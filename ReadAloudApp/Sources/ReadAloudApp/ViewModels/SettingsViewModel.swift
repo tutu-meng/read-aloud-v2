@@ -7,6 +7,8 @@
 
 import SwiftUI
 import Combine
+import Foundation
+import CoreGraphics
 
 /// SettingsViewModel manages the state and logic for the settings view
 class SettingsViewModel: ObservableObject {
