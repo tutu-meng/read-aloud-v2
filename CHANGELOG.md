@@ -48,4 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All models conform to Codable for persistence
 - Book conforms to Identifiable for SwiftUI lists
 - Added comprehensive unit tests for all models (12 tests, all passing)
-- Updated SettingsViewModel and SettingsView to use UserSettings model 
+- Updated SettingsViewModel and SettingsView to use UserSettings model
+
+#### CORE-3-b: Fix UserSettings Scope Issue
+- Fixed "cannot find UserSettings in scope" error in SettingsViewModel
+- Added missing imports: Foundation and CoreGraphics
+- CoreGraphics import required for CGFloat type used in UserSettings 
