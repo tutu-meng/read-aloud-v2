@@ -28,6 +28,9 @@ class AppCoordinator: ObservableObject {
     // lazy var speechService = SpeechService()
     // lazy var persistenceService = PersistenceService()
     
+    // CORE-2: Demonstrating Swift/Objective-C interoperability
+    lazy var interoperabilityService = InteroperabilityService()
+    
     // MARK: - Navigation Methods
     
     /// Navigate to the reader view with a selected book

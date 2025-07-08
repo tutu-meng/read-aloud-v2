@@ -24,5 +24,8 @@ targets:
     platform: iOS
     sources:
       - Tests/ReadAloudAppTests
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      PRODUCT_BUNDLE_IDENTIFIER: com.readAloud.ReadAloudAppTests
     dependencies:
       - target: ReadAloudApp 

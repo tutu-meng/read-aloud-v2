@@ -23,8 +23,8 @@ This directory contains all documentation for the ReadAloudApp iOS project. The 
 
 ### Current Sprint
 - **Epic**: Core Architecture & Setup
-- **Status**: CORE-1 Complete ✅
-- **Next**: CORE-2 - Implement MVVM-C Structure
+- **Status**: CORE-1 & CORE-2 Complete ✅
+- **Next**: CORE-3 - Define Core Data Models
 
 ### Completed Tasks
 1. **CORE-1**: Initialize Xcode Project ✅
@@ -32,6 +32,12 @@ This directory contains all documentation for the ReadAloudApp iOS project. The 
    - Set up folder organization
    - Configured bridging header
    - Implemented basic navigation
+
+2. **CORE-2**: Establish Swift/Objective-C Interoperability ✅
+   - Configured bridging header in build settings
+   - Created Objective-C demonstration classes
+   - Verified seamless Swift/Objective-C integration
+   - Added comprehensive interoperability tests
 
 ## Architecture Overview
 

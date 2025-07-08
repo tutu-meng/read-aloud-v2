@@ -7,4 +7,7 @@
 //
 
 // Import Objective-C headers here as needed
-// Example: #import "SomeObjectiveCClass.h" 
+// Example: #import "SomeObjectiveCClass.h"
+
+// CORE-2: Demonstrating Swift/Objective-C interoperability
+#import "LegacyTextProcessor.h" 

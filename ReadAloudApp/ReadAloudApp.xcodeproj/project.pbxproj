@@ -7,10 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14AE3182F51F50438CBEC2ED /* InteroperabilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */; };
 		3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */; };
 		380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */; };
 		39173CA7DD4B8AB2DEE69401 /* ReaderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD5D124C50B1B157E30FC97B /* ReaderViewModel.swift */; };
 		3CFB82D23DA0E837CC91E6FE /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DC86735F988743CCF6B6B8 /* AppCoordinator.swift */; };
+		5B2B07E279B0D85D748F515E /* InteroperabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */; };
 		7C6898699FAAD8C858D9C7FC /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DBE3A4D730A211FE9BF09 /* LibraryViewModel.swift */; };
 		7DBECE0E21E771EBA78AD697 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4237D0FECF4BB27AB5B149 /* ContentView.swift */; };
 		8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AED4A6471788B858A3B9E5C /* SettingsView.swift */; };
@@ -18,6 +20,7 @@
 		C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953B8E989E93DBBC46372F39 /* ReadAloudApp.swift */; };
 		C8F455AE9CD2C88613903FB2 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F00BA17693C60EF0CFA2B83 /* Book.swift */; };
 		D8B69E747C1785F71764401B /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6665876891CDE2E095C49DFA /* LibraryView.swift */; };
+		ED0200BF8BDEA3C439E36A7E /* LegacyTextProcessor.m in Sources */ = {isa = PBXBuildFile; fileRef = C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +35,7 @@
 
 /* Begin PBXFileReference section */
 		04BB15698225E88273853704 /* ReadAloudApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ReadAloudApp-Bridging-Header.h"; sourceTree = "<group>"; };
+		1001129FD9EF361F3678628F /* LegacyTextProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LegacyTextProcessor.h; sourceTree = "<group>"; };
 		1D4237D0FECF4BB27AB5B149 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		21DC86735F988743CCF6B6B8 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		2608873B40CA0052119E474D /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
@@ -44,7 +48,10 @@
 		AB90F0E8927B2B7276BED0BE /* ReadAloudApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ReadAloudApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4EC4AA059919337BB0E3919 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BD5D124C50B1B157E30FC97B /* ReaderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewModel.swift; sourceTree = "<group>"; };
+		C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteroperabilityTests.swift; sourceTree = "<group>"; };
+		C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LegacyTextProcessor.m; sourceTree = "<group>"; };
 		CA361B124D92E2F6F35E5EA6 /* ReadAloudAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReadAloudAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteroperabilityService.swift; sourceTree = "<group>"; };
 		E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -71,6 +78,7 @@
 		1CDD87E11E89C2F03CC0BF7C /* ReadAloudAppTests */ = {
 			isa = PBXGroup;
 			children = (
+				C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */,
 				82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */,
 			);
 			name = ReadAloudAppTests;
@@ -93,6 +101,7 @@
 				DED02BA512B1FC1AED9E2148 /* Coordinators */,
 				0C5CE7D84BED37BCEE1CB832 /* Models */,
 				26C67221E190AD7B594C9645 /* Resources */,
+				A7EF6A342BB1E583A89B70EE /* Services */,
 				6CDF0001F9907C14BCBAAD98 /* ViewModels */,
 				045E64E663F5FB4AC74F28DE /* Views */,
 			);
@@ -108,6 +117,16 @@
 				E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A7EF6A342BB1E583A89B70EE /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */,
+				1001129FD9EF361F3678628F /* LegacyTextProcessor.h */,
+				C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		DED02BA512B1FC1AED9E2148 /* Coordinators */ = {
@@ -213,6 +232,8 @@
 				3CFB82D23DA0E837CC91E6FE /* AppCoordinator.swift in Sources */,
 				C8F455AE9CD2C88613903FB2 /* Book.swift in Sources */,
 				7DBECE0E21E771EBA78AD697 /* ContentView.swift in Sources */,
+				14AE3182F51F50438CBEC2ED /* InteroperabilityService.swift in Sources */,
+				ED0200BF8BDEA3C439E36A7E /* LegacyTextProcessor.m in Sources */,
 				D8B69E747C1785F71764401B /* LibraryView.swift in Sources */,
 				7C6898699FAAD8C858D9C7FC /* LibraryViewModel.swift in Sources */,
 				C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */,
@@ -227,6 +248,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5B2B07E279B0D85D748F515E /* InteroperabilityTests.swift in Sources */,
 				3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -344,6 +366,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -360,6 +383,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

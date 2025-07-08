@@ -111,10 +111,22 @@ Each ViewModel is an `ObservableObject` with `@Published` properties for reactiv
 
 ### Bridging Header
 
-`ReadAloudApp-Bridging-Header.h` is configured for potential Objective-C interoperability, supporting:
+`ReadAloudApp-Bridging-Header.h` is configured for Swift/Objective-C interoperability, supporting:
 - Legacy code integration
-- C/C++ library usage
+- C/C++ library usage (via Objective-C++ wrappers)
 - Performance-critical implementations
+
+Example usage:
+```objc
+// In bridging header
+#import "LegacyTextProcessor.h"
+
+// In Swift code
+let processor = LegacyTextProcessor()
+let result = processor.processText("Hello")
+```
+
+The project includes `InteroperabilityService` demonstrating this capability.
 
 ## Coding Standards
 

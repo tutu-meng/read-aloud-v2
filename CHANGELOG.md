@@ -31,4 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Used EnvironmentObject for AppCoordinator injection
 - Created responsive SwiftUI layouts with proper navigation
 - Generated Xcode project using XcodeGen for iOS Simulator support
-- App can now be run in iOS Simulator with proper app target 
+- App can now be run in iOS Simulator with proper app target
+
+#### CORE-2: Establish Swift/Objective-C Interoperability
+- Configured bridging header in project build settings
+- Created demonstration Objective-C class (LegacyTextProcessor) 
+- Implemented InteroperabilityService showing Swift/Objective-C integration
+- Added comprehensive unit tests verifying interoperability
+- Demonstrated C-style code integration capabilities
+- All tests pass, confirming seamless language interoperability 
