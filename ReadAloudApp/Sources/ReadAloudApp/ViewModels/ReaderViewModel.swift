@@ -11,7 +11,13 @@ import Combine
 /// ReaderViewModel manages the state and logic for the reader view
 class ReaderViewModel: ObservableObject {
     // MARK: - Properties
-    @Published var currentPage = 0
+    @Published var currentPage = 0 {
+        didSet {
+            if currentPage != oldValue && !isLoading {
+                updatePageContent()
+            }
+        }
+    }
     @Published var totalPages = 0
     @Published var pageContent = ""
     @Published var isLoading = true
@@ -33,9 +39,29 @@ class ReaderViewModel: ObservableObject {
     /// Load and paginate the book
     func loadBook() {
         // TODO: Implement using FileProcessor and PaginationService
-        isLoading = false
-        pageContent = "Sample page content for \(book.title)"
-        totalPages = 1
+        // For now, simulate multiple pages for UI testing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            self.isLoading = false
+            self.totalPages = 10 // Simulate 10 pages for testing
+            self.updatePageContent()
+        }
+    }
+    
+    /// Update the page content based on current page
+    private func updatePageContent() {
+        // Simulate different content for each page
+        pageContent = """
+        Page \(currentPage + 1) of \(book.title)
+        
+        This is placeholder content for page \(currentPage + 1).
+        
+        In a real implementation, this would contain the actual paginated text from the book file. The content would be calculated by the PaginationService based on the current font settings and view dimensions.
+        
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        """
     }
     
     /// Navigate to a specific page

@@ -97,6 +97,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project supports files up to 2GB with hybrid loading strategy planned
 - Following MVVM-C pattern with AppCoordinator managing navigation
 
+## [0.6.0] - 2025-01-08
+### Added
+- **UI-1**: Build Main Reader View with Paged TabView
+  - Enhanced ReaderView with TabView using .page style for swipe navigation
+  - Updated ReaderViewModel to simulate 10 pages with dynamic content
+  - Implemented page content updates on navigation with property observer
+  - Added generatePageContent method for unique page placeholder content
+  - Created comprehensive test suite with 8 new tests
+  - Provides familiar page-turning experience with smooth animations
+
 ## [0.5.0] - 2025-01-08
 ### Added
 - **FILE-1**: Created FileProcessor Service and TextSource Abstraction

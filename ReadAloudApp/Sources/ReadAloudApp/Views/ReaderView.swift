@@ -66,7 +66,7 @@ struct ReaderView: View {
             TabView(selection: $viewModel.currentPage) {
                 ForEach(0..<viewModel.totalPages, id: \.self) { pageIndex in
                     PageView(
-                        content: viewModel.pageContent,
+                        content: generatePageContent(for: pageIndex),
                         pageIndex: pageIndex
                     )
                     .tag(pageIndex)
@@ -102,6 +102,27 @@ struct ReaderView: View {
             }
         }
         .frame(height: 30)
+    }
+    
+    /// Generate placeholder content for a specific page
+    private func generatePageContent(for pageIndex: Int) -> String {
+        // If we're on the current page, use the viewModel's content
+        // Otherwise, generate placeholder content
+        if pageIndex == viewModel.currentPage {
+            return viewModel.pageContent
+        } else {
+            return """
+            Page \(pageIndex + 1) of \(viewModel.book.title)
+            
+            This is placeholder content for page \(pageIndex + 1).
+            
+            In a real implementation, this would contain the actual paginated text from the book file. The content would be calculated by the PaginationService based on the current font settings and view dimensions.
+            
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+            """
+        }
     }
 }
 
