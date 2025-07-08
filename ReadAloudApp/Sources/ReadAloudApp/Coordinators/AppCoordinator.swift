@@ -126,8 +126,11 @@ class AppCoordinator: ObservableObject {
     
     /// Handle application-wide errors
     func handleError(_ error: Error) {
-        debugPrint("❌ AppCoordinator: Error occurred: \(error.localizedDescription)")
-        errorMessage = error.localizedDescription
+        // Convert to AppError if needed
+        let appError: AppError = (error as? AppError) ?? .unknown(underlyingError: error)
+        
+        debugPrint("❌ AppCoordinator: Error occurred: [\(appError.errorCode)] \(appError.localizedDescription)")
+        errorMessage = appError.localizedDescription
         
         // Clear error after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in

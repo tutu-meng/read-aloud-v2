@@ -61,6 +61,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created comprehensive AppCoordinatorTests.swift - 11 tests all passing
   - AppCoordinator now serves as the central navigation and dependency injection hub
 
+- CORE-5: Implement Centralized Error Handling
+  - Created AppError enum in new Utilities folder with domain-specific error cases
+  - Implemented all required error cases plus additional ones for comprehensive coverage:
+    - File operations: fileNotFound, fileReadFailed, fileTooLarge, invalidFileFormat
+    - Text processing: paginationFailed, encodingError
+    - Text-to-speech: ttsError, voiceNotAvailable, ttsNotSupported
+    - Storage: saveFailed, loadFailed, insufficientStorage
+    - Network: noNetworkConnection, downloadFailed
+    - General: unknown, notImplemented
+  - Full LocalizedError protocol conformance with user-friendly descriptions
+  - Added error metadata: error codes, severity levels, recovery suggestions, help anchors
+  - Integrated AppError with AppCoordinator for consistent error handling
+  - Created comprehensive AppErrorTests.swift - 20 tests all passing
+  - Total test count now at 50 (all passing)
+
 ### Fixed
 - CORE-3-b: Fix UserSettings scope issue in SettingsViewModel
   - Xcode reported "cannot find UserSettings in scope" error in SettingsViewModel
