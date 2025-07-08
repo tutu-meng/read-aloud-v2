@@ -36,34 +36,39 @@ struct SettingsView: View {
         Section(header: Text("Text Settings")) {
             // Font Size
             VStack(alignment: .leading) {
-                Text("Font Size: \(Int(viewModel.fontSize))")
+                Text("Font Size: \(Int(viewModel.userSettings.fontSize))")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Slider(value: $viewModel.fontSize, in: 12...32, step: 1)
+                Slider(value: $viewModel.userSettings.fontSize, 
+                      in: UserSettings.fontSizeRange, 
+                      step: 1)
             }
             
             // Font Selection
-            Picker("Font", selection: $viewModel.fontName) {
-                Text("System").tag("System")
-                Text("Georgia").tag("Georgia")
-                Text("Helvetica").tag("Helvetica")
-                Text("Times New Roman").tag("Times New Roman")
-                Text("Courier").tag("Courier")
+            Picker("Font", selection: $viewModel.userSettings.fontName) {
+                ForEach(UserSettings.availableFonts, id: \.self) { font in
+                    Text(font).tag(font)
+                }
             }
             
             // Line Spacing
             VStack(alignment: .leading) {
-                Text("Line Spacing: \(viewModel.lineSpacing, specifier: "%.1f")")
+                Text("Line Spacing: \(viewModel.userSettings.lineSpacing, specifier: "%.1f")")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Slider(value: $viewModel.lineSpacing, in: 0.8...2.0, step: 0.1)
+                Slider(value: $viewModel.userSettings.lineSpacing, 
+                      in: UserSettings.lineSpacingRange, 
+                      step: 0.1)
             }
         }
     }
     
     private var appearanceSection: some View {
         Section(header: Text("Appearance")) {
-            Picker("Theme", selection: $viewModel.theme) {
+            Picker("Theme", selection: Binding(
+                get: { SettingsViewModel.ColorTheme(from: viewModel.userSettings.theme) },
+                set: { viewModel.userSettings.theme = $0.themeString }
+            )) {
                 ForEach(SettingsViewModel.ColorTheme.allCases, id: \.self) { theme in
                     Text(theme.rawValue).tag(theme)
                 }
@@ -75,10 +80,14 @@ struct SettingsView: View {
     private var speechSettingsSection: some View {
         Section(header: Text("Text-to-Speech")) {
             VStack(alignment: .leading) {
-                Text("Speech Rate: \(viewModel.speechRate, specifier: "%.1f")x")
+                Text("Speech Rate: \(viewModel.userSettings.speechRate, specifier: "%.1f")x")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Slider(value: $viewModel.speechRate, in: 0.5...2.0, step: 0.1)
+                Slider(value: Binding(
+                    get: { Double(viewModel.userSettings.speechRate) },
+                    set: { viewModel.userSettings.speechRate = Float($0) }
+                ), in: Double(UserSettings.speechRateRange.lowerBound)...Double(UserSettings.speechRateRange.upperBound), 
+                   step: 0.1)
             }
         }
     }

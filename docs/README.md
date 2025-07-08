@@ -23,8 +23,8 @@ This directory contains all documentation for the ReadAloudApp iOS project. The 
 
 ### Current Sprint
 - **Epic**: Core Architecture & Setup
-- **Status**: CORE-1 & CORE-2 Complete ✅
-- **Next**: CORE-3 - Define Core Data Models
+- **Status**: CORE-1, CORE-2 & CORE-3 Complete ✅
+- **Next**: CORE-4 - Implement AppError Enum
 
 ### Completed Tasks
 1. **CORE-1**: Initialize Xcode Project ✅
@@ -38,6 +38,13 @@ This directory contains all documentation for the ReadAloudApp iOS project. The 
    - Created Objective-C demonstration classes
    - Verified seamless Swift/Objective-C integration
    - Added comprehensive interoperability tests
+
+3. **CORE-3**: Define Core Data Models ✅
+   - Created UserSettings model for user preferences
+   - Created ReadingProgress model for tracking position
+   - Verified Book model meets all requirements
+   - All models conform to Codable, Book is Identifiable
+   - Added 12 unit tests with 100% pass rate
 
 ## Architecture Overview
 

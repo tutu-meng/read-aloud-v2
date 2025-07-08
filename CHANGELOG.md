@@ -39,4 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented InteroperabilityService showing Swift/Objective-C integration
 - Added comprehensive unit tests verifying interoperability
 - Demonstrated C-style code integration capabilities
-- All tests pass, confirming seamless language interoperability 
+- All tests pass, confirming seamless language interoperability
+
+#### CORE-3: Define Core Data Models
+- Created UserSettings model with all required properties (font, theme, spacing, speech rate)
+- Created ReadingProgress model to track reading position and progress
+- Book model already existed with all required properties
+- All models conform to Codable for persistence
+- Book conforms to Identifiable for SwiftUI lists
+- Added comprehensive unit tests for all models (12 tests, all passing)
+- Updated SettingsViewModel and SettingsView to use UserSettings model 

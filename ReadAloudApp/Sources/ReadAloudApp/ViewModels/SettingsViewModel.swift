@@ -11,11 +11,7 @@ import Combine
 /// SettingsViewModel manages the state and logic for the settings view
 class SettingsViewModel: ObservableObject {
     // MARK: - Properties
-    @Published var fontSize: Double = 16.0
-    @Published var fontName: String = "System"
-    @Published var theme: ColorTheme = .light
-    @Published var speechRate: Double = 1.0
-    @Published var lineSpacing: Double = 1.0
+    @Published var userSettings: UserSettings = .default
     
     private let coordinator: AppCoordinator
     
@@ -24,6 +20,18 @@ class SettingsViewModel: ObservableObject {
         case light = "Light"
         case dark = "Dark"
         case sepia = "Sepia"
+        
+        var themeString: String {
+            return self.rawValue.lowercased()
+        }
+        
+        init(from theme: String) {
+            switch theme.lowercased() {
+            case "dark": self = .dark
+            case "sepia": self = .sepia
+            default: self = .light
+            }
+        }
     }
     
     // MARK: - Initialization
@@ -36,13 +44,15 @@ class SettingsViewModel: ObservableObject {
     
     /// Load settings from storage
     func loadSettings() {
-        // TODO: Load from UserSettings/PersistenceService
+        // TODO: Load from PersistenceService
+        // For now, using default settings
+        self.userSettings = UserSettings.default
     }
     
     /// Save settings
     func saveSettings() {
         // TODO: Save using PersistenceService
-        print("Saving settings")
+        print("Saving settings: \(userSettings)")
     }
     
     /// Close settings

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		083C791871E87045BF4FDF9D /* ReadingProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9C3B9A012F139DD1008E40 /* ReadingProgress.swift */; };
 		14AE3182F51F50438CBEC2ED /* InteroperabilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */; };
 		3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */; };
 		380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */; };
@@ -19,6 +20,8 @@
 		98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2608873B40CA0052119E474D /* ReaderView.swift */; };
 		C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953B8E989E93DBBC46372F39 /* ReadAloudApp.swift */; };
 		C8F455AE9CD2C88613903FB2 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F00BA17693C60EF0CFA2B83 /* Book.swift */; };
+		CB8CF35CC9810C18B9376A6E /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279AF933740B2A3B16BE53D5 /* ModelTests.swift */; };
+		D0B5CFEFDE0C4B128A1B9D25 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57D8ACA928B81625C215B7C /* UserSettings.swift */; };
 		D8B69E747C1785F71764401B /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6665876891CDE2E095C49DFA /* LibraryView.swift */; };
 		ED0200BF8BDEA3C439E36A7E /* LegacyTextProcessor.m in Sources */ = {isa = PBXBuildFile; fileRef = C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */; };
 /* End PBXBuildFile section */
@@ -39,6 +42,7 @@
 		1D4237D0FECF4BB27AB5B149 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		21DC86735F988743CCF6B6B8 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		2608873B40CA0052119E474D /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
+		279AF933740B2A3B16BE53D5 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		3F7DBE3A4D730A211FE9BF09 /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		5F00BA17693C60EF0CFA2B83 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		6665876891CDE2E095C49DFA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
@@ -48,11 +52,13 @@
 		AB90F0E8927B2B7276BED0BE /* ReadAloudApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ReadAloudApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4EC4AA059919337BB0E3919 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BD5D124C50B1B157E30FC97B /* ReaderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewModel.swift; sourceTree = "<group>"; };
+		BE9C3B9A012F139DD1008E40 /* ReadingProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingProgress.swift; sourceTree = "<group>"; };
 		C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteroperabilityTests.swift; sourceTree = "<group>"; };
 		C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LegacyTextProcessor.m; sourceTree = "<group>"; };
 		CA361B124D92E2F6F35E5EA6 /* ReadAloudAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReadAloudAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteroperabilityService.swift; sourceTree = "<group>"; };
 		E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		E57D8ACA928B81625C215B7C /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -71,6 +77,8 @@
 			isa = PBXGroup;
 			children = (
 				5F00BA17693C60EF0CFA2B83 /* Book.swift */,
+				BE9C3B9A012F139DD1008E40 /* ReadingProgress.swift */,
+				E57D8ACA928B81625C215B7C /* UserSettings.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -79,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */,
+				279AF933740B2A3B16BE53D5 /* ModelTests.swift */,
 				82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */,
 			);
 			name = ReadAloudAppTests;
@@ -239,8 +248,10 @@
 				C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */,
 				98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */,
 				39173CA7DD4B8AB2DEE69401 /* ReaderViewModel.swift in Sources */,
+				083C791871E87045BF4FDF9D /* ReadingProgress.swift in Sources */,
 				8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */,
 				380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */,
+				D0B5CFEFDE0C4B128A1B9D25 /* UserSettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +260,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5B2B07E279B0D85D748F515E /* InteroperabilityTests.swift in Sources */,
+				CB8CF35CC9810C18B9376A6E /* ModelTests.swift in Sources */,
 				3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

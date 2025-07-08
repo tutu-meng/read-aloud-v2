@@ -82,6 +82,21 @@ sequenceDiagram
 - `importedDate: Date`
 - `fileSize: Int64`
 
+### UserSettings Model
+- `fontName: String` (default: "System")
+- `fontSize: CGFloat` (default: 16.0)
+- `theme: String` (default: "light")
+- `lineSpacing: CGFloat` (default: 1.2)
+- `speechRate: Float` (default: 1.0)
+
+### ReadingProgress Model
+- `bookID: String` (matches Book.contentHash)
+- `lastReadCharacterIndex: Int`
+- `lastPageNumber: Int?`
+- `totalPages: Int?`
+- `percentageComplete: Double?`
+- `lastUpdated: Date`
+
 ### ViewModels Pattern
 ```swift
 class SomeViewModel: ObservableObject {
