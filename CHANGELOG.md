@@ -97,7 +97,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project supports files up to 2GB with hybrid loading strategy planned
 - Following MVVM-C pattern with AppCoordinator managing navigation
 
-## [0.1.0] - Initial Setup
+## [0.5.0] - 2025-01-08
+### Added
+- **FILE-1**: Created FileProcessor Service and TextSource Abstraction
+  - Implemented FileProcessor class with async `loadText(from:)` method
+  - Defined TextSource enum with memory-mapped and streaming cases
+  - Created Services folder structure for file handling components
+  - Added comprehensive test suite with 6 new tests
+  - Established foundation for hybrid file loading strategy (memory-mapping for <1.5GB, streaming for larger files)
+  - Initial implementation uses stub that throws AppError.notImplemented
+
+## [0.4.0] - 2025-01-07
 - Initial project creation
 - Basic project structure
 ``` 
