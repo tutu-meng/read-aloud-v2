@@ -18,6 +18,7 @@
 		7DBECE0E21E771EBA78AD697 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4237D0FECF4BB27AB5B149 /* ContentView.swift */; };
 		8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AED4A6471788B858A3B9E5C /* SettingsView.swift */; };
 		98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2608873B40CA0052119E474D /* ReaderView.swift */; };
+		B79D8193FE4D29B3F7D3A454 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */; };
 		C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953B8E989E93DBBC46372F39 /* ReadAloudApp.swift */; };
 		C8F455AE9CD2C88613903FB2 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F00BA17693C60EF0CFA2B83 /* Book.swift */; };
 		CB8CF35CC9810C18B9376A6E /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279AF933740B2A3B16BE53D5 /* ModelTests.swift */; };
@@ -37,6 +38,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorTests.swift; sourceTree = "<group>"; };
 		04BB15698225E88273853704 /* ReadAloudApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ReadAloudApp-Bridging-Header.h"; sourceTree = "<group>"; };
 		1001129FD9EF361F3678628F /* LegacyTextProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LegacyTextProcessor.h; sourceTree = "<group>"; };
 		1D4237D0FECF4BB27AB5B149 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 		1CDD87E11E89C2F03CC0BF7C /* ReadAloudAppTests */ = {
 			isa = PBXGroup;
 			children = (
+				012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */,
 				C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */,
 				279AF933740B2A3B16BE53D5 /* ModelTests.swift */,
 				82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */,
@@ -259,6 +262,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B79D8193FE4D29B3F7D3A454 /* AppCoordinatorTests.swift in Sources */,
 				5B2B07E279B0D85D748F515E /* InteroperabilityTests.swift in Sources */,
 				CB8CF35CC9810C18B9376A6E /* ModelTests.swift in Sources */,
 				3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */,

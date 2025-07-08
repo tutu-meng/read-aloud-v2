@@ -39,6 +39,10 @@ graph TD
 ### Core Components
 
 1. **AppCoordinator**: Central navigation and dependency injection
+   - Manages navigation state and app lifecycle
+   - Creates ViewModels with dependencies
+   - Handles application-wide errors
+   - Provides `start()` method for initialization
 2. **ViewModels**: Business logic and state management
 3. **Views**: SwiftUI presentation layer
 4. **Services**: Reusable business logic components
@@ -102,8 +106,18 @@ ReadAloudApp/
 ### Navigation Flow
 
 The AppCoordinator manages all navigation through published properties:
-- `currentView`: Enum representing active screen
+- `currentView`: Enum representing active screen (library, reader, settings, loading)
 - `selectedBook`: Currently selected book for reading
+- `isLoading`: Loading state indicator
+- `errorMessage`: Application-wide error messages
+
+Key methods:
+- `start()`: Initialize app state and observers
+- `navigateToReader(with:)`: Navigate to reader with selected book
+- `navigateToLibrary()`: Return to book library
+- `showSettings()`: Display settings screen
+- `handleError(_:)`: Display error with auto-dismissal
+- `handleDeepLink(_:)`: Process external navigation requests
 
 ### State Management
 
