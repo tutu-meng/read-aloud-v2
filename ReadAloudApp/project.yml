@@ -9,6 +9,9 @@ targets:
     platform: iOS
     sources:
       - Sources/ReadAloudApp
+      - path: Resources
+        type: folder
+        buildPhase: resources
     settings:
       INFOPLIST_FILE: Sources/ReadAloudApp/Resources/Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.readAloud.ReadAloudApp

@@ -29,8 +29,21 @@ class LibraryViewModel: ObservableObject {
     /// Load books from storage
     func loadBooks() {
         // TODO: Implement loading books from PersistenceService
-        // For now, using empty array
-        books = []
+        // For now, adding sample book for UI testing
+        
+        // Check if sample book exists
+        let sampleBookPath = Bundle.main.path(forResource: "alice_in_wonderland", ofType: "txt", inDirectory: "SampleBooks")
+            ?? "Resources/SampleBooks/alice_in_wonderland.txt"
+        
+        let sampleBook = Book(
+            title: "Alice's Adventures in Wonderland",
+            fileURL: URL(fileURLWithPath: sampleBookPath),
+            contentHash: "sample-alice-hash",
+            importedDate: Date(),
+            fileSize: 5102
+        )
+        
+        books = [sampleBook]
     }
     
     /// Handle book selection

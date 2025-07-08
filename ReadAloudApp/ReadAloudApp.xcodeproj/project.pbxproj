@@ -10,6 +10,7 @@
 		083C791871E87045BF4FDF9D /* ReadingProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9C3B9A012F139DD1008E40 /* ReadingProgress.swift */; };
 		14AE3182F51F50438CBEC2ED /* InteroperabilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */; };
 		177136E6055AC61864E44C0B /* AppErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD37840031BB884E34E5255 /* AppErrorTests.swift */; };
+		1801FDC2327F4E94F84AE5FC /* UIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFB9F8F95AD1BE27E96D230 /* UIWorkflowTests.swift */; };
 		2C031E61C271E8A13A9046D1 /* FileProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469941E2ACF5571370930148 /* FileProcessorTests.swift */; };
 		3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */; };
 		380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */; };
@@ -20,6 +21,7 @@
 		7C6898699FAAD8C858D9C7FC /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DBE3A4D730A211FE9BF09 /* LibraryViewModel.swift */; };
 		7DBECE0E21E771EBA78AD697 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4237D0FECF4BB27AB5B149 /* ContentView.swift */; };
 		812D76906FAD2E74226B6919 /* FileProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CDC30E52E452043884E2E /* FileProcessor.swift */; };
+		87BB915C0558CCFEF17D3F2C /* Resources in Resources */ = {isa = PBXBuildFile; fileRef = 7F40600CF6387711A31E13A9 /* Resources */; };
 		8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AED4A6471788B858A3B9E5C /* SettingsView.swift */; };
 		98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2608873B40CA0052119E474D /* ReaderView.swift */; };
 		B79D8193FE4D29B3F7D3A454 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */; };
@@ -52,11 +54,13 @@
 		21DC86735F988743CCF6B6B8 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		2608873B40CA0052119E474D /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
 		279AF933740B2A3B16BE53D5 /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
+		2BFB9F8F95AD1BE27E96D230 /* UIWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIWorkflowTests.swift; sourceTree = "<group>"; };
 		3F7DBE3A4D730A211FE9BF09 /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		469941E2ACF5571370930148 /* FileProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProcessorTests.swift; sourceTree = "<group>"; };
 		5CF9214D4A349A0F4B20D744 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
 		5F00BA17693C60EF0CFA2B83 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		6665876891CDE2E095C49DFA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		7F40600CF6387711A31E13A9 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources; sourceTree = SOURCE_ROOT; };
 		82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadAloudAppTests.swift; sourceTree = "<group>"; };
 		8AED4A6471788B858A3B9E5C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		953B8E989E93DBBC46372F39 /* ReadAloudApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadAloudApp.swift; sourceTree = "<group>"; };
@@ -105,6 +109,7 @@
 				279AF933740B2A3B16BE53D5 /* ModelTests.swift */,
 				82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */,
 				0ED9487EC5A6F108612A3AB1 /* ReaderViewModelTests.swift */,
+				2BFB9F8F95AD1BE27E96D230 /* UIWorkflowTests.swift */,
 			);
 			name = ReadAloudAppTests;
 			path = Tests/ReadAloudAppTests;
@@ -175,6 +180,7 @@
 		F1CC54A18D3255C9C42277C1 = {
 			isa = PBXGroup;
 			children = (
+				7F40600CF6387711A31E13A9 /* Resources */,
 				6CD68866EFC133FAF6CEB117 /* ReadAloudApp */,
 				1CDD87E11E89C2F03CC0BF7C /* ReadAloudAppTests */,
 				F9210DFD45E4D1C6A2DF6557 /* Products */,
@@ -198,6 +204,7 @@
 			buildConfigurationList = 014127BAF9DB0245DBABC8A7 /* Build configuration list for PBXNativeTarget "ReadAloudApp" */;
 			buildPhases = (
 				0402BF99539B2D781DD1CA98 /* Sources */,
+				7A17A7E2FF2508D584F01E63 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -259,6 +266,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		7A17A7E2FF2508D584F01E63 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87BB915C0558CCFEF17D3F2C /* Resources in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		0402BF99539B2D781DD1CA98 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -294,6 +312,7 @@
 				CB8CF35CC9810C18B9376A6E /* ModelTests.swift in Sources */,
 				3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */,
 				581EFCD04BF492E55DFC656F /* ReaderViewModelTests.swift in Sources */,
+				1801FDC2327F4E94F84AE5FC /* UIWorkflowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
