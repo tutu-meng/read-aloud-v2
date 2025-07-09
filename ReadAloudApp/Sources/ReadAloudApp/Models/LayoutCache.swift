@@ -147,6 +147,89 @@ class LayoutCache {
         return retrieveLayout(userSettings: userSettings, viewSize: viewSize, contentHash: contentHash) != nil
     }
     
+    // MARK: - Convenience Methods for Simple Caching
+    
+    /// Simple cache storage for individual NSRange objects using string keys
+    private var simpleCache: [String: (range: NSRange, timestamp: Date)] = [:]
+    
+    /// Store a single NSRange with a string key
+    /// - Parameters:
+    ///   - key: String key for the cache entry
+    ///   - range: NSRange to store
+    func storeLayout(key: String, range: NSRange) {
+        simpleCache[key] = (range: range, timestamp: Date())
+        debugPrint("🗂️ LayoutCache: Stored simple layout for key: \(key)")
+        
+        // Clean up if needed
+        cleanupSimpleCacheIfNeeded()
+    }
+    
+    /// Retrieve a cached NSRange by string key
+    /// - Parameter key: String key for the cache entry
+    /// - Returns: NSRange if found and valid, nil otherwise
+    func retrieveLayout(key: String) -> NSRange? {
+        guard let entry = simpleCache[key] else {
+            debugPrint("🗂️ LayoutCache: No cached layout found for key: \(key)")
+            return nil
+        }
+        
+        // Check if the cached layout is still valid
+        let age = Date().timeIntervalSince(entry.timestamp)
+        if age > maxCacheAge {
+            debugPrint("🗂️ LayoutCache: Cached layout expired for key: \(key)")
+            simpleCache.removeValue(forKey: key)
+            return nil
+        }
+        
+        debugPrint("🗂️ LayoutCache: Retrieved cached layout for key: \(key)")
+        return entry.range
+    }
+    
+    /// Store a single integer value with a string key (for page counts)
+    /// - Parameters:
+    ///   - key: String key for the cache entry
+    ///   - value: Integer value to store
+    func storeIntValue(key: String, value: Int) {
+        let range = NSRange(location: 0, length: value)
+        storeLayout(key: key, range: range)
+    }
+    
+    /// Retrieve a cached integer value by string key
+    /// - Parameter key: String key for the cache entry
+    /// - Returns: Integer value if found and valid, nil otherwise
+    func retrieveIntValue(key: String) -> Int? {
+        guard let range = retrieveLayout(key: key) else {
+            return nil
+        }
+        return range.length
+    }
+    
+    /// Clean up simple cache entries
+    private func cleanupSimpleCacheIfNeeded() {
+        // Remove expired entries
+        let now = Date()
+        let expiredKeys = simpleCache.compactMap { key, value in
+            let age = now.timeIntervalSince(value.timestamp)
+            return age > maxCacheAge ? key : nil
+        }
+        
+        for key in expiredKeys {
+            simpleCache.removeValue(forKey: key)
+        }
+        
+        // If still too many entries, remove oldest ones
+        if simpleCache.count > maxCacheSize {
+            let sortedEntries = simpleCache.sorted { $0.value.timestamp < $1.value.timestamp }
+            let entriesToRemove = sortedEntries.prefix(simpleCache.count - maxCacheSize)
+            
+            for (key, _) in entriesToRemove {
+                simpleCache.removeValue(forKey: key)
+            }
+            
+            debugPrint("🗂️ LayoutCache: Cleaned up \(entriesToRemove.count) old simple cache entries")
+        }
+    }
+    
     // MARK: - Private Methods
     
     /// Clean up old or excess cache entries
