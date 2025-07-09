@@ -21,6 +21,9 @@ class AppCoordinator: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
+    // MARK: - Shared Settings State
+    @Published var userSettings: UserSettings = .default
+    
     // MARK: - View State
     enum AppView {
         case library
@@ -35,7 +38,7 @@ class AppCoordinator: ObservableObject {
     // lazy var fileProcessor = FileProcessor()
     
     // Pagination service for text layout
-    // lazy var paginationService = PaginationService()
+    lazy var paginationService = PaginationService()
     
     // Speech service for text-to-speech
     // lazy var speechService = SpeechService()

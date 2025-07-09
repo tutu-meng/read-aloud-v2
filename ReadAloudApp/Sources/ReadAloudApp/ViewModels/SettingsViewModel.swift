@@ -13,9 +13,15 @@ import CoreGraphics
 /// SettingsViewModel manages the state and logic for the settings view
 class SettingsViewModel: ObservableObject {
     // MARK: - Properties
-    @Published var userSettings: UserSettings = .default
+    
+    /// Access to shared UserSettings through coordinator
+    var userSettings: UserSettings {
+        get { coordinator.userSettings }
+        set { coordinator.userSettings = newValue }
+    }
     
     private let coordinator: AppCoordinator
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Types
     enum ColorTheme: String, CaseIterable {
@@ -39,7 +45,20 @@ class SettingsViewModel: ObservableObject {
     // MARK: - Initialization
     init(coordinator: AppCoordinator) {
         self.coordinator = coordinator
+        setupObservation()
         loadSettings()
+    }
+    
+    // MARK: - Observation Setup
+    
+    /// Set up observation of coordinator's UserSettings
+    private func setupObservation() {
+        // Forward changes from coordinator's userSettings to trigger UI updates
+        coordinator.$userSettings
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Methods
@@ -47,14 +66,23 @@ class SettingsViewModel: ObservableObject {
     /// Load settings from storage
     func loadSettings() {
         // TODO: Load from PersistenceService
-        // For now, using default settings
-        self.userSettings = UserSettings.default
+        // For now, using default settings in coordinator
+        if coordinator.userSettings.fontName == "System" {
+            debugPrint("⚙️ SettingsViewModel: Using default settings")
+        } else {
+            debugPrint("⚙️ SettingsViewModel: Loaded existing settings")
+        }
     }
     
     /// Save settings
     func saveSettings() {
         // TODO: Save using PersistenceService
-        print("Saving settings: \(userSettings)")
+        debugPrint("⚙️ SettingsViewModel: Saving settings: \(userSettings)")
+    }
+    
+    /// Save settings without navigation (for sheet dismissal)
+    func saveSettingsOnly() {
+        saveSettings()
     }
     
     /// Close settings

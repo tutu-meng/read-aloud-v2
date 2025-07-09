@@ -27,19 +27,88 @@ class ReaderViewModel: ObservableObject {
     private let coordinator: AppCoordinator
     private var cancellables = Set<AnyCancellable>()
     private var bookPages: [String] = []
+    private var fullBookContent: String = ""
+    private var currentViewSize: CGSize = .zero
     
     // MARK: - Initialization
     init(book: Book, coordinator: AppCoordinator) {
         self.book = book
         self.coordinator = coordinator
+        
+        setupSettingsObservation()
         loadBook()
+    }
+    
+    // MARK: - Settings Observation
+    
+    /// Set up observation for UserSettings changes
+    private func setupSettingsObservation() {
+        // Simple observation that triggers on any settings change
+        coordinator.$userSettings
+            .dropFirst() // Skip initial value
+            .sink { [weak self] newSettings in
+                self?.handleSettingsChange()
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// Handle settings changes that affect layout
+    private func handleSettingsChange() {
+        debugPrint("📱 ReaderViewModel: Settings changed, triggering re-pagination")
+        
+        // Invalidate pagination cache
+        coordinator.paginationService.invalidateCache()
+        
+        // Re-paginate with new settings if we have content
+        if !fullBookContent.isEmpty && currentViewSize != .zero {
+            repaginateContent()
+        }
+    }
+    
+    // MARK: - Pagination Methods
+    
+    /// Re-paginate content with current settings
+    private func repaginateContent() {
+        guard !fullBookContent.isEmpty else { return }
+        
+        // Use PaginationService to paginate content
+        bookPages = coordinator.paginationService.paginateText(
+            content: fullBookContent,
+            settings: coordinator.userSettings,
+            viewSize: currentViewSize
+        )
+        
+        // Update total pages
+        totalPages = bookPages.count
+        
+        // Ensure current page is valid
+        if currentPage >= totalPages {
+            currentPage = max(0, totalPages - 1)
+        }
+        
+        // Update page content
+        updatePageContent()
+    }
+    
+    /// Update view size for pagination calculations
+    func updateViewSize(_ size: CGSize) {
+        guard size != currentViewSize else { return }
+        
+        currentViewSize = size
+        
+        // Re-paginate if we have content
+        if !fullBookContent.isEmpty {
+            repaginateContent()
+        }
     }
     
     // MARK: - Methods
     
     /// Load and paginate the book
     func loadBook() {
-        // TODO: Implement using FileProcessor and PaginationService
+        isLoading = true
+        
+        // TODO: Implement using FileProcessor
         // For now, try to load actual file content for UI testing
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -48,23 +117,23 @@ class ReaderViewModel: ObservableObject {
                 // Try to load the actual file content
                 let content = try String(contentsOf: self.book.fileURL, encoding: .utf8)
                 
-                // Simple pagination: split into chunks of approximately 500 characters
-                let chunkSize = 500
-                var pages: [String] = []
-                var currentIndex = content.startIndex
-                
-                while currentIndex < content.endIndex {
-                    let endIndex = content.index(currentIndex, offsetBy: chunkSize, limitedBy: content.endIndex) ?? content.endIndex
-                    let pageContent = String(content[currentIndex..<endIndex])
-                    pages.append(pageContent)
-                    currentIndex = endIndex
-                }
-                
                 DispatchQueue.main.async {
+                    self.fullBookContent = content
                     self.isLoading = false
-                    self.totalPages = pages.count
-                    self.bookPages = pages
-                    self.updatePageContent()
+                    
+                    // Initial pagination (will use default view size initially)
+                    if self.currentViewSize != .zero {
+                        self.repaginateContent()
+                    } else {
+                        // Fallback pagination until view size is available
+                        self.bookPages = self.coordinator.paginationService.paginateText(
+                            content: content,
+                            settings: self.coordinator.userSettings,
+                            viewSize: CGSize(width: 375, height: 600) // Default iPhone size
+                        )
+                        self.totalPages = self.bookPages.count
+                        self.updatePageContent()
+                    }
                 }
             } catch {
                 // Fallback to placeholder content if file can't be loaded
@@ -92,6 +161,10 @@ class ReaderViewModel: ObservableObject {
             
             In a real implementation, this would contain the actual paginated text from the book file. The content would be calculated by the PaginationService based on the current font settings and view dimensions.
             
+            Font: \(coordinator.userSettings.fontName)
+            Size: \(coordinator.userSettings.fontSize)pt
+            Line Spacing: \(coordinator.userSettings.lineSpacing)x
+            
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
             
             Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
@@ -103,7 +176,6 @@ class ReaderViewModel: ObservableObject {
     func goToPage(_ page: Int) {
         guard page >= 0 && page < totalPages else { return }
         currentPage = page
-        // TODO: Load page content
     }
     
     /// Start/stop text-to-speech
@@ -115,5 +187,10 @@ class ReaderViewModel: ObservableObject {
     /// Go back to library
     func goBackToLibrary() {
         coordinator.navigateToLibrary()
+    }
+    
+    /// Create a SettingsViewModel for the settings sheet
+    func makeSettingsViewModel() -> SettingsViewModel {
+        return coordinator.makeSettingsViewModel()
     }
 } 

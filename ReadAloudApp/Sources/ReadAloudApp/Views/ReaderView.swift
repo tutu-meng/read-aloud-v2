@@ -43,8 +43,7 @@ struct ReaderView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                // TODO: Implement settings view
-                Text("Settings Placeholder")
+                SettingsView(viewModel: viewModel.makeSettingsViewModel(), isSheet: true)
             }
         }
     }
@@ -75,6 +74,16 @@ struct ReaderView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.default, value: viewModel.currentPage)
+            .onAppear {
+                // Provide view size to viewModel for pagination calculations
+                let contentSize = CGSize(width: geometry.size.width, height: geometry.size.height - 100)
+                viewModel.updateViewSize(contentSize)
+            }
+            .onChange(of: geometry.size) { _, newSize in
+                // Update view size when geometry changes
+                let contentSize = CGSize(width: newSize.width, height: newSize.height - 100)
+                viewModel.updateViewSize(contentSize)
+            }
             
             // Page indicator
             pageIndicator

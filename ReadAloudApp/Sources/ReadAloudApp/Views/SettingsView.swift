@@ -12,6 +12,16 @@ struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
     @Environment(\.presentationMode) var presentationMode
     
+    /// Whether this view is presented as a sheet (vs full screen navigation)
+    let isSheet: Bool
+    
+    // MARK: - Initialization
+    
+    init(viewModel: SettingsViewModel, isSheet: Bool = false) {
+        self.viewModel = viewModel
+        self.isSheet = isSheet
+    }
+    
     var body: some View {
         NavigationView {
             Form {
@@ -24,8 +34,14 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        viewModel.close()
-                        presentationMode.wrappedValue.dismiss()
+                        if isSheet {
+                            // For sheet presentation, just save settings and dismiss
+                            viewModel.saveSettingsOnly()
+                            presentationMode.wrappedValue.dismiss()
+                        } else {
+                            // For full navigation, close normally
+                            viewModel.close()
+                        }
                     }
                 }
             }
