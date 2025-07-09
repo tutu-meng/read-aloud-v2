@@ -115,21 +115,4 @@ struct ReaderView: View {
             return "Loading page \(pageIndex + 1)..."
         }
     }
-}
-
-/// PageView displays a single page of content
-struct PageView: View {
-    let content: String
-    let pageIndex: Int
-    
-    var body: some View {
-        ScrollView {
-            Text(content)
-                .font(.body)
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
-    }
 } 

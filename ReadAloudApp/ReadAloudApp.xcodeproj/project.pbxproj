@@ -22,6 +22,8 @@
 		7DBECE0E21E771EBA78AD697 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4237D0FECF4BB27AB5B149 /* ContentView.swift */; };
 		812D76906FAD2E74226B6919 /* FileProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CDC30E52E452043884E2E /* FileProcessor.swift */; };
 		8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AED4A6471788B858A3B9E5C /* SettingsView.swift */; };
+		8FE769986E9053F3412C2801 /* PageViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D608204CA54533AC7302AA5C /* PageViewTests.swift */; };
+		9457CFD462528A3DD258E87C /* PageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B744D6A54F24178EF8A69A /* PageView.swift */; };
 		98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2608873B40CA0052119E474D /* ReaderView.swift */; };
 		B79D8193FE4D29B3F7D3A454 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */; };
 		C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953B8E989E93DBBC46372F39 /* ReadAloudApp.swift */; };
@@ -70,6 +72,8 @@
 		C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LegacyTextProcessor.m; sourceTree = "<group>"; };
 		CA361B124D92E2F6F35E5EA6 /* ReadAloudAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReadAloudAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D55A19B5AA158E7668F36240 /* InteroperabilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteroperabilityService.swift; sourceTree = "<group>"; };
+		D5B744D6A54F24178EF8A69A /* PageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageView.swift; sourceTree = "<group>"; };
+		D608204CA54533AC7302AA5C /* PageViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewTests.swift; sourceTree = "<group>"; };
 		E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		E57D8ACA928B81625C215B7C /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -80,6 +84,7 @@
 			children = (
 				1D4237D0FECF4BB27AB5B149 /* ContentView.swift */,
 				6665876891CDE2E095C49DFA /* LibraryView.swift */,
+				D5B744D6A54F24178EF8A69A /* PageView.swift */,
 				2608873B40CA0052119E474D /* ReaderView.swift */,
 				8AED4A6471788B858A3B9E5C /* SettingsView.swift */,
 			);
@@ -104,6 +109,7 @@
 				469941E2ACF5571370930148 /* FileProcessorTests.swift */,
 				C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */,
 				279AF933740B2A3B16BE53D5 /* ModelTests.swift */,
+				D608204CA54533AC7302AA5C /* PageViewTests.swift */,
 				82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */,
 				0ED9487EC5A6F108612A3AB1 /* ReaderViewModelTests.swift */,
 				2BFB9F8F95AD1BE27E96D230 /* UIWorkflowTests.swift */,
@@ -266,6 +272,7 @@
 				ED0200BF8BDEA3C439E36A7E /* LegacyTextProcessor.m in Sources */,
 				D8B69E747C1785F71764401B /* LibraryView.swift in Sources */,
 				7C6898699FAAD8C858D9C7FC /* LibraryViewModel.swift in Sources */,
+				9457CFD462528A3DD258E87C /* PageView.swift in Sources */,
 				C23FD5A128F6D2F94D4414E8 /* ReadAloudApp.swift in Sources */,
 				98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */,
 				39173CA7DD4B8AB2DEE69401 /* ReaderViewModel.swift in Sources */,
@@ -285,6 +292,7 @@
 				2C031E61C271E8A13A9046D1 /* FileProcessorTests.swift in Sources */,
 				5B2B07E279B0D85D748F515E /* InteroperabilityTests.swift in Sources */,
 				CB8CF35CC9810C18B9376A6E /* ModelTests.swift in Sources */,
+				8FE769986E9053F3412C2801 /* PageViewTests.swift in Sources */,
 				3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */,
 				581EFCD04BF492E55DFC656F /* ReaderViewModelTests.swift in Sources */,
 				1801FDC2327F4E94F84AE5FC /* UIWorkflowTests.swift in Sources */,
