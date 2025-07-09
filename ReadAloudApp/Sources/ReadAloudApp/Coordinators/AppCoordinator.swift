@@ -35,16 +35,7 @@ class AppCoordinator: ObservableObject {
     // MARK: - Services (Lazy Initialization for Performance)
     
     // File processing service for handling text files
-    // lazy var fileProcessor = FileProcessor()
-    
-    // Pagination service for text layout
-    lazy var paginationService = PaginationService()
-    
-    // Speech service for text-to-speech
-    // lazy var speechService = SpeechService()
-    
-    // Persistence service for saving user data
-    // lazy var persistenceService = PersistenceService()
+    lazy var fileProcessor = FileProcessor()
     
     // CORE-2: Demonstrating Swift/Objective-C interoperability
     lazy var interoperabilityService = InteroperabilityService()
@@ -103,6 +94,19 @@ class AppCoordinator: ObservableObject {
     func handleDeepLink(_ url: URL) {
         debugPrint("🔗 AppCoordinator: Handling deep link: \(url)")
         // TODO: Implement deep link handling
+    }
+    
+    // MARK: - Service Factory Methods
+    
+    /// Create PaginationService with required dependencies
+    /// - Parameters:
+    ///   - textSource: The TextSource for pagination
+    ///   - userSettings: Optional user settings (defaults to coordinator's settings)
+    /// - Returns: Configured PaginationService instance
+    func makePaginationService(textSource: TextSource, userSettings: UserSettings? = nil) -> PaginationService {
+        let settings = userSettings ?? self.userSettings
+        debugPrint("🏭 AppCoordinator: Creating PaginationService with TextSource and UserSettings")
+        return PaginationService(textSource: textSource, userSettings: settings)
     }
     
     // MARK: - ViewModels Factory Methods (Dependency Injection)

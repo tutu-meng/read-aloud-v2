@@ -3,6 +3,7 @@
 //  ReadAloudApp
 //
 //  Created on 2024
+//  Updated for PGN-1: Create PaginationService and LayoutCache Skeletons
 //
 
 import Foundation
@@ -15,31 +16,77 @@ class PaginationService {
     
     // MARK: - Properties
     
+    /// The text source to be paginated
+    private let textSource: TextSource
+    
+    /// User settings affecting layout
+    private let userSettings: UserSettings
+    
+    /// Layout cache for performance optimization
+    private let layoutCache: LayoutCache
+    
     /// Cache for paginated content to avoid recalculation
     private var paginationCache: [String: [String]] = [:]
-    
-    /// Current user settings affecting layout
-    private var currentSettings: UserSettings?
     
     /// Current view dimensions
     private var currentViewSize: CGSize?
     
     // MARK: - Initialization
     
-    init() {
-        debugPrint("📄 PaginationService: Initializing")
+    /// Initialize PaginationService with TextSource and UserSettings
+    /// - Parameters:
+    ///   - textSource: The TextSource object containing the text to be paginated
+    ///   - userSettings: The UserSettings object containing layout preferences
+    init(textSource: TextSource, userSettings: UserSettings) {
+        self.textSource = textSource
+        self.userSettings = userSettings
+        self.layoutCache = LayoutCache()
+        debugPrint("📄 PaginationService: Initializing with TextSource and UserSettings")
     }
     
-    // MARK: - Public Methods
+    // MARK: - Public API Methods
     
-    /// Invalidate the pagination cache when settings change
-    /// This method is called when layout-affecting properties change
+    /// Get the character range for a specific page
+    /// - Parameter pageNumber: The page number (1-based)
+    /// - Returns: NSRange representing the character range for the specified page
+    func pageRange(for pageNumber: Int) -> NSRange {
+        // TODO: Implement actual page range calculation
+        // This is a placeholder implementation for PGN-1
+        debugPrint("📄 PaginationService: pageRange(for:) called with page \(pageNumber)")
+        
+        // Return a placeholder range for now
+        let estimatedCharsPerPage = 500
+        let startLocation = (pageNumber - 1) * estimatedCharsPerPage
+        let length = estimatedCharsPerPage
+        
+        return NSRange(location: startLocation, length: length)
+    }
+    
+    /// Get the total number of pages for the current text and settings
+    /// - Returns: Total page count
+    func totalPageCount() -> Int {
+        // TODO: Implement actual page count calculation
+        // This is a placeholder implementation for PGN-1
+        debugPrint("📄 PaginationService: totalPageCount() called")
+        
+        // Return a placeholder count based on text length estimation
+        let textLength = getTextLength()
+        let estimatedCharsPerPage = 500
+        let pageCount = max(1, (textLength + estimatedCharsPerPage - 1) / estimatedCharsPerPage)
+        
+        debugPrint("📄 PaginationService: Estimated total pages: \(pageCount)")
+        return pageCount
+    }
+    
+    /// Invalidate the pagination cache when settings or content change
     func invalidateCache() {
         debugPrint("🗑️ PaginationService: Invalidating pagination cache")
         paginationCache.removeAll()
-        currentSettings = nil
+        layoutCache.clearCache()
         currentViewSize = nil
     }
+    
+    // MARK: - Legacy Methods (kept for compatibility)
     
     /// Paginate text content based on current settings and view dimensions
     /// - Parameters:
@@ -61,7 +108,6 @@ class PaginationService {
         
         // Cache the result
         paginationCache[cacheKey] = pages
-        currentSettings = settings
         currentViewSize = viewSize
         
         debugPrint("📄 PaginationService: Paginated text into \(pages.count) pages")
@@ -74,18 +120,32 @@ class PaginationService {
     ///   - viewSize: View dimensions to check against
     /// - Returns: True if cache is valid, false otherwise
     func isCacheValid(for settings: UserSettings, viewSize: CGSize) -> Bool {
-        guard let currentSettings = currentSettings,
-              let currentViewSize = currentViewSize else {
+        guard let currentViewSize = currentViewSize else {
             return false
         }
         
-        return currentSettings.fontSize == settings.fontSize &&
-               currentSettings.fontName == settings.fontName &&
-               currentSettings.lineSpacing == settings.lineSpacing &&
+        return userSettings.fontSize == settings.fontSize &&
+               userSettings.fontName == settings.fontName &&
+               userSettings.lineSpacing == settings.lineSpacing &&
                currentViewSize == viewSize
     }
     
     // MARK: - Private Methods
+    
+    /// Get the text length from the TextSource
+    /// - Returns: Estimated text length in characters
+    private func getTextLength() -> Int {
+        // TODO: Implement proper text length calculation based on TextSource type
+        // This is a placeholder implementation for PGN-1
+        switch textSource {
+        case .memoryMapped(let nsData):
+            return nsData.length
+        case .streaming(_):
+            // For streaming, we'll need to read chunks to estimate length
+            // For now, return a placeholder
+            return 10000
+        }
+    }
     
     /// Generate a cache key for the given parameters
     private func generateCacheKey(content: String, settings: UserSettings, viewSize: CGSize) -> String {

@@ -29,6 +29,8 @@ class ReaderViewModel: ObservableObject {
     private var bookPages: [String] = []
     private var fullBookContent: String = ""
     private var currentViewSize: CGSize = .zero
+    private var currentTextSource: TextSource?
+    private var currentPaginationService: PaginationService?
     
     // MARK: - Initialization
     init(book: Book, coordinator: AppCoordinator) {
@@ -56,11 +58,11 @@ class ReaderViewModel: ObservableObject {
     private func handleSettingsChange() {
         debugPrint("📱 ReaderViewModel: Settings changed, triggering re-pagination")
         
-        // Invalidate pagination cache
-        coordinator.paginationService.invalidateCache()
+        // Invalidate pagination cache if we have a service
+        currentPaginationService?.invalidateCache()
         
         // Re-paginate with new settings if we have content
-        if !fullBookContent.isEmpty && currentViewSize != .zero {
+        if currentTextSource != nil && currentViewSize != .zero {
             repaginateContent()
         }
     }
@@ -69,17 +71,31 @@ class ReaderViewModel: ObservableObject {
     
     /// Re-paginate content with current settings
     private func repaginateContent() {
-        guard !fullBookContent.isEmpty else { return }
+        guard let textSource = currentTextSource else { return }
         
-        // Use PaginationService to paginate content
-        bookPages = coordinator.paginationService.paginateText(
-            content: fullBookContent,
-            settings: coordinator.userSettings,
-            viewSize: currentViewSize
+        // Create a new PaginationService with current settings
+        currentPaginationService = coordinator.makePaginationService(
+            textSource: textSource,
+            userSettings: coordinator.userSettings
         )
         
-        // Update total pages
-        totalPages = bookPages.count
+        // Get total page count
+        totalPages = currentPaginationService?.totalPageCount() ?? 0
+        
+        // For now, use legacy pagination method for actual page content
+        // TODO: Replace with proper pageRange(for:) implementation when available
+        if !fullBookContent.isEmpty {
+            bookPages = coordinator.makePaginationService(
+                textSource: textSource,
+                userSettings: coordinator.userSettings
+            ).paginateText(
+                content: fullBookContent,
+                settings: coordinator.userSettings,
+                viewSize: currentViewSize
+            )
+            
+            totalPages = bookPages.count
+        }
         
         // Ensure current page is valid
         if currentPage >= totalPages {
@@ -97,7 +113,7 @@ class ReaderViewModel: ObservableObject {
         currentViewSize = size
         
         // Re-paginate if we have content
-        if !fullBookContent.isEmpty {
+        if currentTextSource != nil {
             repaginateContent()
         }
     }
@@ -108,16 +124,17 @@ class ReaderViewModel: ObservableObject {
     func loadBook() {
         isLoading = true
         
-        // TODO: Implement using FileProcessor
-        // For now, try to load actual file content for UI testing
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            
+        // Use FileProcessor to load the book content
+        Task {
             do {
-                // Try to load the actual file content
-                let content = try String(contentsOf: self.book.fileURL, encoding: .utf8)
+                // Load text using FileProcessor
+                let textSource = try await coordinator.fileProcessor.loadText(from: book.fileURL)
                 
-                DispatchQueue.main.async {
+                // Extract text content for display
+                let content = try await extractTextContent(from: textSource)
+                
+                await MainActor.run {
+                    self.currentTextSource = textSource
                     self.fullBookContent = content
                     self.isLoading = false
                     
@@ -126,24 +143,53 @@ class ReaderViewModel: ObservableObject {
                         self.repaginateContent()
                     } else {
                         // Fallback pagination until view size is available
-                        self.bookPages = self.coordinator.paginationService.paginateText(
+                        self.currentPaginationService = self.coordinator.makePaginationService(
+                            textSource: textSource,
+                            userSettings: self.coordinator.userSettings
+                        )
+                        
+                        self.bookPages = self.currentPaginationService?.paginateText(
                             content: content,
                             settings: self.coordinator.userSettings,
                             viewSize: CGSize(width: 375, height: 600) // Default iPhone size
-                        )
+                        ) ?? []
+                        
                         self.totalPages = self.bookPages.count
                         self.updatePageContent()
                     }
                 }
             } catch {
-                // Fallback to placeholder content if file can't be loaded
-                DispatchQueue.main.async {
+                // Handle loading error
+                await MainActor.run {
                     self.isLoading = false
                     self.totalPages = 10 // Simulate 10 pages for testing
                     self.bookPages = []
                     self.updatePageContent()
+                    
+                    // Report error to coordinator
+                    self.coordinator.handleError(error)
                 }
             }
+        }
+    }
+    
+    /// Extract text content from TextSource for display
+    private func extractTextContent(from textSource: TextSource) async throws -> String {
+        switch textSource {
+        case .memoryMapped(let nsData):
+            // Convert NSData to String
+            guard let string = String(data: nsData as Data, encoding: .utf8) else {
+                throw AppError.fileReadFailed(filename: book.title, underlyingError: nil)
+            }
+            return string
+            
+        case .streaming(let fileHandle):
+            // Read from FileHandle
+            let data = fileHandle.readDataToEndOfFile()
+            guard let string = String(data: data, encoding: .utf8) else {
+                throw AppError.fileReadFailed(filename: book.title, underlyingError: nil)
+            }
+            return string
         }
     }
     
