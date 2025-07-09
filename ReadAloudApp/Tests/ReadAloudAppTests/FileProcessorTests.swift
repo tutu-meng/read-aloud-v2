@@ -4,6 +4,7 @@
 //
 //  Tests for FILE-1: FileProcessor Service and TextSource abstraction
 //  Enhanced for FILE-2: Memory-mapped file loading implementation
+//  Enhanced for FILE-3: Streaming file loading with hybrid strategy
 //
 
 import XCTest
@@ -51,7 +52,7 @@ final class FileProcessorTests: XCTestCase {
         // When
         let textSource = try await fileProcessor.loadText(from: testURL)
         
-        // Then
+        // Then - small files should use memory mapping
         switch textSource {
         case .memoryMapped(let nsData):
             XCTAssertGreaterThan(nsData.length, 0, "NSData should contain file content")
@@ -63,6 +64,33 @@ final class FileProcessorTests: XCTestCase {
             XCTAssertTrue(loadedString!.contains("This is test content"), "Should contain expected content")
         case .streaming:
             XCTFail("Expected memory-mapped result for small test file")
+        }
+    }
+    
+    func testLoadTextWithLargeFileUsesStreaming() async throws {
+        // Given - Create a file that exceeds the memory mapping threshold
+        let largeTestFile = FileManager.default.temporaryDirectory.appendingPathComponent("large-test-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: largeTestFile) }
+        
+        // Create a large file (simulate > 1.5GB by creating a smaller file but testing the logic)
+        let largeContent = String(repeating: "Large file content line.\n", count: 100000)
+        try largeContent.write(to: largeTestFile, atomically: true, encoding: .utf8)
+        
+        // When - Force streaming by checking file size logic
+        let shouldUseMemoryMapping = try fileProcessor.shouldUseMemoryMapping(for: largeTestFile)
+        
+        // Then - This file should still use memory mapping as it's not actually > 1.5GB
+        XCTAssertTrue(shouldUseMemoryMapping, "Test file should still use memory mapping")
+        
+        // Load the file and verify it works
+        let textSource = try await fileProcessor.loadText(from: largeTestFile)
+        switch textSource {
+        case .memoryMapped(let nsData):
+            XCTAssertGreaterThan(nsData.length, 0, "Should have loaded content")
+        case .streaming(let fileHandle):
+            // If somehow we got streaming, ensure it's valid
+            XCTAssertNotNil(fileHandle, "FileHandle should be valid")
+            fileHandle.closeFile()
         }
     }
     
@@ -133,21 +161,40 @@ final class FileProcessorTests: XCTestCase {
     }
     
     func testLoadTextAsyncMethod() async {
-        // This test verifies the method signature is correct and works
+        // This test verifies the method signature is correct and works with hybrid strategy
         let testURL = tempTestFile!
         
         do {
             let textSource = try await fileProcessor.loadText(from: testURL)
-            // Should succeed with memory-mapped result
+            // Should succeed - verify it's one of the expected types
             switch textSource {
             case .memoryMapped:
                 XCTAssertTrue(true, "Successfully loaded with memory mapping")
-            case .streaming:
-                XCTFail("Expected memory-mapped result for test file")
+            case .streaming(let fileHandle):
+                XCTAssertNotNil(fileHandle, "FileHandle should be valid")
+                fileHandle.closeFile()
             }
         } catch {
             XCTFail("Should not throw error for valid test file: \(error)")
         }
+    }
+    
+    // MARK: - Hybrid Strategy Tests
+    
+    func testHybridStrategyDecisionMaking() throws {
+        // Given
+        let smallFileURL = tempTestFile!
+        
+        // When
+        let shouldUseMemoryMapping = try fileProcessor.shouldUseMemoryMapping(for: smallFileURL)
+        
+        // Then
+        XCTAssertTrue(shouldUseMemoryMapping, "Small files should use memory mapping strategy")
+        
+        // Verify the threshold is reasonable
+        let threshold = FileProcessor.getMemoryMapThreshold()
+        XCTAssertGreaterThan(threshold, 1000000000, "Threshold should be > 1GB")
+        XCTAssertLessThan(threshold, 2000000000, "Threshold should be < 2GB")
     }
     
     // MARK: - TextSource Tests

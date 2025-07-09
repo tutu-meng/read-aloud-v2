@@ -4,6 +4,7 @@
 //
 //  Created on FILE-1 implementation
 //  Enhanced for FILE-2: Memory-mapped file loading
+//  Enhanced for FILE-3: Streaming file loading with NSFileHandle
 //
 
 import Foundation
@@ -30,10 +31,10 @@ public class FileProcessor {
     
     /// Asynchronously loads text from the specified file URL.
     ///
-    /// This method implements the primary loading strategy using memory-mapping:
-    /// - Attempts to load files using NSData(contentsOfFile:options:.mappedIfSafe)
-    /// - Returns TextSource.memoryMapped for successful loads
-    /// - Throws AppError.fileReadFailed for any loading failures
+    /// This method implements a hybrid loading strategy:
+    /// - Files < 1.5GB: Memory-mapped using NSData(contentsOfFile:options:.mappedIfSafe)
+    /// - Files >= 1.5GB: Streaming using NSFileHandle to avoid virtual memory limits
+    /// - Returns appropriate TextSource based on file size and loading strategy
     ///
     /// - Parameter url: The URL of the text file to load
     /// - Returns: A TextSource representing the loaded text data
@@ -53,22 +54,25 @@ public class FileProcessor {
             throw AppError.fileNotFound(filename: url.lastPathComponent)
         }
         
-        // Get file size for logging
-        do {
-            let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
-            if let fileSize = fileAttributes[.size] as? Int64 {
-                debugPrint("📄 FileProcessor: File size: \(fileSize) bytes")
-                
-                // Log if file exceeds memory mapping threshold
-                if fileSize >= Self.memoryMapThreshold {
-                    debugPrint("⚠️ FileProcessor: File size (\(fileSize)) exceeds memory mapping threshold (\(Self.memoryMapThreshold))")
-                }
-            }
-        } catch {
-            debugPrint("⚠️ FileProcessor: Could not get file attributes: \(error)")
-        }
+        // Determine loading strategy based on file size
+        let shouldUseMemoryMapping = try self.shouldUseMemoryMapping(for: url)
         
-        // Attempt memory-mapped loading
+        if shouldUseMemoryMapping {
+            debugPrint("🗺️ FileProcessor: Using memory-mapped loading strategy")
+            return try await loadTextUsingMemoryMapping(from: url)
+        } else {
+            debugPrint("🔄 FileProcessor: Using streaming loading strategy")
+            return try await loadTextUsingStreaming(from: url)
+        }
+    }
+    
+    // MARK: - Private Loading Methods
+    
+    /// Load text using memory-mapped strategy for files < 1.5GB
+    /// - Parameter url: The URL of the text file to load
+    /// - Returns: TextSource.memoryMapped with NSData
+    /// - Throws: AppError if memory mapping fails
+    private func loadTextUsingMemoryMapping(from url: URL) async throws -> TextSource {
         debugPrint("🗺️ FileProcessor: Attempting memory-mapped loading...")
         
         do {
@@ -77,6 +81,33 @@ public class FileProcessor {
             return TextSource.memoryMapped(nsData)
         } catch {
             debugPrint("❌ FileProcessor: Memory-mapped loading failed for: \(url.path) - \(error)")
+            throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
+        }
+    }
+    
+    /// Load text using streaming strategy for files >= 1.5GB
+    /// - Parameter url: The URL of the text file to load
+    /// - Returns: TextSource.streaming with FileHandle
+    /// - Throws: AppError if file handle creation fails
+    private func loadTextUsingStreaming(from url: URL) async throws -> TextSource {
+        debugPrint("🔄 FileProcessor: Attempting streaming loading...")
+        
+        return try openFileForStreaming(from: url)
+    }
+    
+    /// Private method to open a file for reading using NSFileHandle
+    /// - Parameter url: The URL of the text file to open
+    /// - Returns: TextSource.streaming with configured FileHandle
+    /// - Throws: AppError if file handle creation fails
+    private func openFileForStreaming(from url: URL) throws -> TextSource {
+        debugPrint("🔄 FileProcessor: Opening file handle for streaming: \(url.lastPathComponent)")
+        
+        do {
+            let fileHandle = try FileHandle(forReadingFrom: url)
+            debugPrint("✅ FileProcessor: Successfully opened file handle for streaming")
+            return TextSource.streaming(fileHandle)
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to open file handle for: \(url.path) - \(error)")
             throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
         }
     }
@@ -94,7 +125,16 @@ public class FileProcessor {
                 throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: nil)
             }
             
-            return fileSize < Self.memoryMapThreshold
+            debugPrint("📄 FileProcessor: File size: \(fileSize) bytes")
+            
+            let shouldUseMemoryMapping = fileSize < Self.memoryMapThreshold
+            if shouldUseMemoryMapping {
+                debugPrint("📝 FileProcessor: File size (\(fileSize)) is below memory mapping threshold (\(Self.memoryMapThreshold))")
+            } else {
+                debugPrint("⚠️ FileProcessor: File size (\(fileSize)) exceeds memory mapping threshold (\(Self.memoryMapThreshold))")
+            }
+            
+            return shouldUseMemoryMapping
         } catch {
             throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
         }

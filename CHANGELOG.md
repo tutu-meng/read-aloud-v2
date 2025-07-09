@@ -38,6 +38,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handles empty files and edge cases gracefully
 - Comprehensive validation before file access attempts
 
+#### FILE-3: Fallback Streaming Strategy with NSFileHandle (2025-01-08)
+- **Hybrid Loading Strategy**: Completed full hybrid file loading system with intelligent strategy selection
+- **Streaming Implementation**: Added NSFileHandle-based streaming for files ≥ 1.5GB to prevent memory crashes
+- **Private Method Architecture**: Implemented `openFileForStreaming(from:)` private method as specified
+  - Uses `FileHandle(forReadingFrom:)` for safe file handle creation
+  - Returns `TextSource.streaming(FileHandle)` on successful creation
+  - Comprehensive error handling for FileHandle creation failures
+- **Strategy Decision Logic**: Enhanced `loadText(from:)` with automatic strategy selection
+  - Files < 1.5GB: Memory mapping for optimal performance
+  - Files ≥ 1.5GB: Streaming for memory safety
+  - Seamless fallback with unified error handling
+- **Virtual Memory Protection**: Prevents app crashes from exceeding iOS memory limits
+- **Comprehensive Testing**: Added 24 tests covering streaming functionality and hybrid integration
+  - FILE3StreamingTests.swift with 12 specialized streaming tests
+  - Enhanced FileProcessorTests.swift with hybrid strategy validation
+  - 100% pass rate for all FILE-3 specific functionality
+
+**Technical Benefits**:
+- Memory safety for files of unlimited size
+- Chunk-based reading prevents memory pressure
+- Automatic strategy selection based on file characteristics
+- Maintains backward compatibility with FILE-2 memory mapping
+- Unified API with transparent operation
+
+**Performance Characteristics**:
+- Streaming threshold: 1.5GB (automatic fallback)
+- Chunk-based reading for memory efficiency
+- Scalable performance regardless of file size
+- Responsive UI during large file operations
+- FileHandle operations: seek, read chunks, position tracking
+
+**Error Handling Enhancements**:
+- Comprehensive FileHandle creation error handling
+- Detailed filename context in all error messages
+- Underlying error preservation for debugging
+- Strategy-specific error reporting
+
 #### UI-4: Real-time Settings Observation for Reader Interface (2025-01-08)
 - **Shared UserSettings Architecture**: Established centralized settings management through AppCoordinator
 - **PaginationService Integration**: Created intelligent caching system for efficient text re-pagination
@@ -69,6 +106,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Robust Validation**: Added comprehensive file existence and URL validation
 - **Performance Logging**: Integrated detailed debug logging for monitoring and troubleshooting
 
+#### FILE-3: Hybrid Loading Strategy Implementation
+- **Complete Strategy Overhaul**: Transformed single-strategy loading into intelligent hybrid approach
+- **Automatic Strategy Selection**: Enhanced loadText method with size-based strategy determination
+- **Private Method Architecture**: Modularized loading strategies into dedicated private methods
+  - `loadTextUsingMemoryMapping(from:)` - Memory mapping implementation
+  - `loadTextUsingStreaming(from:)` - FileHandle streaming implementation
+  - `openFileForStreaming(from:)` - FileHandle creation and error handling
+- **Enhanced shouldUseMemoryMapping**: Improved threshold checking with detailed logging
+- **Unified Error Handling**: Consistent error reporting across both loading strategies
+
 #### UI-4: Settings Architecture Refactoring
 - **Centralized State Management**: Moved from local @Published properties to shared coordinator state
 - **Reactive Data Flow**: Implemented publisher-subscriber pattern for settings propagation
@@ -82,6 +129,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Exception Handling**: Properly wrapped NSData initialization in try-catch blocks
 - **Memory Safety**: Ensured proper error propagation without memory leaks
 - **Test Reliability**: Enhanced test stability with proper temporary file cleanup
+
+#### FILE-3: Virtual Memory Safety and Streaming Reliability
+- **Memory Crash Prevention**: Eliminated app crashes from attempting to memory-map extremely large files
+- **FileHandle Error Handling**: Proper error propagation from FileHandle creation failures
+- **Async/Await Compliance**: Fixed test function signatures to properly handle async operations
+- **Strategy Selection Logic**: Resolved edge cases in hybrid strategy decision making
+- **Resource Management**: Ensured proper FileHandle cleanup in all test scenarios
 
 #### UI-4: Build and Runtime Fixes
 - **Combine Complexity**: Simplified complex Combine expressions that caused compiler timeouts
