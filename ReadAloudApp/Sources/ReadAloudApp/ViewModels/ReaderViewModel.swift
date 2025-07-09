@@ -63,14 +63,16 @@ class ReaderViewModel: ObservableObject {
         
         // Re-paginate with new settings if we have content
         if currentTextSource != nil && currentViewSize != .zero {
-            repaginateContent()
+            Task {
+                await repaginateContent()
+            }
         }
     }
     
     // MARK: - Pagination Methods
     
-    /// Re-paginate content with current settings
-    private func repaginateContent() {
+    /// Re-paginate content with current settings (BUG-1 FIX - now async)
+    private func repaginateContent() async {
         guard let textSource = currentTextSource else { return }
         
         // Create a new PaginationService with current settings
@@ -82,10 +84,9 @@ class ReaderViewModel: ObservableObject {
         // Get total page count
         totalPages = currentPaginationService?.totalPageCount() ?? 0
         
-        // For now, use legacy pagination method for actual page content
-        // TODO: Replace with proper pageRange(for:) implementation when available
+        // Use the new async paginateText method with Core Text calculations (BUG-1 FIX)
         if !fullBookContent.isEmpty {
-            bookPages = coordinator.makePaginationService(
+            bookPages = await coordinator.makePaginationService(
                 textSource: textSource,
                 userSettings: coordinator.userSettings
             ).paginateText(
@@ -112,9 +113,11 @@ class ReaderViewModel: ObservableObject {
         
         currentViewSize = size
         
-        // Re-paginate if we have content
+        // Re-paginate if we have content (now async)
         if currentTextSource != nil {
-            repaginateContent()
+            Task {
+                await repaginateContent()
+            }
         }
     }
     
@@ -137,23 +140,28 @@ class ReaderViewModel: ObservableObject {
                     self.currentTextSource = textSource
                     self.fullBookContent = content
                     self.isLoading = false
-                    
-                    // Initial pagination (will use default view size initially)
-                    if self.currentViewSize != .zero {
-                        self.repaginateContent()
-                    } else {
-                        // Fallback pagination until view size is available
+                }
+                
+                // Perform pagination after updating the main actor properties
+                if self.currentViewSize != .zero {
+                    await self.repaginateContent()
+                } else {
+                    // Fallback pagination until view size is available
+                    await MainActor.run {
                         self.currentPaginationService = self.coordinator.makePaginationService(
                             textSource: textSource,
                             userSettings: self.coordinator.userSettings
                         )
-                        
-                        self.bookPages = self.currentPaginationService?.paginateText(
-                            content: content,
-                            settings: self.coordinator.userSettings,
-                            viewSize: CGSize(width: 375, height: 600) // Default iPhone size
-                        ) ?? []
-                        
+                    }
+                    
+                    let pages = await self.currentPaginationService?.paginateText(
+                        content: content,
+                        settings: self.coordinator.userSettings,
+                        viewSize: CGSize(width: 375, height: 600) // Default iPhone size
+                    ) ?? []
+                    
+                    await MainActor.run {
+                        self.bookPages = pages
                         self.totalPages = self.bookPages.count
                         self.updatePageContent()
                     }

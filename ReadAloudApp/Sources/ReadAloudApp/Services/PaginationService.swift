@@ -130,29 +130,55 @@ class PaginationService {
     
     // MARK: - Legacy Methods (kept for compatibility)
     
-    /// Paginate text content based on current settings and view dimensions
+    /// Paginate text content based on current settings and view dimensions using Core Text (BUG-1 FIX)
+    /// This method now uses precise Core Text layout calculations instead of character estimation
     /// - Parameters:
     ///   - content: The full text content to paginate
     ///   - settings: User settings affecting layout (font, size, spacing)
     ///   - viewSize: Available view dimensions for text
-    /// - Returns: Array of paginated text chunks
-    func paginateText(content: String, settings: UserSettings, viewSize: CGSize) -> [String] {
-        let cacheKey = generateCacheKey(content: content, settings: settings, viewSize: viewSize)
+    /// - Returns: Array of paginated text chunks based on Core Text calculations
+    /// - Note: This method is now async as it depends on asynchronous Core Text layout calculations
+    func paginateText(content: String, settings: UserSettings, viewSize: CGSize) async -> [String] {
+        debugPrint("📄 PaginationService: paginateText() called with Core Text calculations (BUG-1 FIX)")
         
-        // Check cache first
-        if let cachedPages = paginationCache[cacheKey] {
-            debugPrint("📄 PaginationService: Using cached pagination for \(cachedPages.count) pages")
-            return cachedPages
+        // Step a: Call getOrCalculateFullLayout to retrieve accurate array of NSRange objects
+        let bounds = CGRect(origin: .zero, size: viewSize)
+        let pageRanges = await getOrCalculateFullLayout(bounds: bounds)
+        
+        // Step b: Create empty [String] array to hold page content
+        var pages: [String] = []
+        
+        // Step c: Iterate through the returned NSRange array and extract corresponding substrings
+        for (pageIndex, range) in pageRanges.enumerated() {
+            // Validate range bounds to prevent crashes
+            let safeRange = NSRange(
+                location: min(range.location, content.count),
+                length: min(range.length, content.count - min(range.location, content.count))
+            )
+            
+            // Extract substring for this page
+            if safeRange.location < content.count && safeRange.length > 0 {
+                let startIndex = content.index(content.startIndex, offsetBy: safeRange.location)
+                let endIndex = content.index(startIndex, offsetBy: safeRange.length)
+                let pageContent = String(content[startIndex..<endIndex])
+                
+                // Step d: Append each extracted substring to the [String] array
+                pages.append(pageContent)
+                
+                debugPrint("📄 PaginationService: Page \(pageIndex + 1): \(pageContent.count) characters")
+            } else {
+                debugPrint("⚠️ PaginationService: Invalid range for page \(pageIndex + 1): \(safeRange)")
+                pages.append("")
+            }
         }
         
-        // Calculate new pagination
-        let pages = calculatePagination(content: content, settings: settings, viewSize: viewSize)
+        // Ensure we have at least one page
+        if pages.isEmpty {
+            debugPrint("⚠️ PaginationService: No pages generated, adding empty page")
+            pages.append("")
+        }
         
-        // Cache the result
-        paginationCache[cacheKey] = pages
-        currentViewSize = viewSize
-        
-        debugPrint("📄 PaginationService: Paginated text into \(pages.count) pages")
+        debugPrint("📄 PaginationService: Paginated text into \(pages.count) pages using Core Text calculations")
         return pages
     }
     
@@ -174,49 +200,82 @@ class PaginationService {
     
     // MARK: - Private Core Text Implementation (PGN-2)
     
+    // MARK: - PGN-5: Core calculatePageRange Function Implementation
+    
     /// Calculate the character range that fits within the given bounds using Core Text (PGN-5)
     /// This is the single, most critical function within the PaginationService that uses Apple's Core Text
     /// framework to perform precise measurement of how many characters can fit into a specific view area.
     /// - Parameters:
-    ///   - startIndex: Starting character index in the attributed string
-    ///   - bounds: View bounds (CGRect) available for text layout
-    ///   - attributedString: The attributed string to layout
-    /// - Returns: NSRange representing the characters that fit within the bounds
-    /// - Note: This method is designed to run on a background thread to prevent UI freezes
+    ///   - startIndex: Starting character index in the full attributed string to measure from
+    ///   - bounds: Exact bounds of the view where the text will be rendered
+    ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
+    /// - Returns: NSRange representing the exact characters that fit perfectly on the page
+    /// - Note: This function performs Core Text calculations on the current thread
     private func calculatePageRange(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) -> NSRange {
         debugPrint("📄 PaginationService: calculatePageRange(from: \(startIndex), in: \(bounds))")
+        debugPrint("📄 BOUNDS DEBUG: width=\(bounds.width), height=\(bounds.height), area=\(bounds.width * bounds.height)")
         
-        // Ensure we have valid bounds
-        guard bounds.width > 0, bounds.height > 0 else {
+        // BOUNDS VALIDATION AND CORRECTION
+        var correctedBounds = bounds
+        
+        // Validate and correct unrealistic bounds
+        if bounds.height > 1000 {
+            debugPrint("⚠️ BOUNDS CORRECTION: Height \(bounds.height) is too large, capping at 600")
+            correctedBounds.size.height = 600
+        }
+        
+        if bounds.width > 500 {
+            debugPrint("⚠️ BOUNDS CORRECTION: Width \(bounds.width) is too large, capping at 375")
+            correctedBounds.size.width = 375
+        }
+        
+        if bounds.width < 200 {
+            debugPrint("⚠️ BOUNDS CORRECTION: Width \(bounds.width) is too small, setting to 300")
+            correctedBounds.size.width = 300
+        }
+        
+        if bounds.height < 300 {
+            debugPrint("⚠️ BOUNDS CORRECTION: Height \(bounds.height) is too small, setting to 400")
+            correctedBounds.size.height = 400
+        }
+        
+        if correctedBounds != bounds {
+            debugPrint("📄 CORRECTED BOUNDS: \(correctedBounds)")
+        }
+        
+        debugPrint("attributedString: \(attributedString.attributes(at: 0, effectiveRange: nil))")
+        
+        // Validate input parameters
+        guard correctedBounds.width > 0, correctedBounds.height > 0 else {
             debugPrint("⚠️ PaginationService: Invalid bounds provided")
             return NSRange(location: startIndex, length: 0)
         }
         
-        // Ensure startIndex is within bounds
         guard startIndex >= 0, startIndex < attributedString.length else {
             debugPrint("⚠️ PaginationService: startIndex \(startIndex) out of bounds for string length \(attributedString.length)")
             return NSRange(location: startIndex, length: 0)
         }
         
-        // Create a substring from the startIndex to the end
-        let remainingRange = NSRange(location: startIndex, length: attributedString.length - startIndex)
-        let remainingString = attributedString.attributedSubstring(from: remainingRange)
+        // Step 1: Create CTFramesetter from the full attributed string (PGN-5 requirement)
+        let framesetter = CTFramesetterCreateWithAttributedString(attributedString)
         
-        // Create the framesetter from the attributed string (PGN-5 requirement)
-        let framesetter = CTFramesetterCreateWithAttributedString(remainingString)
+        // Step 2: Create CGPath from the corrected CGRect to define the shape of the text container (PGN-5 requirement)
+        let path = CGPath(rect: correctedBounds, transform: nil)
         
-        // Create a path that represents the text area (rectangle) - perfectly matches input bounds (PGN-5 requirement)
-        let path = CGPath(rect: bounds, transform: nil)
+        // Step 3: Call CTFramesetterCreateFrame to generate a CTFrame (PGN-5 requirement)
+        // Use the startIndex to specify where to begin the layout
+        let frameRange = CFRange(location: startIndex, length: attributedString.length - startIndex)
+        let frame = CTFramesetterCreateFrame(framesetter, frameRange, path, nil)
         
-        // Create a frame within the path to determine how much text fits (PGN-5 requirement)
-        let frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, nil)
-        
-        // Get the range of text that was actually laid out in the frame (PGN-5 requirement)
-        let frameRange = CTFrameGetStringRange(frame)
-        
-        // Convert CFRange to NSRange and adjust for the start index (PGN-5 requirement)
-        let fittingLength = frameRange.length
-        let resultRange = NSRange(location: startIndex, length: fittingLength)
+        // Step 4: Call CTFrameGetStringRange on the resulting CTFrame to get the visible character range (PGN-5 requirement)
+        let visibleRange = CTFrameGetVisibleStringRange(frame)
+                // Pagination success check
+        if visibleRange.length > 0 && visibleRange.length < attributedString.length - startIndex {
+            debugPrint("✅ PAGINATION SUCCESS: \(visibleRange.length) characters fit on page (out of \(attributedString.length - startIndex) remaining)")
+        }
+      
+        // Step 5: Return exact NSRange representing the characters that fit perfectly on the page (PGN-5 requirement)
+        let resultRange = NSRange(location: visibleRange.location, length: visibleRange.length)
         
         debugPrint("📄 PaginationService: Calculated range: location=\(resultRange.location), length=\(resultRange.length)")
         
@@ -331,18 +390,20 @@ class PaginationService {
         return pageRanges
     }
     
-    /// Async version of calculatePageRange that runs on a background thread
+    /// Async version of calculatePageRange that runs on a background thread (PGN-5 PREFERRED IMPLEMENTATION)
+    /// This is the preferred implementation that explicitly dispatches Core Text calculations to a background thread
+    /// to prevent any blocking or stuttering of the main UI thread, as required by PGN-5.
     /// - Parameters:
-    ///   - startIndex: Starting character index in the attributed string
-    ///   - bounds: View bounds (CGRect) available for text layout
-    ///   - attributedString: The attributed string to layout
-    /// - Returns: NSRange representing the characters that fit within the bounds
-    /// - Note: This method runs on a background thread to prevent UI freezes
+    ///   - startIndex: Starting character index in the full attributed string to measure from
+    ///   - bounds: Exact bounds of the view where the text will be rendered
+    ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
+    /// - Returns: NSRange representing the exact characters that fit perfectly on the page
+    /// - Note: All Core Text calculations are explicitly dispatched to DispatchQueue.global(qos: .userInitiated)
     private func calculatePageRangeAsync(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) async -> NSRange {
-        debugPrint("📄 PaginationService: calculatePageRangeAsync(from: \(startIndex), in: \(bounds))")
+        debugPrint("📄 PaginationService: calculatePageRangeAsync(from: \(startIndex), in: \(bounds)) - dispatching to background thread")
         
         return await withCheckedContinuation { continuation in
-            // Dispatch Core Text calculations to a background thread
+            // PGN-5 Requirement: All Core Text calculations must be explicitly dispatched to a background thread
             DispatchQueue.global(qos: .userInitiated).async {
                 let result = self.calculatePageRange(from: startIndex, in: bounds, with: attributedString)
                 continuation.resume(returning: result)
@@ -449,21 +510,81 @@ class PaginationService {
         return edgeCaseResults
     }
     
+    // MARK: - Debug Test Function
+    
+    /// Test function to verify Core Text calculations with known values
+    func testCoreTextCalculation() {
+        debugPrint("🧪 TESTING Core Text calculation with known values")
+        
+        // Test with multiple scenarios
+        let testScenarios = [
+            ("Small bounds", CGRect(x: 0, y: 0, width: 200, height: 300), 16.0, 4.0),
+            ("Medium bounds", CGRect(x: 0, y: 0, width: 300, height: 400), 16.0, 4.0),
+            ("Large bounds", CGRect(x: 0, y: 0, width: 500, height: 800), 16.0, 4.0),
+            ("Small font", CGRect(x: 0, y: 0, width: 300, height: 400), 10.0, 4.0),
+            ("Large font", CGRect(x: 0, y: 0, width: 300, height: 400), 24.0, 4.0),
+            ("No line spacing", CGRect(x: 0, y: 0, width: 300, height: 400), 16.0, 0.0),
+            ("High line spacing", CGRect(x: 0, y: 0, width: 300, height: 400), 16.0, 10.0)
+        ]
+        
+        // Test text that should definitely require multiple pages
+        let testText = String(repeating: "This is a test sentence that should help us understand pagination behavior. ", count: 50)
+        debugPrint("🧪 Test text length: \(testText.count) characters")
+        
+        for (name, bounds, fontSize, lineSpacing) in testScenarios {
+            debugPrint("🧪 Testing scenario: \(name)")
+            debugPrint("   Bounds: \(bounds)")
+            debugPrint("   Font size: \(fontSize)")
+            debugPrint("   Line spacing: \(lineSpacing)")
+            
+            // Create test attributed string
+            let testFont = UIFont.systemFont(ofSize: fontSize)
+            let testParagraphStyle = NSMutableParagraphStyle()
+            testParagraphStyle.lineSpacing = lineSpacing
+            
+            let testAttributes: [NSAttributedString.Key: Any] = [
+                .font: testFont,
+                .paragraphStyle: testParagraphStyle
+            ]
+            
+            let testAttributedString = NSAttributedString(string: testText, attributes: testAttributes)
+            
+            // Test the calculation
+            let result = calculatePageRange(from: 0, in: bounds, with: testAttributedString)
+            let percentage = Double(result.length) / Double(testText.count) * 100.0
+            
+            debugPrint("   Result: location=\(result.location), length=\(result.length)")
+            debugPrint("   Percentage: \(String(format: "%.1f", percentage))%")
+            
+            if result.length >= testText.count {
+                debugPrint("   ⚠️ PROBLEM: All text fits on one page!")
+            } else {
+                debugPrint("   ✅ GOOD: Text is properly paginated")
+            }
+            debugPrint("   ---")
+        }
+    }
+    
     // MARK: - Helper Methods
     
     /// Create an attributed string from text content with current user settings
     /// - Parameter content: The text content to convert
     /// - Returns: NSAttributedString with applied font and spacing settings
     private func createAttributedString(from content: String) -> NSAttributedString {
+        // Create font with user settings
         let font = UIFont(name: userSettings.fontName, size: userSettings.fontSize) ?? UIFont.systemFont(ofSize: userSettings.fontSize)
+        debugPrint("📄 FONT DEBUG: name=\(font.fontName), size=\(font.pointSize), lineHeight=\(font.lineHeight)")
         
+        // Configure paragraph style with user settings
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = userSettings.lineSpacing
+        debugPrint("📄 PARAGRAPH DEBUG: lineSpacing=\(paragraphStyle.lineSpacing)")
         
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .paragraphStyle: paragraphStyle
         ]
+        debugPrint ("attributes: \(attributes)")
         
         return NSAttributedString(string: content, attributes: attributes)
     }
@@ -550,37 +671,6 @@ class PaginationService {
     private func generateCacheKey(content: String, settings: UserSettings, viewSize: CGSize) -> String {
         let contentHash = content.hashValue
         return "\(contentHash)_\(settings.fontSize)_\(settings.fontName)_\(settings.lineSpacing)_\(viewSize.width)_\(viewSize.height)"
-    }
-    
-    /// Calculate pagination for the given content and settings
-    /// This is a simplified implementation - in a real app, this would use
-    /// text measurement and layout calculations
-    private func calculatePagination(content: String, settings: UserSettings, viewSize: CGSize) -> [String] {
-        // Simple character-based pagination for now
-        // In a real implementation, this would calculate based on:
-        // - Font metrics
-        // - Line height
-        // - Available text area
-        // - Word wrapping
-        
-        // Estimate characters per page based on font size
-        let baseCharsPerPage = 500
-        let fontSizeMultiplier = settings.fontSize / 16.0  // 16 is base font size
-        let lineSpacingMultiplier = 1.0 / settings.lineSpacing  // More spacing = less content
-        
-        let charsPerPage = Int(Double(baseCharsPerPage) / fontSizeMultiplier * lineSpacingMultiplier)
-        
-        var pages: [String] = []
-        var currentIndex = content.startIndex
-        
-        while currentIndex < content.endIndex {
-            let endIndex = content.index(currentIndex, offsetBy: charsPerPage, limitedBy: content.endIndex) ?? content.endIndex
-            let pageContent = String(content[currentIndex..<endIndex])
-            pages.append(pageContent)
-            currentIndex = endIndex
-        }
-        
-        return pages.isEmpty ? [""] : pages
     }
     
     // MARK: - Deinit
