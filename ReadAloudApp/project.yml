@@ -10,10 +10,10 @@ targets:
     sources:
       # Only include compilable source code here
       - path: Sources/ReadAloudApp
-    resources:
-      # This is the correct, dedicated place for your resource folder.
-      # It ensures everything inside is copied to the app bundle.
-      - path: rsc
+      - path: Resources/SampleBooks
+        type: folder
+        buildPhase: resources
+        destination: Resources/SampleBooks
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.readAloud.ReadAloudApp
