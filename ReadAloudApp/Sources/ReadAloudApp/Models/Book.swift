@@ -52,12 +52,7 @@ public struct Book: Identifiable, Codable, Hashable {
     
     /// Get the String.Encoding for this book's text encoding
     public var stringEncoding: String.Encoding {
-        return Book.stringEncoding(for: textEncoding)
-    }
-    
-    /// Convert encoding name to String.Encoding
-    public static func stringEncoding(for encodingName: String) -> String.Encoding {
-        switch encodingName.uppercased() {
+        switch textEncoding.uppercased() {
         case "UTF-8":
             return .utf8
         case "UTF-16":
@@ -70,14 +65,9 @@ public struct Book: Identifiable, Codable, Hashable {
             return .isoLatin1
         case "WINDOWS-1252", "CP1252":
             return .windowsCP1252
-        case "SHIFT_JIS", "SHIFT-JIS":
-            return .shiftJIS
-        case "EUC-JP":
-            return .japaneseEUC
         case "GBK", "GB18030":
-            return .init(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        case "BIG5":
-            return .init(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.big5.rawValue)))
+            // GBK is a subset of GB18030, use CFStringEncoding
+            return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
         default:
             return .utf8 // Default fallback
         }

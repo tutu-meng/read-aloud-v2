@@ -326,7 +326,9 @@ class PaginationService {
             // Dispatch full layout calculation to a background thread
             DispatchQueue.global(qos: .userInitiated).async {
                 let result = self.calculateFullLayout(bounds: bounds, attributedString: attributedString)
-                continuation.resume(returning: result)
+                DispatchQueue.main.async {
+                    continuation.resume(returning: result)
+                }
             }
         }
     }
@@ -397,7 +399,9 @@ class PaginationService {
             // PGN-5 Requirement: All Core Text calculations must be explicitly dispatched to a background thread
             DispatchQueue.global(qos: .userInitiated).async {
                 let result = self.calculatePageRange(from: startIndex, in: bounds, with: attributedString)
-                continuation.resume(returning: result)
+                DispatchQueue.main.async {
+                    continuation.resume(returning: result)
+                }
             }
         }
     }

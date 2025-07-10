@@ -121,6 +121,43 @@ public class FileProcessor {
         return book
     }
     
+    // MARK: - Book Creation Methods
+    
+    /// Create a book from a file URL with a specific encoding
+    /// - Parameters:
+    ///   - url: The file URL
+    ///   - encoding: The specific encoding to use
+    /// - Returns: A Book instance
+    /// - Throws: AppError if the file cannot be processed
+    public func createBook(from url: URL, encoding: String) async throws -> Book {
+        debugPrint("📄 FileProcessor: Creating book with specific encoding: \(encoding)")
+        
+        do {
+            // Get file info
+            let fileSize = try getFileSize(for: url)
+            let title = url.deletingPathExtension().lastPathComponent
+            
+            // Create content hash
+            let contentHash = try await generateContentHash(for: url)
+            
+            // Create book with specified encoding
+            let book = Book(
+                title: title,
+                fileURL: url,
+                contentHash: contentHash,
+                fileSize: fileSize,
+                textEncoding: encoding
+            )
+            
+            debugPrint("✅ FileProcessor: Book created successfully with \(encoding) encoding")
+            return book
+            
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to create book: \(error)")
+            throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
+        }
+    }
+    
     /// Extract text content from a file using the specified encoding
     /// - Parameters:
     ///   - url: The file URL to read
@@ -214,7 +251,7 @@ public class FileProcessor {
     
     // MARK: - Encoding Detection Methods
     
-    /// Detect the best encoding for a text file using a fallback chain
+    /// Detect the best encoding for a text file using a comprehensive approach
     /// - Parameter url: The file URL to analyze
     /// - Returns: The name of the best encoding found
     /// - Throws: AppError if file cannot be read
@@ -222,48 +259,110 @@ public class FileProcessor {
         debugPrint("🔍 FileProcessor: Detecting encoding for: \(url.lastPathComponent)")
         
         do {
-            // Read a sample of the file for encoding detection (first 8KB should be enough)
-            let sampleData = try Data(contentsOf: url).prefix(8192)
+            // Read a sample of the file for encoding detection (16KB should be sufficient)
+            let sampleData = try Data(contentsOf: url).prefix(16384)
             
-            // Try encodings in order of preference
-            let encodingsToTry: [(String, String.Encoding)] = [
-                ("UTF-8", .utf8),
-                ("UTF-16", .utf16),
-                ("ASCII", .ascii),
-                ("ISO-8859-1", .isoLatin1),
-                ("Windows-1252", .windowsCP1252),
-                ("Shift_JIS", .shiftJIS),
-                ("EUC-JP", .japaneseEUC)
+            // Step 1: Check for BOM (Byte Order Mark) - most reliable
+            if let bomEncoding = detectBOMEncoding(from: sampleData) {
+                debugPrint("✅ FileProcessor: BOM detected, using encoding: \(bomEncoding)")
+                return bomEncoding
+            }
+            
+            // Step 2: Try GBK first - if it contains Chinese characters, it's GBK
+            let gbkEncoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+            if let gbkString = String(data: sampleData, encoding: gbkEncoding),
+               !gbkString.contains("\u{FFFD}"), // No replacement characters
+               containsChineseCharacters(gbkString) {
+                debugPrint("✅ FileProcessor: Chinese characters detected, using GBK encoding")
+                return "GBK"
+            }
+            
+            // Step 3: Try other common encodings for English text
+            let encodingsToTry: [(String.Encoding, String)] = [
+                (.utf8, "UTF-8"),                    // Most common for modern files
+                (.utf16, "UTF-16"),                  // Common for Windows files
+                (.windowsCP1252, "Windows-1252"),    // Common for English Windows files
+                (.isoLatin1, "ISO-8859-1")          // Fallback for basic Latin
             ]
             
-            for (encodingName, encoding) in encodingsToTry {
-                if let _ = String(data: sampleData, encoding: encoding) {
-                    debugPrint("✅ FileProcessor: Successfully detected encoding: \(encodingName)")
-                    return encodingName
+            for (encoding, name) in encodingsToTry {
+                if let string = String(data: sampleData, encoding: encoding),
+                   !string.contains("\u{FFFD}"), // No replacement characters
+                   !hasExcessiveControlCharacters(string) {
+                    debugPrint("✅ FileProcessor: Valid encoding detected: \(name)")
+                    return name
                 }
             }
             
-            // If no encoding works, try more exotic ones
-            let exoticEncodings: [(String, String.Encoding)] = [
-                ("GBK", Book.stringEncoding(for: "GBK")),
-                ("Big5", Book.stringEncoding(for: "Big5"))
-            ]
-            
-            for (encodingName, encoding) in exoticEncodings {
-                if let _ = String(data: sampleData, encoding: encoding) {
-                    debugPrint("✅ FileProcessor: Successfully detected exotic encoding: \(encodingName)")
-                    return encodingName
-                }
-            }
-            
-            // Last resort: default to UTF-8
-            debugPrint("⚠️ FileProcessor: Could not detect encoding, defaulting to UTF-8")
+            // Fallback to UTF-8
+            debugPrint("⚠️ FileProcessor: No optimal encoding found, defaulting to UTF-8")
             return "UTF-8"
             
         } catch {
-            debugPrint("❌ FileProcessor: Failed to read file for encoding detection: \(error)")
+            debugPrint("❌ FileProcessor: Error during encoding detection: \(error)")
             throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
         }
+    }
+    
+    /// Detect BOM (Byte Order Mark) from data
+    /// - Parameter data: The data to check for BOM
+    /// - Returns: Encoding name if BOM is found, nil otherwise
+    private func detectBOMEncoding(from data: Data) -> String? {
+        guard data.count >= 2 else { return nil }
+        
+        // UTF-8 BOM: EF BB BF
+        if data.count >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
+            return "UTF-8"
+        }
+        
+        // UTF-16 Little Endian BOM: FF FE
+        if data[0] == 0xFF && data[1] == 0xFE {
+            return "UTF-16"
+        }
+        
+        // UTF-16 Big Endian BOM: FE FF
+        if data[0] == 0xFE && data[1] == 0xFF {
+            return "UTF-16"
+        }
+        
+        // UTF-32 Little Endian BOM: FF FE 00 00
+        if data.count >= 4 && data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00 {
+            return "UTF-32"
+        }
+        
+        // UTF-32 Big Endian BOM: 00 00 FE FF
+        if data.count >= 4 && data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xFE && data[3] == 0xFF {
+            return "UTF-32"
+        }
+        
+        return nil
+    }
+    
+    /// Check if string contains Chinese characters
+    /// - Parameter string: The string to check
+    /// - Returns: True if Chinese characters are found
+    private func containsChineseCharacters(_ string: String) -> Bool {
+        return string.contains { char in
+            let scalar = char.unicodeScalars.first!
+            return (scalar.value >= 0x4E00 && scalar.value <= 0x9FFF) || // CJK Unified Ideographs
+                   (scalar.value >= 0x3400 && scalar.value <= 0x4DBF)    // CJK Extension A
+        }
+    }
+    
+    /// Check if string has excessive control characters
+    /// - Parameter string: The string to check
+    /// - Returns: True if too many control characters are found
+    private func hasExcessiveControlCharacters(_ string: String) -> Bool {
+        let controlCharacterCount = string.filter { char in
+            let unicodeScalar = char.unicodeScalars.first!
+            return unicodeScalar.properties.generalCategory == .control && 
+                   unicodeScalar.value != 9 &&  // tab
+                   unicodeScalar.value != 10 && // newline
+                   unicodeScalar.value != 13    // carriage return
+        }.count
+        
+        let controlRatio = Double(controlCharacterCount) / Double(string.count)
+        return controlRatio > 0.1 // More than 10% control characters
     }
     
     /// Validate that a file can be properly decoded with the specified encoding
@@ -276,16 +375,18 @@ public class FileProcessor {
         
         do {
             // Read a sample of the file
-            let sampleData = try Data(contentsOf: url).prefix(8192)
+            let sampleData = try Data(contentsOf: url).prefix(16384)
             
-            // Try to decode with the specified encoding
-            if let _ = String(data: sampleData, encoding: encoding) {
-                debugPrint("✅ FileProcessor: Encoding validation successful")
-                return true
-            } else {
-                debugPrint("❌ FileProcessor: Encoding validation failed")
+            // Simple validation - check if string can be created without replacement characters
+            guard let string = String(data: sampleData, encoding: encoding) else {
+                debugPrint("❌ FileProcessor: Cannot create string with specified encoding")
                 return false
             }
+            
+            // Check for replacement characters and excessive control characters
+            let isValid = !string.contains("\u{FFFD}") && !hasExcessiveControlCharacters(string)
+            debugPrint(isValid ? "✅ FileProcessor: Encoding validation successful" : "❌ FileProcessor: Encoding validation failed")
+            return isValid
         } catch {
             debugPrint("❌ FileProcessor: Error during encoding validation: \(error)")
             return false
@@ -419,20 +520,31 @@ public class FileProcessor {
         return uniqueURL
     }
     
-    /// Get the file size for a given URL
+    /// Get file size for a URL
     /// - Parameter url: The file URL
     /// - Returns: File size in bytes
-    /// - Throws: AppError if file attributes cannot be read
+    /// - Throws: AppError if file cannot be accessed
     private func getFileSize(for url: URL) throws -> Int64 {
-        do {
-            let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
-            guard let fileSize = fileAttributes[.size] as? Int64 else {
-                throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: nil)
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        return attributes[.size] as? Int64 ?? 0
+    }
+    
+    /// Generate SHA256 hash for file content
+    /// - Parameter url: The file URL
+    /// - Returns: SHA256 hash string
+    /// - Throws: AppError if file cannot be read
+    private func generateContentHash(for url: URL) async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    let data = try Data(contentsOf: url)
+                    let hash = SHA256.hash(data: data)
+                    let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+                    continuation.resume(returning: hashString)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
             }
-            return fileSize
-        } catch {
-            debugPrint("❌ FileProcessor: Failed to get file size for: \(url.path) - \(error)")
-            throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
         }
     }
 } 

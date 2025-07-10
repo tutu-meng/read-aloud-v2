@@ -19,16 +19,25 @@ class LibraryViewModel: ObservableObject {
     private let coordinator: AppCoordinator
     private var cancellables = Set<AnyCancellable>()
     
+    // MARK: - Encoding Selection Properties
+    @Published var showingEncodingSelection = false
+    @Published var bookPendingEncoding: (url: URL, title: String)?
+    
     // MARK: - Initialization
     init(coordinator: AppCoordinator) {
         self.coordinator = coordinator
         setupObservers()
-        loadBooks()
+        
+        // Load books asynchronously
+        Task { @MainActor in
+            loadBooks()
+        }
     }
     
     // MARK: - Methods
     
     /// Load books from storage
+    @MainActor
     func loadBooks() {
         isLoading = true
         
@@ -107,10 +116,6 @@ class LibraryViewModel: ObservableObject {
         // Calculate content hash
         let contentHash = try await calculateContentHash(for: fileURL)
         
-        // Detect encoding using FileProcessor
-        let fileProcessor = FileProcessor()
-        let detectedEncoding = try await fileProcessor.detectBestEncoding(for: fileURL)
-        
         // Create book title from filename
         let title = fileURL.deletingPathExtension().lastPathComponent
         
@@ -121,7 +126,7 @@ class LibraryViewModel: ObservableObject {
             contentHash: contentHash,
             importedDate: creationDate,
             fileSize: fileSize,
-            textEncoding: detectedEncoding
+            textEncoding: "UTF-8" // Default to UTF-8, user will be asked to select if needed
         )
     }
     
@@ -156,6 +161,7 @@ class LibraryViewModel: ObservableObject {
     }
     
     /// Load sample book as fallback
+    @MainActor
     private func loadSampleBook() {
         books = [createSampleBook()]
     }
@@ -165,40 +171,148 @@ class LibraryViewModel: ObservableObject {
         coordinator.navigateToReader(with: book)
     }
     
-    /// Handle file import from document picker
-    func handleFileImport(_ fileURL: URL) {
-        coordinator.handleFileImport(fileURL)
+    /// Remove a book from the library
+    /// - Parameters:
+    ///   - book: The book to remove
+    ///   - deleteFile: Whether to delete the associated file (default: false)
+    @MainActor
+    func removeBook(_ book: Book, deleteFile: Bool = false) {
+        debugPrint("📚 LibraryViewModel: Removing book: \(book.title)")
+        
+        // Remove from books array
+        books.removeAll { $0.id == book.id }
+        
+        // Optionally delete the file
+        if deleteFile {
+            deleteBookFile(book)
+        }
+        
+        debugPrint("✅ LibraryViewModel: Book removed successfully")
     }
     
-    /// Add a new book to the library
-    /// - Parameter book: The book to add
+    /// Remove multiple books from the library
+    /// - Parameters:
+    ///   - booksToRemove: Array of books to remove
+    ///   - deleteFiles: Whether to delete the associated files (default: false)
     @MainActor
-    func addBook(_ book: Book) {
-        debugPrint("📚 LibraryViewModel: Adding book: \(book.title)")
+    func removeBooks(_ booksToRemove: [Book], deleteFiles: Bool = false) {
+        debugPrint("📚 LibraryViewModel: Removing \(booksToRemove.count) books")
         
-        // Check if book already exists (by content hash)
-        if !books.contains(where: { $0.contentHash == book.contentHash }) {
-            books.append(book)
-            debugPrint("✅ LibraryViewModel: Book added successfully")
+        let idsToRemove = Set(booksToRemove.map { $0.id })
+        books.removeAll { idsToRemove.contains($0.id) }
+        
+        // Optionally delete the files
+        if deleteFiles {
+            for book in booksToRemove {
+                deleteBookFile(book)
+            }
+        }
+        
+        debugPrint("✅ LibraryViewModel: \(booksToRemove.count) books removed successfully")
+    }
+    
+    /// Delete the file associated with a book
+    /// - Parameter book: The book whose file should be deleted
+    private func deleteBookFile(_ book: Book) {
+        do {
+            // Only delete files in the Documents directory (imported files)
+            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let bookFileURL = book.fileURL
             
-            // Sort books by import date (newest first)
-            books.sort { $0.importedDate > $1.importedDate }
-        } else {
-            debugPrint("⚠️ LibraryViewModel: Book already exists with same content hash")
+            // Check if the file is in the Documents directory
+            if bookFileURL.path.hasPrefix(documentsURL.path) {
+                try FileManager.default.removeItem(at: bookFileURL)
+                debugPrint("🗑️ LibraryViewModel: Deleted file: \(bookFileURL.lastPathComponent)")
+            } else {
+                debugPrint("⚠️ LibraryViewModel: Skipping file deletion for non-imported file: \(bookFileURL.lastPathComponent)")
+            }
+        } catch {
+            debugPrint("❌ LibraryViewModel: Failed to delete file for book '\(book.title)': \(error)")
         }
     }
     
-    /// Refresh the book list by reloading from storage
-    func refreshBooks() {
-        debugPrint("🔄 LibraryViewModel: Refreshing book list")
-        loadBooks()
+    // MARK: - Encoding Selection Methods
+    
+    /// Handle file import from document picker
+    /// - Parameter fileURL: The selected file URL
+    @MainActor
+    func handleFileImport(_ fileURL: URL) {
+        debugPrint("📚 LibraryViewModel: Handling file import: \(fileURL.lastPathComponent)")
+        
+        let bookTitle = fileURL.deletingPathExtension().lastPathComponent
+        
+        // Check if this book already exists (by checking if we've processed this file before)
+        let existingBook = books.first { book in
+            book.title == bookTitle || book.fileURL.lastPathComponent == fileURL.lastPathComponent
+        }
+        
+        if let existingBook = existingBook {
+            // Book already exists, navigate to it directly
+            debugPrint("📚 LibraryViewModel: Book already exists, navigating to existing book")
+            coordinator.navigateToReader(with: existingBook)
+        } else {
+            // New book, show encoding selection
+            debugPrint("📚 LibraryViewModel: New book, showing encoding selection")
+            bookPendingEncoding = (url: fileURL, title: bookTitle)
+            showingEncodingSelection = true
+        }
     }
     
-    /// Remove a book from the library
-    /// - Parameter book: The book to remove
-    func removeBook(_ book: Book) {
-        books.removeAll { $0.id == book.id }
-        debugPrint("🗑️ LibraryViewModel: Removed book: \(book.title)")
+    /// Handle encoding selection for a pending book
+    /// - Parameter encoding: The selected encoding
+    @MainActor
+    func handleEncodingSelection(_ encoding: String) {
+        guard let pendingBook = bookPendingEncoding else {
+            debugPrint("❌ LibraryViewModel: No pending book for encoding selection")
+            return
+        }
+        
+        debugPrint("📚 LibraryViewModel: Creating book with encoding: \(encoding)")
+        
+        Task {
+            do {
+                let book = try await createBook(from: pendingBook.url, with: encoding)
+                await MainActor.run {
+                    self.books.append(book)
+                    self.books.sort { $0.importedDate > $1.importedDate }
+                    coordinator.navigateToReader(with: book)
+                    clearEncodingSelection()
+                }
+            } catch {
+                await MainActor.run {
+                    debugPrint("❌ LibraryViewModel: Failed to create book: \(error)")
+                    clearEncodingSelection()
+                }
+            }
+        }
+    }
+    
+    /// Cancel encoding selection
+    @MainActor
+    func cancelEncodingSelection() {
+        clearEncodingSelection()
+    }
+    
+    /// Clear encoding selection state
+    @MainActor
+    private func clearEncodingSelection() {
+        showingEncodingSelection = false
+        bookPendingEncoding = nil
+    }
+    
+    /// Create a book from URL with specified encoding
+    /// - Parameters:
+    ///   - url: The file URL
+    ///   - encoding: The text encoding to use
+    /// - Returns: The created Book
+    private func createBook(from url: URL, with encoding: String) async throws -> Book {
+        let fileProcessor = FileProcessor()
+        
+        // Create book with specified encoding
+        let book = try await fileProcessor.createBook(from: url, encoding: encoding)
+        
+        debugPrint("✅ LibraryViewModel: Book created successfully with \(encoding) encoding")
+        return book
     }
     
     // MARK: - Private Methods
@@ -210,9 +324,9 @@ class LibraryViewModel: ObservableObject {
             .compactMap { $0.userInfo?["book"] as? Book }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] book in
+                // Already on main thread due to receive(on:)
                 Task { @MainActor in
-                    // Refresh the entire book list to ensure we have the most up-to-date data
-                    self?.refreshBooks()
+                    self?.loadBooks()
                 }
             }
             .store(in: &cancellables)
