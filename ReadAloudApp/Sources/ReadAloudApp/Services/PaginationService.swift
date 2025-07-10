@@ -217,34 +217,6 @@ class PaginationService {
         
         // BOUNDS VALIDATION AND CORRECTION
         var correctedBounds = bounds
-        
-        // Validate and correct unrealistic bounds
-        if bounds.height > 1000 {
-            debugPrint("⚠️ BOUNDS CORRECTION: Height \(bounds.height) is too large, capping at 600")
-            correctedBounds.size.height = 600
-        }
-        
-        if bounds.width > 500 {
-            debugPrint("⚠️ BOUNDS CORRECTION: Width \(bounds.width) is too large, capping at 375")
-            correctedBounds.size.width = 375
-        }
-        
-        if bounds.width < 200 {
-            debugPrint("⚠️ BOUNDS CORRECTION: Width \(bounds.width) is too small, setting to 300")
-            correctedBounds.size.width = 300
-        }
-        
-        if bounds.height < 300 {
-            debugPrint("⚠️ BOUNDS CORRECTION: Height \(bounds.height) is too small, setting to 400")
-            correctedBounds.size.height = 400
-        }
-        
-        if correctedBounds != bounds {
-            debugPrint("📄 CORRECTED BOUNDS: \(correctedBounds)")
-        }
-        
-        debugPrint("attributedString: \(attributedString.attributes(at: 0, effectiveRange: nil))")
-        
         // Validate input parameters
         guard correctedBounds.width > 0, correctedBounds.height > 0 else {
             debugPrint("⚠️ PaginationService: Invalid bounds provided")
@@ -372,7 +344,8 @@ class PaginationService {
         debugPrint("📄 PaginationService: No cached layout found, calculating full layout")
         
         // Create attributed string with user settings
-        let attributedString = createAttributedString(from: fullText)
+        let my_pageview = PageView(content: fullText, pageIndex: 0)
+        let attributedString = my_pageview.createAttributedString(from: fullText, settings: userSettings)
         
         // Calculate the full layout asynchronously
         let pageRanges = await calculateFullLayoutAsync(bounds: bounds, attributedString: attributedString)
@@ -445,148 +418,6 @@ class PaginationService {
         
         debugPrint("📄 PaginationService: Calculated \(ranges.count) page ranges")
         return ranges
-    }
-    
-    // MARK: - PGN-5 Validation Methods
-    
-    /// Validate the accuracy of calculatePageRange function with different parameters (PGN-5)
-    /// This method tests the Core Text implementation with various settings to ensure precision
-    /// - Parameter testText: Sample text to use for testing
-    /// - Returns: Array of validation results for different test scenarios
-    private func validateCalculatePageRangeAccuracy(with testText: String) -> [String] {
-        var validationResults: [String] = []
-        
-        // Test scenarios with different font sizes
-        let testScenarios: [(fontSize: CGFloat, bounds: CGRect, description: String)] = [
-            (12.0, CGRect(x: 0, y: 0, width: 300, height: 400), "Small font, standard bounds"),
-            (16.0, CGRect(x: 0, y: 0, width: 300, height: 400), "Medium font, standard bounds"),
-            (20.0, CGRect(x: 0, y: 0, width: 300, height: 400), "Large font, standard bounds"),
-            (16.0, CGRect(x: 0, y: 0, width: 200, height: 300), "Medium font, narrow bounds"),
-            (16.0, CGRect(x: 0, y: 0, width: 400, height: 500), "Medium font, wide bounds")
-        ]
-        
-        for scenario in testScenarios {
-            // Create attributed string with specific font size
-            let font = UIFont.systemFont(ofSize: scenario.fontSize)
-            let attributes: [NSAttributedString.Key: Any] = [.font: font]
-            let attributedString = NSAttributedString(string: testText, attributes: attributes)
-            
-            // Test the function
-            let result = calculatePageRange(from: 0, in: scenario.bounds, with: attributedString)
-            
-            // Calculate expected vs actual
-            let expectedRange = "Expected range validation for \(scenario.description)"
-            let actualRange = "Actual: location=\(result.location), length=\(result.length)"
-            
-            validationResults.append("\(expectedRange) - \(actualRange)")
-        }
-        
-        return validationResults
-    }
-    
-    /// Test calculatePageRange with edge cases (PGN-5)
-    /// - Parameter testText: Sample text to use for testing
-    /// - Returns: Array of edge case test results
-    private func validateCalculatePageRangeEdgeCases(with testText: String) -> [String] {
-        var edgeCaseResults: [String] = []
-        
-        let font = UIFont.systemFont(ofSize: 16.0)
-        let attributes: [NSAttributedString.Key: Any] = [.font: font]
-        let attributedString = NSAttributedString(string: testText, attributes: attributes)
-        
-        // Test edge cases
-        let edgeCases: [(startIndex: Int, bounds: CGRect, description: String)] = [
-            (0, CGRect(x: 0, y: 0, width: 50, height: 50), "Very small bounds"),
-            (0, CGRect(x: 0, y: 0, width: 1000, height: 1000), "Very large bounds"),
-            (testText.count - 10, CGRect(x: 0, y: 0, width: 300, height: 400), "Near end of text"),
-            (0, CGRect(x: 0, y: 0, width: 300, height: 20), "Very short height")
-        ]
-        
-        for edgeCase in edgeCases {
-            let result = calculatePageRange(from: edgeCase.startIndex, in: edgeCase.bounds, with: attributedString)
-            edgeCaseResults.append("\(edgeCase.description): location=\(result.location), length=\(result.length)")
-        }
-        
-        return edgeCaseResults
-    }
-    
-    // MARK: - Debug Test Function
-    
-    /// Test function to verify Core Text calculations with known values
-    func testCoreTextCalculation() {
-        debugPrint("🧪 TESTING Core Text calculation with known values")
-        
-        // Test with multiple scenarios
-        let testScenarios = [
-            ("Small bounds", CGRect(x: 0, y: 0, width: 200, height: 300), 16.0, 4.0),
-            ("Medium bounds", CGRect(x: 0, y: 0, width: 300, height: 400), 16.0, 4.0),
-            ("Large bounds", CGRect(x: 0, y: 0, width: 500, height: 800), 16.0, 4.0),
-            ("Small font", CGRect(x: 0, y: 0, width: 300, height: 400), 10.0, 4.0),
-            ("Large font", CGRect(x: 0, y: 0, width: 300, height: 400), 24.0, 4.0),
-            ("No line spacing", CGRect(x: 0, y: 0, width: 300, height: 400), 16.0, 0.0),
-            ("High line spacing", CGRect(x: 0, y: 0, width: 300, height: 400), 16.0, 10.0)
-        ]
-        
-        // Test text that should definitely require multiple pages
-        let testText = String(repeating: "This is a test sentence that should help us understand pagination behavior. ", count: 50)
-        debugPrint("🧪 Test text length: \(testText.count) characters")
-        
-        for (name, bounds, fontSize, lineSpacing) in testScenarios {
-            debugPrint("🧪 Testing scenario: \(name)")
-            debugPrint("   Bounds: \(bounds)")
-            debugPrint("   Font size: \(fontSize)")
-            debugPrint("   Line spacing: \(lineSpacing)")
-            
-            // Create test attributed string
-            let testFont = UIFont.systemFont(ofSize: fontSize)
-            let testParagraphStyle = NSMutableParagraphStyle()
-            testParagraphStyle.lineSpacing = lineSpacing
-            
-            let testAttributes: [NSAttributedString.Key: Any] = [
-                .font: testFont,
-                .paragraphStyle: testParagraphStyle
-            ]
-            
-            let testAttributedString = NSAttributedString(string: testText, attributes: testAttributes)
-            
-            // Test the calculation
-            let result = calculatePageRange(from: 0, in: bounds, with: testAttributedString)
-            let percentage = Double(result.length) / Double(testText.count) * 100.0
-            
-            debugPrint("   Result: location=\(result.location), length=\(result.length)")
-            debugPrint("   Percentage: \(String(format: "%.1f", percentage))%")
-            
-            if result.length >= testText.count {
-                debugPrint("   ⚠️ PROBLEM: All text fits on one page!")
-            } else {
-                debugPrint("   ✅ GOOD: Text is properly paginated")
-            }
-            debugPrint("   ---")
-        }
-    }
-    
-    // MARK: - Helper Methods
-    
-    /// Create an attributed string from text content with current user settings
-    /// - Parameter content: The text content to convert
-    /// - Returns: NSAttributedString with applied font and spacing settings
-    private func createAttributedString(from content: String) -> NSAttributedString {
-        // Create font with user settings
-        let font = UIFont(name: userSettings.fontName, size: userSettings.fontSize) ?? UIFont.systemFont(ofSize: userSettings.fontSize)
-        debugPrint("📄 FONT DEBUG: name=\(font.fontName), size=\(font.pointSize), lineHeight=\(font.lineHeight)")
-        
-        // Configure paragraph style with user settings
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = userSettings.lineSpacing
-        debugPrint("📄 PARAGRAPH DEBUG: lineSpacing=\(paragraphStyle.lineSpacing)")
-        
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .paragraphStyle: paragraphStyle
-        ]
-        debugPrint ("attributes: \(attributes)")
-        
-        return NSAttributedString(string: content, attributes: attributes)
     }
     
     /// Generate a unique cache key for full layout calculation (PGN-3)

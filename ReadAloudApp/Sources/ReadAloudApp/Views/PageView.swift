@@ -11,7 +11,7 @@ import UIKit
 /// PageView displays a single page of content using UITextView for advanced text manipulation
 /// This UIViewRepresentable wrapper provides access to UITextView's NSLayoutManager and NSTextStorage
 /// which are essential for text-to-speech highlighting functionality
-struct PageView: UIViewRepresentable {
+public struct PageView: UIViewRepresentable {
     let content: String
     let pageIndex: Int
     
@@ -20,7 +20,7 @@ struct PageView: UIViewRepresentable {
     
     // MARK: - UIViewRepresentable
     
-    func makeUIView(context: Context) -> UITextView {
+    public func makeUIView(context: Context) -> UITextView {
         let textView = UITextView()
         
         // Configure as read-only
@@ -34,7 +34,7 @@ struct PageView: UIViewRepresentable {
         return textView
     }
     
-    func updateUIView(_ uiView: UITextView, context: Context) {
+    public func updateUIView(_ uiView: UITextView, context: Context) {
         // Update appearance if settings changed
         configureTextView(uiView, with: appCoordinator.userSettings)
         
@@ -43,23 +43,7 @@ struct PageView: UIViewRepresentable {
         uiView.attributedText = attributedString
     }
     
-    // MARK: - Private Methods
-    
-    /// Configure UITextView with user settings
-    private func configureTextView(_ textView: UITextView, with settings: UserSettings) {
-        // Configure appearance
-        textView.backgroundColor = getBackgroundColor(for: settings.theme)
-        textView.textColor = getTextColor(for: settings.theme)
-        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-        
-        // Configure text container
-        textView.textContainer.lineFragmentPadding = 0
-        textView.textContainer.maximumNumberOfLines = 0
-        textView.textContainer.lineBreakMode = .byWordWrapping
-    }
-    
-    /// Create attributed string with user settings
-    private func createAttributedString(from text: String, settings: UserSettings) -> NSAttributedString {
+    func createAttributedString(from text: String, settings: UserSettings) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: text)
         
         // Get font based on settings
@@ -78,6 +62,19 @@ struct PageView: UIViewRepresentable {
         attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRange)
         
         return attributedString
+    }
+    
+    /// Configure UITextView with user settings
+    private func configureTextView(_ textView: UITextView, with settings: UserSettings) {
+        // Configure appearance
+        textView.backgroundColor = getBackgroundColor(for: settings.theme)
+        textView.textColor = getTextColor(for: settings.theme)
+        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        
+        // Configure text container
+        textView.textContainer.lineFragmentPadding = 0
+        textView.textContainer.maximumNumberOfLines = 0
+        textView.textContainer.lineBreakMode = .byWordWrapping
     }
     
     /// Get UIFont based on font name and size

@@ -29,6 +29,7 @@ class ReaderViewModel: ObservableObject {
     private var bookPages: [String] = []
     private var fullBookContent: String = ""
     private var currentViewSize: CGSize = .zero
+    private var currentContentSize: CGSize = .zero
     private var currentTextSource: TextSource?
     private var currentPaginationService: PaginationService?
     
@@ -92,7 +93,7 @@ class ReaderViewModel: ObservableObject {
             ).paginateText(
                 content: fullBookContent,
                 settings: coordinator.userSettings,
-                viewSize: currentViewSize
+                viewSize: currentContentSize
             )
             
             totalPages = bookPages.count
@@ -112,6 +113,7 @@ class ReaderViewModel: ObservableObject {
         guard size != currentViewSize else { return }
         
         currentViewSize = size
+        currentContentSize = CGSize(width: size.width, height: size.height - 100)
         
         // Re-paginate if we have content (now async)
         if currentTextSource != nil {
@@ -157,7 +159,7 @@ class ReaderViewModel: ObservableObject {
                     let pages = await self.currentPaginationService?.paginateText(
                         content: content,
                         settings: self.coordinator.userSettings,
-                        viewSize: CGSize(width: 375, height: 600) // Default iPhone size
+                        viewSize: self.currentContentSize // Default iPhone size
                     ) ?? []
                     
                     await MainActor.run {
