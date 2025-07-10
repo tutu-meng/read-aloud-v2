@@ -11,6 +11,7 @@ import Combine
 // MARK: - Notification Names
 extension Notification.Name {
     static let bookAdded = Notification.Name("bookAdded")
+    static let bookRemoved = Notification.Name("bookRemoved")
 }
 
 /// AppCoordinator manages the overall application flow and dependencies
@@ -197,24 +198,6 @@ class AppCoordinator: ObservableObject {
         }
     }
     
-    /// Add a book to the library and notify observers
-    /// - Parameter book: The book to add
-    @MainActor
-    private func addBookToLibrary(_ book: Book) async {
-        debugPrint("📚 AppCoordinator: Adding book to library: \(book.title)")
-        
-        // TODO: This will be enhanced when we implement persistent storage
-        // For now, we'll use a simple in-memory approach
-        
-        // Notify the LibraryViewModel to add the book
-        // This is a temporary solution until we implement proper persistence
-        NotificationCenter.default.post(
-            name: .bookAdded,
-            object: nil,
-            userInfo: ["book": book]
-        )
-    }
-    
     // MARK: - Error Handling
     
     /// Handle application-wide errors
@@ -317,6 +300,105 @@ class AppCoordinator: ObservableObject {
     /// - Returns: ReadingProgress if found, nil otherwise
     func getReadingProgress(for bookID: String) -> ReadingProgress? {
         return readingProgressList.first { $0.bookID == bookID }
+    }
+    
+    // MARK: - Book Library Persistence Methods
+    
+    /// Save book library to persistence
+    /// - Parameter books: Array of books to save
+    func saveBookLibrary(_ books: [Book]) {
+        debugPrint("💾 AppCoordinator: Saving book library (\(books.count) books) to persistence")
+        
+        Task {
+            do {
+                try persistenceService.saveBookLibrary(books)
+                debugPrint("✅ AppCoordinator: Book library saved successfully")
+            } catch {
+                debugPrint("❌ AppCoordinator: Failed to save book library: \(error)")
+                await MainActor.run {
+                    self.handleError(error)
+                }
+            }
+        }
+    }
+    
+    /// Load book library from persistence
+    /// - Returns: Array of books from persistence, validated to ensure files still exist
+    func loadBookLibrary() async -> [Book] {
+        debugPrint("📖 AppCoordinator: Loading book library from persistence")
+        
+        do {
+            let books = try persistenceService.loadBookLibrary()
+            let validBooks = persistenceService.validateBookLibrary(books)
+            
+            // If some books were filtered out, save the cleaned library
+            if validBooks.count != books.count {
+                saveBookLibrary(validBooks)
+            }
+            
+            debugPrint("✅ AppCoordinator: Loaded \(validBooks.count) valid books from library")
+            return validBooks
+            
+        } catch {
+            debugPrint("❌ AppCoordinator: Failed to load book library: \(error)")
+            await MainActor.run {
+                self.handleError(error)
+            }
+            return []
+        }
+    }
+    
+    /// Add a book to the library and save to persistence
+    /// - Parameter book: The book to add
+    func addBookToLibrary(_ book: Book) async {
+        debugPrint("📚 AppCoordinator: Adding book to library: \(book.title)")
+        
+        // Load current library
+        var currentLibrary = await loadBookLibrary()
+        
+        // Check if book already exists (by content hash)
+        if !currentLibrary.contains(where: { $0.contentHash == book.contentHash }) {
+            currentLibrary.append(book)
+            currentLibrary.sort { $0.importedDate > $1.importedDate }
+            
+            // Save updated library
+            saveBookLibrary(currentLibrary)
+            
+            // Notify observers
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .bookAdded,
+                    object: nil,
+                    userInfo: ["book": book]
+                )
+            }
+        } else {
+            debugPrint("📚 AppCoordinator: Book already exists in library")
+        }
+    }
+    
+    /// Remove a book from the library and save to persistence
+    /// - Parameter book: The book to remove
+    func removeBookFromLibrary(_ book: Book) async {
+        debugPrint("📚 AppCoordinator: Removing book from library: \(book.title)")
+        
+        // Load current library
+        var currentLibrary = await loadBookLibrary()
+        
+        // Remove the book
+        currentLibrary.removeAll { $0.id == book.id }
+        
+        // Save updated library
+        saveBookLibrary(currentLibrary)
+        
+        // Notify observers
+        await MainActor.run {
+            NotificationCenter.default.post(
+                name: .bookRemoved,
+                object: nil,
+                userInfo: ["book": book]
+            )
+        }
     }
     
     // MARK: - Private Methods

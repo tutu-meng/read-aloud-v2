@@ -19,6 +19,9 @@ class PersistenceService {
     /// Filename for ReadingProgress storage in Application Support directory
     private static let readingProgressFileName = "ReadingProgress.json"
     
+    /// Filename for Book Library storage in Application Support directory
+    private static let bookLibraryFileName = "BookLibrary.json"
+    
     // MARK: - Shared Instance
     
     /// Shared singleton instance
@@ -122,6 +125,77 @@ class PersistenceService {
             throw PersistenceError.decodingFailed(underlyingError: error)
         }
     }
+
+    // MARK: - Book Library Persistence
+
+    /// Save array of Book objects to a JSON file in Application Support directory
+    /// - Parameter books: Array of Book objects to save
+    /// - Throws: PersistenceError if encoding, directory creation, or file writing fails
+    func saveBookLibrary(_ books: [Book]) throws {
+        debugPrint("💾 PersistenceService: Saving \(books.count) Book entries")
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(books)
+            
+            let fileURL = try getBookLibraryFileURL()
+            try data.write(to: fileURL)
+            
+            debugPrint("✅ PersistenceService: Book library saved to \(fileURL.path)")
+        } catch {
+            debugPrint("❌ PersistenceService: Failed to save book library: \(error)")
+            throw PersistenceError.savingFailed(underlyingError: error)
+        }
+    }
+
+    /// Load and decode array of Book objects from JSON file
+    /// - Returns: Array of Book objects, empty array if none found
+    /// - Throws: PersistenceError if decoding fails
+    func loadBookLibrary() throws -> [Book] {
+        debugPrint("📖 PersistenceService: Loading book library")
+        
+        let fileURL = try getBookLibraryFileURL()
+        
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            debugPrint("📝 PersistenceService: No book library file found, returning empty array")
+            return []
+        }
+        
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let books = try decoder.decode([Book].self, from: data)
+            debugPrint("✅ PersistenceService: Loaded \(books.count) Book entries")
+            return books
+        } catch {
+            debugPrint("❌ PersistenceService: Failed to decode book library: \(error)")
+            throw PersistenceError.decodingFailed(underlyingError: error)
+        }
+    }
+
+    /// Validate that all books in the library still have valid file URLs
+    /// - Parameter books: Array of books to validate
+    /// - Returns: Array of books with valid file URLs (removes books whose files no longer exist)
+    func validateBookLibrary(_ books: [Book]) -> [Book] {
+        debugPrint("🔍 PersistenceService: Validating \(books.count) books in library")
+        
+        let validBooks = books.filter { book in
+            let fileExists = FileManager.default.fileExists(atPath: book.fileURL.path)
+            if !fileExists {
+                debugPrint("⚠️ PersistenceService: Book file no longer exists: \(book.title) at \(book.fileURL.path)")
+            }
+            return fileExists
+        }
+        
+        if validBooks.count != books.count {
+            debugPrint("📚 PersistenceService: Filtered library from \(books.count) to \(validBooks.count) valid books")
+        }
+        
+        return validBooks
+    }
     
     // MARK: - Helper Methods
     
@@ -150,6 +224,33 @@ class PersistenceService {
         }
         
         return appDirectory.appendingPathComponent(Self.readingProgressFileName)
+    }
+
+    /// Get the URL for the Book Library JSON file in Application Support directory
+    /// - Returns: URL to the Book Library file
+    /// - Throws: PersistenceError if Application Support directory cannot be accessed or created
+    private func getBookLibraryFileURL() throws -> URL {
+        let fileManager = FileManager.default
+        
+        guard let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw PersistenceError.directoryAccessFailed
+        }
+        
+        // Create app-specific directory in Application Support
+        let appDirectory = appSupportURL.appendingPathComponent("ReadAloudApp")
+        
+        // Create directory if it doesn't exist
+        if !fileManager.fileExists(atPath: appDirectory.path) {
+            do {
+                try fileManager.createDirectory(at: appDirectory, withIntermediateDirectories: true, attributes: nil)
+                debugPrint("📁 PersistenceService: Created Application Support directory: \(appDirectory.path)")
+            } catch {
+                debugPrint("❌ PersistenceService: Failed to create directory: \(error)")
+                throw PersistenceError.directoryCreationFailed(underlyingError: error)
+            }
+        }
+        
+        return appDirectory.appendingPathComponent(Self.bookLibraryFileName)
     }
     
     /// Get the current Application Support directory path for debugging

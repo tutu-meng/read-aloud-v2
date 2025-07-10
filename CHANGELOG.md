@@ -630,3 +630,38 @@ ReadAloudApp/
   - Enhanced background thread dispatch for Core Text operations
   - Added comprehensive Core Text stack integration (CTFramesetter, CTFrame, CTFrameGetStringRange)
   - Files: PaginationService.swift 
+
+- **Book Library Persistence**: Implemented comprehensive book library persistence system
+  - Books are now saved to persistent storage in Application Support directory
+  - Library state is preserved between app launches
+  - Automatic validation ensures only books with valid file paths remain in library
+  - One-time migration from Documents directory scanning to persistent library
+  - Proper book metadata preservation (encoding, import date, file size, etc.)
+
+- **PersistenceService**: Extended with book library management methods
+  - `saveBookLibrary()` - Persist entire book collection
+  - `loadBookLibrary()` - Load books from persistent storage  
+  - `validateBookLibrary()` - Remove books whose files no longer exist
+- **AppCoordinator**: Added book library persistence coordination
+  - `addBookToLibrary()` - Add books to persistent library
+  - `removeBookFromLibrary()` - Remove books from persistent library
+  - `loadBookLibrary()` - Load books with validation
+- **LibraryViewModel**: Updated to use persistent book storage
+  - Books loaded from persistent storage instead of Documents directory scanning
+  - Migration support for existing Documents directory books
+  - Improved book management with persistent state
+
+- **Performance**:
+  - **Eliminated repeated file scanning**: Books loaded once from persistent storage
+  - **Faster app startup**: No need to scan and hash files on every launch
+  - **Reduced I/O operations**: Book metadata cached in persistent storage
+
+- **Fixed**:
+  - **Memory management**: Removed unused functions to reduce memory footprint
+  - **Threading issues**: Resolved compilation warnings for proper main actor usage
+
+- **Technical Details**:
+  - **Book library stored as JSON in Application Support/ReadAloudApp/BookLibrary.json**
+  - **Automatic cleanup of orphaned books whose files have been deleted**
+  - **Maintains backward compatibility with existing Documents directory files**
+  - **Thread-safe operations with proper main actor isolation** 

@@ -29,28 +29,4 @@ class InteroperabilityService {
         // Direct call to Objective-C method returning NSUInteger
         return legacyProcessor.calculateHash(text)
     }
-    
-    /// Demonstration method showing bidirectional data flow
-    func demonstrateInteroperability() {
-        print("=== Swift/Objective-C Interoperability Test ===")
-        
-        let testText = "Hello from Swift!"
-        
-        // Call Objective-C method from Swift
-        let processed = processWithLegacyCode(text: testText)
-        print("Processed text: \(processed)")
-        
-        // Get hash from Objective-C
-        let hash = calculateLegacyHash(text: testText)
-        print("Legacy hash: \(hash)")
-        
-        // Demonstrate that Swift types work seamlessly
-        let swiftArray = ["Swift", "Objective-C", "Interop"]
-        for item in swiftArray {
-            let result = legacyProcessor.processText(item)
-            print("Processing '\(item)': \(result)")
-        }
-        
-        print("=== Interoperability Test Complete ===")
-    }
 } 

@@ -36,37 +36,39 @@ class LibraryViewModel: ObservableObject {
     
     // MARK: - Methods
     
-    /// Load books from storage
+    /// Load books from persistent storage
     @MainActor
     func loadBooks() {
         isLoading = true
         
         Task {
             do {
-                let loadedBooks = try await loadBooksFromDocuments()
+                // Load books from persistent library
+                let loadedBooks = await coordinator.loadBookLibrary()
+                
+                // If no books in library, scan Documents directory for migration
+                let finalBooks = loadedBooks.isEmpty ? try await migrateDocumentsToLibrary() : loadedBooks
                 
                 await MainActor.run {
-                    self.books = loadedBooks
+                    self.books = finalBooks
                     self.isLoading = false
-                    debugPrint("📚 LibraryViewModel: Loaded \(loadedBooks.count) books from storage")
+                    debugPrint("📚 LibraryViewModel: Loaded \(finalBooks.count) books from persistent library")
                 }
             } catch {
                 await MainActor.run {
                     self.isLoading = false
                     self.errorMessage = "Failed to load books: \(error.localizedDescription)"
                     debugPrint("❌ LibraryViewModel: Failed to load books: \(error)")
-                    
-                    // Fallback to sample book for testing
-                    self.loadSampleBook()
                 }
             }
         }
     }
     
-    /// Load books from the app's Documents directory
-    /// This method scans the Documents directory for imported text files
-    /// and creates Book objects for each discovered file
-    private func loadBooksFromDocuments() async throws -> [Book] {
+    /// Migrate existing books from Documents directory to persistent library (one-time migration)
+    /// This method scans the Documents directory for text files and adds them to the persistent library
+    private func migrateDocumentsToLibrary() async throws -> [Book] {
+        debugPrint("📚 LibraryViewModel: Migrating books from Documents directory to persistent library")
+        
         let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let fileManager = FileManager.default
         
@@ -86,8 +88,11 @@ class LibraryViewModel: ObservableObject {
             do {
                 let book = try await createBookFromFile(fileURL)
                 books.append(book)
+                
+                // Add each book to the persistent library
+                await coordinator.addBookToLibrary(book)
             } catch {
-                debugPrint("⚠️ LibraryViewModel: Failed to create book from file \(fileURL.lastPathComponent): \(error)")
+                debugPrint("⚠️ LibraryViewModel: Failed to migrate book from file \(fileURL.lastPathComponent): \(error)")
                 // Continue with other files instead of failing completely
             }
         }
@@ -95,12 +100,7 @@ class LibraryViewModel: ObservableObject {
         // Sort books by import date (newest first)
         books.sort { $0.importedDate > $1.importedDate }
         
-        // If no books found, add sample book for testing
-        if books.isEmpty {
-            debugPrint("📚 LibraryViewModel: No books found in Documents, adding sample book")
-            books.append(createSampleBook())
-        }
-        
+        debugPrint("📚 LibraryViewModel: Migration complete - added \(books.count) books to persistent library")
         return books
     }
     
@@ -146,25 +146,7 @@ class LibraryViewModel: ObservableObject {
         }
     }
     
-    /// Create the sample book for testing
-    private func createSampleBook() -> Book {
-        let sampleBookPath = Bundle.main.path(forResource: "alice_in_wonderland", ofType: "txt", inDirectory: "SampleBooks")
-            ?? "Resources/SampleBooks/alice_in_wonderland.txt"
-        
-        return Book(
-            title: "Alice's Adventures in Wonderland",
-            fileURL: URL(fileURLWithPath: sampleBookPath),
-            contentHash: "sample-alice-hash",
-            importedDate: Date(),
-            fileSize: 5102
-        )
-    }
-    
-    /// Load sample book as fallback
     @MainActor
-    private func loadSampleBook() {
-        books = [createSampleBook()]
-    }
     
     /// Handle book selection
     func selectBook(_ book: Book) {
@@ -179,8 +161,13 @@ class LibraryViewModel: ObservableObject {
     func removeBook(_ book: Book, deleteFile: Bool = false) {
         debugPrint("📚 LibraryViewModel: Removing book: \(book.title)")
         
-        // Remove from books array
+        // Remove from local books array
         books.removeAll { $0.id == book.id }
+        
+        // Remove from persistent library
+        Task {
+            await coordinator.removeBookFromLibrary(book)
+        }
         
         // Optionally delete the file
         if deleteFile {
@@ -188,28 +175,7 @@ class LibraryViewModel: ObservableObject {
         }
         
         debugPrint("✅ LibraryViewModel: Book removed successfully")
-    }
-    
-    /// Remove multiple books from the library
-    /// - Parameters:
-    ///   - booksToRemove: Array of books to remove
-    ///   - deleteFiles: Whether to delete the associated files (default: false)
-    @MainActor
-    func removeBooks(_ booksToRemove: [Book], deleteFiles: Bool = false) {
-        debugPrint("📚 LibraryViewModel: Removing \(booksToRemove.count) books")
-        
-        let idsToRemove = Set(booksToRemove.map { $0.id })
-        books.removeAll { idsToRemove.contains($0.id) }
-        
-        // Optionally delete the files
-        if deleteFiles {
-            for book in booksToRemove {
-                deleteBookFile(book)
-            }
-        }
-        
-        debugPrint("✅ LibraryViewModel: \(booksToRemove.count) books removed successfully")
-    }
+    }    
     
     /// Delete the file associated with a book
     /// - Parameter book: The book whose file should be deleted
@@ -272,6 +238,10 @@ class LibraryViewModel: ObservableObject {
         Task {
             do {
                 let book = try await createBook(from: pendingBook.url, with: encoding)
+                
+                // Add to persistent library
+                await coordinator.addBookToLibrary(book)
+                
                 await MainActor.run {
                     self.books.append(book)
                     self.books.sort { $0.importedDate > $1.importedDate }
@@ -330,11 +300,5 @@ class LibraryViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-    }
-    
-    /// Import a new book
-    func importBook(from url: URL) {
-        // TODO: Implement file import using FileProcessor
-        print("Importing book from: \(url)")
     }
 } 
