@@ -24,14 +24,21 @@ struct LibraryView: View {
             .navigationTitle("Library")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingFilePicker = true }) {
-                        Image(systemName: "plus")
+                    Button("Import") {
+                        showingFilePicker = true
                     }
                 }
             }
             .sheet(isPresented: $showingFilePicker) {
-                // TODO: Implement file picker
-                Text("File Picker Placeholder")
+                DocumentPicker(
+                    onFileSelected: { fileURL in
+                        showingFilePicker = false
+                        viewModel.handleFileImport(fileURL)
+                    },
+                    onDismiss: {
+                        showingFilePicker = false
+                    }
+                )
             }
         }
     }
@@ -46,19 +53,16 @@ struct LibraryView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Tap the + button to import your first book")
+            Text("Tap the Import button to add your first book")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
-            Button(action: { showingFilePicker = true }) {
-                Label("Import Book", systemImage: "plus.circle.fill")
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+            Button("Import Book") {
+                showingFilePicker = true
             }
+            .buttonStyle(.borderedProminent)
         }
     }
     

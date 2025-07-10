@@ -51,6 +51,11 @@ class LibraryViewModel: ObservableObject {
         coordinator.navigateToReader(with: book)
     }
     
+    /// Handle file import from document picker
+    func handleFileImport(_ fileURL: URL) {
+        coordinator.handleFileImport(fileURL)
+    }
+    
     /// Import a new book
     func importBook(from url: URL) {
         // TODO: Implement file import using FileProcessor

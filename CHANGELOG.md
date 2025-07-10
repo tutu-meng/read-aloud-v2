@@ -464,3 +464,41 @@ ReadAloudApp/
   - Updated project_context.md with current implementation status and epic roadmap
   - Added mermaid diagrams for system architecture visualization
   - Enhanced performance monitoring documentation with cache hit ratios and UI responsiveness metrics 
+
+- **PERSIST-1 - Document Picker Implementation** (2024-01-XX)
+  - Created DocumentPicker.swift as UIViewControllerRepresentable wrapper for UIDocumentPickerViewController
+  - Added Import button to LibraryView with modal sheet presentation
+  - Implemented file selection callback mechanism through coordinator pattern
+  - Added security-scoped resource access for sandboxed file import
+  - Extended AppError with fileAccessDenied case for proper error handling
+  - Integrated XcodeGen workflow for automatic project file management
+  - Restricted file picker to plain text files only (UTType.plainText)
+  - Added proper loading states and error handling during file import
+  - Files: DocumentPicker.swift (new), AppCoordinator.swift, LibraryView.swift, LibraryViewModel.swift, AppError.swift
+
+- **BUG-1 - Core Text Pagination Accuracy** (2024-01-XX)
+  - Completely removed legacy calculatePagination method using 500-character estimation
+  - Rewrote paginateText method to use precise Core Text calculations from getOrCalculateFullLayout
+  - Fixed critical disconnect between user-facing pagination and Core Text engine
+  - Updated method to async: paginateText(content:settings:viewSize:) async -> [String]
+  - Added proper NSRange iteration to extract exact substrings based on Core Text ranges
+  - Resolved async/await conflicts in ReaderViewModel with proper Task handling
+  - Added comprehensive range validation and safety checks
+  - Files: PaginationService.swift, ReaderViewModel.swift
+
+- **Pagination Bounds Validation** (2024-01-XX)
+  - Added bounds validation and correction in calculatePageRange method
+  - Fixed issue where unrealistic bounds caused all text to appear on single page
+  - Added bounds correction: heights > 1000px capped at 600px, widths > 500px capped at 375px
+  - Added detailed debugging output for bounds, font, and pagination analysis
+  - Improved Core Text calculation accuracy with proper viewport sizing
+  - Files: PaginationService.swift
+
+- **PGN-5 - Core Text calculatePageRange Enhancement** (2024-01-XX)
+  - Re-implemented calculatePageRange function with proper Core Text integration
+  - Added correct parameter labels: calculatePageRange(from:in:with:)
+  - Implemented full NSAttributedString usage instead of substring approach
+  - Added proper startIndex handling in CTFramesetterCreateFrame parameters
+  - Enhanced background thread dispatch for Core Text operations
+  - Added comprehensive Core Text stack integration (CTFramesetter, CTFrame, CTFrameGetStringRange)
+  - Files: PaginationService.swift 

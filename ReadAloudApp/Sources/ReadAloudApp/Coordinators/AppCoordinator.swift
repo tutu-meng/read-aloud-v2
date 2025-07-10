@@ -129,6 +129,59 @@ class AppCoordinator: ObservableObject {
         return SettingsViewModel(coordinator: self)
     }
     
+    // MARK: - File Import Handling
+    
+    /// Handle file import from document picker
+    /// - Parameter fileURL: The URL of the selected text file
+    func handleFileImport(_ fileURL: URL) {
+        debugPrint("📥 AppCoordinator: Handling file import: \(fileURL.lastPathComponent)")
+        
+        // Start loading state
+        isLoading = true
+        
+        Task {
+            do {
+                // Start accessing the security-scoped resource
+                guard fileURL.startAccessingSecurityScopedResource() else {
+                    throw AppError.fileAccessDenied
+                }
+                
+                defer {
+                    // Stop accessing the security-scoped resource
+                    fileURL.stopAccessingSecurityScopedResource()
+                }
+                
+                // Get file attributes
+                let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey])
+                let fileSize = Int64(resourceValues.fileSize ?? 0)
+                
+                // Create a Book object
+                let book = Book(
+                    id: UUID(),
+                    title: fileURL.deletingPathExtension().lastPathComponent,
+                    fileURL: fileURL,
+                    contentHash: "", // TODO: Calculate hash if needed
+                    importedDate: Date(),
+                    fileSize: fileSize
+                )
+                
+                // TODO: Add book to library persistence
+                debugPrint("📚 AppCoordinator: Created book: \(book.title)")
+                
+                await MainActor.run {
+                    self.isLoading = false
+                    // TODO: Notify LibraryViewModel about the new book
+                }
+                
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    self.handleError(error)
+                }
+            }
+        }
+    }
+    
     // MARK: - Error Handling
     
     /// Handle application-wide errors

@@ -18,6 +18,9 @@ enum AppError: Error {
     /// Failed to read file contents
     case fileReadFailed(filename: String, underlyingError: Error?)
     
+    /// File access denied due to security restrictions
+    case fileAccessDenied
+    
     /// File is too large to process
     case fileTooLarge(filename: String, sizeInMB: Double, maxSizeInMB: Double)
     
@@ -85,6 +88,9 @@ extension AppError: LocalizedError {
             let details = underlyingError?.localizedDescription ?? "Unknown error"
             return "Failed to read the file '\(filename)'. Error: \(details)"
             
+        case .fileAccessDenied:
+            return "Access to the file was denied due to security restrictions."
+            
         case .fileTooLarge(let filename, let sizeInMB, let maxSizeInMB):
             return "The file '\(filename)' is too large (\(String(format: "%.1f", sizeInMB)) MB). Maximum supported size is \(String(format: "%.0f", maxSizeInMB)) MB."
             
@@ -146,6 +152,8 @@ extension AppError: LocalizedError {
             return "The file does not exist at the specified location."
         case .fileReadFailed:
             return "The file could not be opened or read."
+        case .fileAccessDenied:
+            return "Access to the file was denied due to security restrictions."
         case .fileTooLarge:
             return "The file exceeds the maximum size limit."
         case .invalidFileFormat:
@@ -184,6 +192,8 @@ extension AppError: LocalizedError {
             return "Please select a different file or check if the file has been moved or deleted."
         case .fileReadFailed:
             return "Try closing and reopening the file, or check file permissions."
+        case .fileAccessDenied:
+            return "Ensure you have the necessary permissions to access the file."
         case .fileTooLarge:
             return "Try using a smaller file or split the file into smaller parts."
         case .invalidFileFormat:
@@ -218,7 +228,7 @@ extension AppError: LocalizedError {
     /// Help anchor for documentation
     var helpAnchor: String? {
         switch self {
-        case .fileNotFound, .fileReadFailed, .fileTooLarge, .invalidFileFormat:
+        case .fileNotFound, .fileReadFailed, .fileAccessDenied, .fileTooLarge, .invalidFileFormat:
             return "file-errors"
         case .paginationFailed, .encodingError:
             return "text-processing-errors"
@@ -242,6 +252,7 @@ extension AppError {
         switch self {
         case .fileNotFound: return "FILE_001"
         case .fileReadFailed: return "FILE_002"
+        case .fileAccessDenied: return "FILE_005"
         case .fileTooLarge: return "FILE_003"
         case .invalidFileFormat: return "FILE_004"
         case .paginationFailed: return "TEXT_001"
@@ -292,7 +303,7 @@ extension AppError {
             return .error
         case .fileNotFound, .invalidFileFormat, .encodingError, .ttsError, .downloadFailed:
             return .warning
-        case .fileTooLarge, .voiceNotAvailable, .insufficientStorage, .noNetworkConnection, .notImplemented:
+        case .fileAccessDenied, .fileTooLarge, .voiceNotAvailable, .insufficientStorage, .noNetworkConnection, .notImplemented:
             return .info
         }
     }
