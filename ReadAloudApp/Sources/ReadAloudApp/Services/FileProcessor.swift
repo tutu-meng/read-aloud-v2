@@ -5,9 +5,11 @@
 //  Created on FILE-1 implementation
 //  Enhanced for FILE-2: Memory-mapped file loading
 //  Enhanced for FILE-3: Streaming file loading with NSFileHandle
+//  Enhanced for PERSIST-2: File copying and hash calculation
 //
 
 import Foundation
+import CryptoKit
 
 /// TextSource represents an abstraction layer for loaded text data.
 /// It decouples the rest of the application from the specific file reading implementation.
@@ -28,6 +30,90 @@ public class FileProcessor {
     private static let memoryMapThreshold: Int64 = Int64(1.5 * 1024 * 1024 * 1024) // 1.5 GB
     
     // MARK: - Public Methods
+    
+    /// Securely copy a file to the app's Documents directory and return the new URL
+    /// - Parameters:
+    ///   - sourceURL: The original file URL (may be security-scoped)
+    ///   - filename: Optional custom filename, defaults to original filename
+    /// - Returns: URL of the copied file in the Documents directory
+    /// - Throws: AppError if copying fails
+    public func copyFileToDocuments(from sourceURL: URL, filename: String? = nil) async throws -> URL {
+        debugPrint("📄 FileProcessor: Copying file to Documents directory: \(sourceURL.lastPathComponent)")
+        
+        // Get the Documents directory
+        let documentsDirectory = try getDocumentsDirectory()
+        
+        // Create filename (use provided name or original filename)
+        let finalFilename = filename ?? sourceURL.lastPathComponent
+        let destinationURL = documentsDirectory.appendingPathComponent(finalFilename)
+        
+        // Handle potential filename conflicts
+        let uniqueDestinationURL = try generateUniqueFilename(for: destinationURL)
+        
+        // Perform the file copy
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: uniqueDestinationURL)
+            debugPrint("✅ FileProcessor: Successfully copied file to: \(uniqueDestinationURL.path)")
+            return uniqueDestinationURL
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to copy file: \(error)")
+            throw AppError.fileReadFailed(filename: sourceURL.lastPathComponent, underlyingError: error)
+        }
+    }
+    
+    /// Calculate SHA256 hash of a file's content
+    /// - Parameter url: The file URL to hash
+    /// - Returns: SHA256 hash as a hex string
+    /// - Throws: AppError if hashing fails
+    public func calculateContentHash(for url: URL) async throws -> String {
+        debugPrint("📄 FileProcessor: Calculating content hash for: \(url.lastPathComponent)")
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let hash = SHA256.hash(data: data)
+            let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+            debugPrint("✅ FileProcessor: Content hash calculated: \(hashString.prefix(16))...")
+            return hashString
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to calculate hash: \(error)")
+            throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
+        }
+    }
+    
+    /// Process an imported file: copy to Documents, calculate hash, and create Book
+    /// - Parameters:
+    ///   - sourceURL: The original file URL from document picker
+    ///   - customTitle: Optional custom title for the book
+    /// - Returns: A new Book instance with all metadata
+    /// - Throws: AppError if processing fails
+    public func processImportedFile(from sourceURL: URL, customTitle: String? = nil) async throws -> Book {
+        debugPrint("📄 FileProcessor: Processing imported file: \(sourceURL.lastPathComponent)")
+        
+        // Step 1: Copy file to Documents directory
+        let localFileURL = try await copyFileToDocuments(from: sourceURL)
+        
+        // Step 2: Calculate file size
+        let fileSize = try getFileSize(for: localFileURL)
+        
+        // Step 3: Calculate content hash
+        let contentHash = try await calculateContentHash(for: localFileURL)
+        
+        // Step 4: Create Book instance
+        let title = customTitle ?? sourceURL.deletingPathExtension().lastPathComponent
+        let book = Book(
+            id: UUID(),
+            title: title,
+            fileURL: localFileURL,
+            contentHash: contentHash,
+            importedDate: Date(),
+            fileSize: fileSize
+        )
+        
+        debugPrint("✅ FileProcessor: Successfully processed imported file")
+        debugPrint("📖 Book created: \(book.title) (\(book.fileSize) bytes)")
+        
+        return book
+    }
     
     /// Asynchronously loads text from the specified file URL.
     ///
@@ -144,5 +230,69 @@ public class FileProcessor {
     /// - Returns: The size threshold in bytes for memory mapping vs streaming
     public static func getMemoryMapThreshold() -> Int64 {
         return memoryMapThreshold
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    /// Get the app's Documents directory
+    /// - Returns: URL of the Documents directory
+    /// - Throws: AppError if Documents directory cannot be accessed
+    private func getDocumentsDirectory() throws -> URL {
+        do {
+            let documentsDirectory = try FileManager.default.url(for: .documentDirectory, 
+                                                                in: .userDomainMask, 
+                                                                appropriateFor: nil, 
+                                                                create: true)
+            return documentsDirectory
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to access Documents directory: \(error)")
+            throw AppError.fileReadFailed(filename: "Documents", underlyingError: error)
+        }
+    }
+    
+    /// Generate a unique filename if the target file already exists
+    /// - Parameter url: The desired file URL
+    /// - Returns: A unique file URL (may be the same as input if no conflict)
+    /// - Throws: AppError if file system operations fail
+    private func generateUniqueFilename(for url: URL) throws -> URL {
+        var uniqueURL = url
+        var counter = 1
+        
+        while FileManager.default.fileExists(atPath: uniqueURL.path) {
+            let filename = url.deletingPathExtension().lastPathComponent
+            let fileExtension = url.pathExtension
+            let uniqueFilename = "\(filename) (\(counter))"
+            
+            uniqueURL = url.deletingLastPathComponent()
+                .appendingPathComponent(uniqueFilename)
+                .appendingPathExtension(fileExtension)
+            
+            counter += 1
+            
+            // Safety check to prevent infinite loops
+            if counter > 1000 {
+                debugPrint("❌ FileProcessor: Too many filename conflicts, giving up")
+                throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: nil)
+            }
+        }
+        
+        return uniqueURL
+    }
+    
+    /// Get the file size for a given URL
+    /// - Parameter url: The file URL
+    /// - Returns: File size in bytes
+    /// - Throws: AppError if file attributes cannot be read
+    private func getFileSize(for url: URL) throws -> Int64 {
+        do {
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            guard let fileSize = fileAttributes[.size] as? Int64 else {
+                throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: nil)
+            }
+            return fileSize
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to get file size for: \(url.path) - \(error)")
+            throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
+        }
     }
 } 

@@ -21,6 +21,7 @@ class LibraryViewModel: ObservableObject {
     // MARK: - Initialization
     init(coordinator: AppCoordinator) {
         self.coordinator = coordinator
+        setupObservers()
         loadBooks()
     }
     
@@ -54,6 +55,44 @@ class LibraryViewModel: ObservableObject {
     /// Handle file import from document picker
     func handleFileImport(_ fileURL: URL) {
         coordinator.handleFileImport(fileURL)
+    }
+    
+    /// Add a new book to the library
+    /// - Parameter book: The book to add
+    @MainActor
+    func addBook(_ book: Book) {
+        debugPrint("📚 LibraryViewModel: Adding book: \(book.title)")
+        
+        // Check if book already exists (by content hash)
+        if !books.contains(where: { $0.contentHash == book.contentHash }) {
+            books.append(book)
+            debugPrint("✅ LibraryViewModel: Book added successfully")
+        } else {
+            debugPrint("⚠️ LibraryViewModel: Book already exists with same content hash")
+        }
+    }
+    
+    /// Remove a book from the library
+    /// - Parameter book: The book to remove
+    func removeBook(_ book: Book) {
+        books.removeAll { $0.id == book.id }
+        debugPrint("🗑️ LibraryViewModel: Removed book: \(book.title)")
+    }
+    
+    // MARK: - Private Methods
+    
+    /// Setup observers for notifications
+    private func setupObservers() {
+        // Listen for book added notifications
+        NotificationCenter.default.publisher(for: .bookAdded)
+            .compactMap { $0.userInfo?["book"] as? Book }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] book in
+                Task { @MainActor in
+                    self?.addBook(book)
+                }
+            }
+            .store(in: &cancellables)
     }
     
     /// Import a new book

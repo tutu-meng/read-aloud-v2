@@ -8,28 +8,28 @@
 import Foundation
 
 /// Book represents an imported text file in the app
-struct Book: Identifiable, Codable, Hashable {
+public struct Book: Identifiable, Codable, Hashable {
     /// Unique identifier for the book
-    let id: UUID
+    public let id: UUID
     
     /// Title of the book (derived from filename)
-    let title: String
+    public let title: String
     
     /// URL to the file in the app's sandbox
-    let fileURL: URL
+    public let fileURL: URL
     
     /// SHA256 hash of the file content (used as canonical identifier)
-    let contentHash: String
+    public let contentHash: String
     
     /// Date when the book was imported
-    let importedDate: Date
+    public let importedDate: Date
     
     /// File size in bytes
-    let fileSize: Int64
+    public let fileSize: Int64
     
     // MARK: - Initialization
     
-    init(id: UUID = UUID(), 
+    public init(id: UUID = UUID(), 
          title: String, 
          fileURL: URL, 
          contentHash: String,

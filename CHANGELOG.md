@@ -465,6 +465,19 @@ ReadAloudApp/
   - Added mermaid diagrams for system architecture visualization
   - Enhanced performance monitoring documentation with cache hit ratios and UI responsiveness metrics 
 
+- **PERSIST-2 - File Import and Processing Logic** (2024-01-XX)
+  - Enhanced FileProcessor with secure file copying to Documents directory
+  - Implemented SHA256 content hash calculation using CryptoKit framework
+  - Added comprehensive processImportedFile method for end-to-end file processing
+  - Created notification-based library integration system with bookAdded notifications
+  - Enhanced AppCoordinator with proper security-scoped resource management
+  - Updated LibraryViewModel with MainActor-isolated book management
+  - Added duplicate detection using content hash comparison
+  - Implemented asynchronous background processing for all file operations
+  - Made Book model public for cross-module access compatibility
+  - Added fileAccessDenied error case to AppError for sandboxing scenarios
+  - Files: FileProcessor.swift, AppCoordinator.swift, LibraryViewModel.swift, Book.swift, AppError.swift
+
 - **PERSIST-1 - Document Picker Implementation** (2024-01-XX)
   - Created DocumentPicker.swift as UIViewControllerRepresentable wrapper for UIDocumentPickerViewController
   - Added Import button to LibraryView with modal sheet presentation

@@ -8,7 +8,12 @@
 import SwiftUI
 import Combine
 
-/// AppCoordinator manages the navigation flow and dependency injection for the entire app
+// MARK: - Notification Names
+extension Notification.Name {
+    static let bookAdded = Notification.Name("bookAdded")
+}
+
+/// AppCoordinator manages the overall application flow and dependencies
 /// This is the "Coordinator" in the MVVM-C pattern, responsible for:
 /// - Managing navigation state
 /// - Creating and injecting dependencies
@@ -151,26 +156,16 @@ class AppCoordinator: ObservableObject {
                     fileURL.stopAccessingSecurityScopedResource()
                 }
                 
-                // Get file attributes
-                let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-                let fileSize = Int64(resourceValues.fileSize ?? 0)
+                // Process the imported file using FileProcessor
+                let fileProcessor = FileProcessor()
+                let book = try await fileProcessor.processImportedFile(from: fileURL)
                 
-                // Create a Book object
-                let book = Book(
-                    id: UUID(),
-                    title: fileURL.deletingPathExtension().lastPathComponent,
-                    fileURL: fileURL,
-                    contentHash: "", // TODO: Calculate hash if needed
-                    importedDate: Date(),
-                    fileSize: fileSize
-                )
-                
-                // TODO: Add book to library persistence
-                debugPrint("📚 AppCoordinator: Created book: \(book.title)")
+                // Add the book to the library
+                await addBookToLibrary(book)
                 
                 await MainActor.run {
                     self.isLoading = false
-                    // TODO: Notify LibraryViewModel about the new book
+                    debugPrint("✅ AppCoordinator: File import completed successfully")
                 }
                 
             } catch {
@@ -180,6 +175,24 @@ class AppCoordinator: ObservableObject {
                 }
             }
         }
+    }
+    
+    /// Add a book to the library and notify observers
+    /// - Parameter book: The book to add
+    @MainActor
+    private func addBookToLibrary(_ book: Book) async {
+        debugPrint("📚 AppCoordinator: Adding book to library: \(book.title)")
+        
+        // TODO: This will be enhanced when we implement persistent storage
+        // For now, we'll use a simple in-memory approach
+        
+        // Notify the LibraryViewModel to add the book
+        // This is a temporary solution until we implement proper persistence
+        NotificationCenter.default.post(
+            name: .bookAdded,
+            object: nil,
+            userInfo: ["book": book]
+        )
     }
     
     // MARK: - Error Handling
