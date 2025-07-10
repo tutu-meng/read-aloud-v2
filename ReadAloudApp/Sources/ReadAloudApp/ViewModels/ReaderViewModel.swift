@@ -15,6 +15,7 @@ class ReaderViewModel: ObservableObject {
         didSet {
             if currentPage != oldValue && !isLoading {
                 updatePageContent()
+                saveCurrentProgress()
             }
         }
     }
@@ -32,6 +33,7 @@ class ReaderViewModel: ObservableObject {
     private var currentContentSize: CGSize = .zero
     private var currentTextSource: TextSource?
     private var currentPaginationService: PaginationService?
+    private var currentReadingProgress: ReadingProgress?
     
     // MARK: - Initialization
     init(book: Book, coordinator: AppCoordinator) {
@@ -39,6 +41,7 @@ class ReaderViewModel: ObservableObject {
         self.coordinator = coordinator
         
         setupSettingsObservation()
+        setupAppLifecycleObservation()
         loadBook()
     }
     
@@ -51,6 +54,23 @@ class ReaderViewModel: ObservableObject {
             .dropFirst() // Skip initial value
             .sink { [weak self] newSettings in
                 self?.handleSettingsChange()
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// Set up observation for app lifecycle events
+    private func setupAppLifecycleObservation() {
+        // Save progress when app enters background
+        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { [weak self] _ in
+                self?.saveCurrentProgress()
+            }
+            .store(in: &cancellables)
+        
+        // Save progress when app will terminate
+        NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)
+            .sink { [weak self] _ in
+                self?.saveCurrentProgress()
             }
             .store(in: &cancellables)
     }
@@ -129,6 +149,9 @@ class ReaderViewModel: ObservableObject {
     func loadBook() {
         isLoading = true
         
+        // Load saved reading progress first
+        loadSavedProgress()
+        
         // Use FileProcessor to load the book content
         Task {
             do {
@@ -166,6 +189,9 @@ class ReaderViewModel: ObservableObject {
                         self.bookPages = pages
                         self.totalPages = self.bookPages.count
                         self.updatePageContent()
+                        
+                        // Restore saved page position after pagination
+                        self.restoreSavedPosition()
                     }
                 }
             } catch {
@@ -248,5 +274,70 @@ class ReaderViewModel: ObservableObject {
     /// Create a SettingsViewModel for the settings sheet
     func makeSettingsViewModel() -> SettingsViewModel {
         return coordinator.makeSettingsViewModel()
+    }
+    
+    // MARK: - Deinit
+    
+    deinit {
+        // Save progress when leaving the reader
+        saveCurrentProgress()
+        debugPrint("♻️ ReaderViewModel: Deinitializing and saving progress")
+    }
+    
+    // MARK: - Reading Progress Methods
+    
+    /// Load saved reading progress for this book
+    private func loadSavedProgress() {
+        currentReadingProgress = coordinator.getReadingProgress(for: book.contentHash)
+        if let progress = currentReadingProgress {
+            debugPrint("📖 ReaderViewModel: Loaded saved progress for \(book.title) - page \(progress.lastPageNumber ?? 0)")
+        } else {
+            debugPrint("📖 ReaderViewModel: No saved progress found for \(book.title), starting from beginning")
+            currentReadingProgress = ReadingProgress.beginning(for: book.contentHash)
+        }
+    }
+    
+    /// Restore saved reading position after pagination
+    private func restoreSavedPosition() {
+        guard let progress = currentReadingProgress else { return }
+        
+        // If we have a saved page number and it's valid, use it
+        if let savedPage = progress.lastPageNumber, savedPage < totalPages {
+            currentPage = savedPage
+            debugPrint("📖 ReaderViewModel: Restored to page \(savedPage)")
+        }
+        // TODO: In the future, we could use lastReadCharacterIndex to find the exact page
+        // For now, using page number is sufficient
+    }
+    
+    /// Save current reading progress
+    private func saveCurrentProgress() {
+        guard var progress = currentReadingProgress else { return }
+        
+        // Calculate character index (simplified - using page number for now)
+        let characterIndex = calculateCharacterIndex(for: currentPage)
+        
+        // Update progress
+        progress.updatePosition(
+            characterIndex: characterIndex,
+            pageNumber: currentPage,
+            totalPages: totalPages
+        )
+        
+        // Save through coordinator
+        coordinator.saveReadingProgress(progress)
+        
+        // Update our local copy
+        currentReadingProgress = progress
+        
+        debugPrint("📖 ReaderViewModel: Saved progress for \(book.title) - page \(currentPage)")
+    }
+    
+    /// Calculate character index for a given page (simplified implementation)
+    private func calculateCharacterIndex(for page: Int) -> Int {
+        // Simple calculation: estimate characters per page
+        // In a real implementation, this would use the actual text content
+        let estimatedCharsPerPage = fullBookContent.count / max(totalPages, 1)
+        return page * estimatedCharsPerPage
     }
 } 

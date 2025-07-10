@@ -17,7 +17,11 @@ class SettingsViewModel: ObservableObject {
     /// Access to shared UserSettings through coordinator
     var userSettings: UserSettings {
         get { coordinator.userSettings }
-        set { coordinator.userSettings = newValue }
+        set { 
+            coordinator.userSettings = newValue
+            // Save immediately when settings change
+            saveSettings()
+        }
     }
     
     private let coordinator: AppCoordinator
@@ -65,19 +69,14 @@ class SettingsViewModel: ObservableObject {
     
     /// Load settings from storage
     func loadSettings() {
-        // TODO: Load from PersistenceService
-        // For now, using default settings in coordinator
-        if coordinator.userSettings.fontName == "System" {
-            debugPrint("⚙️ SettingsViewModel: Using default settings")
-        } else {
-            debugPrint("⚙️ SettingsViewModel: Loaded existing settings")
-        }
+        // Settings are already loaded by the coordinator on app startup
+        debugPrint("⚙️ SettingsViewModel: Settings loaded from coordinator")
     }
     
-    /// Save settings
+    /// Save settings using PersistenceService through coordinator
     func saveSettings() {
-        // TODO: Save using PersistenceService
-        debugPrint("⚙️ SettingsViewModel: Saving settings: \(userSettings)")
+        coordinator.saveUserSettings(userSettings)
+        debugPrint("⚙️ SettingsViewModel: Settings saved via coordinator")
     }
     
     /// Save settings without navigation (for sheet dismissal)

@@ -29,6 +29,9 @@ class AppCoordinator: ObservableObject {
     // MARK: - Shared Settings State
     @Published var userSettings: UserSettings = .default
     
+    // MARK: - Reading Progress State
+    @Published var readingProgressList: [ReadingProgress] = []
+    
     // MARK: - View State
     enum AppView {
         case library
@@ -45,6 +48,9 @@ class AppCoordinator: ObservableObject {
     // CORE-2: Demonstrating Swift/Objective-C interoperability
     lazy var interoperabilityService = InteroperabilityService()
     
+    // Persistence service for state management
+    private let persistenceService = PersistenceService.shared
+    
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
     
@@ -53,6 +59,9 @@ class AppCoordinator: ObservableObject {
     init() {
         // Initialize coordinator
         debugPrint("🚀 AppCoordinator: Initializing")
+        
+        // Load initial settings and data
+        loadInitialSettings()
     }
     
     // MARK: - Start Method (CORE-4 Requirement)
@@ -216,6 +225,89 @@ class AppCoordinator: ObservableObject {
         errorMessage = nil
     }
     
+    // MARK: - Persistence Methods
+    
+    /// Load initial settings and data from persistence
+    private func loadInitialSettings() {
+        debugPrint("📊 AppCoordinator: Loading initial settings from persistence")
+        
+        Task {
+            do {
+                // Load UserSettings from persistence
+                let settings = try persistenceService.loadUserSettings()
+                
+                // Load ReadingProgress from persistence
+                let progressList = try persistenceService.loadReadingProgress()
+                
+                await MainActor.run {
+                    self.userSettings = settings
+                    self.readingProgressList = progressList
+                    debugPrint("✅ AppCoordinator: Loaded settings and \(progressList.count) reading progress entries")
+                }
+                
+            } catch {
+                await MainActor.run {
+                    debugPrint("⚠️ AppCoordinator: Failed to load settings, using defaults: \(error)")
+                    // userSettings and readingProgressList already have default values
+                }
+            }
+        }
+    }
+    
+    /// Save UserSettings to persistence
+    /// - Parameter settings: The UserSettings to save
+    func saveUserSettings(_ settings: UserSettings) {
+        debugPrint("💾 AppCoordinator: Saving UserSettings to persistence")
+        
+        Task {
+            do {
+                try persistenceService.saveUserSettings(settings)
+                debugPrint("✅ AppCoordinator: UserSettings saved successfully")
+            } catch {
+                debugPrint("❌ AppCoordinator: Failed to save UserSettings: \(error)")
+                await MainActor.run {
+                    self.handleError(error)
+                }
+            }
+        }
+    }
+    
+    /// Save ReadingProgress to persistence
+    /// - Parameter progress: The ReadingProgress to save or update
+    func saveReadingProgress(_ progress: ReadingProgress) {
+        debugPrint("💾 AppCoordinator: Saving ReadingProgress for book: \(progress.bookID)")
+        
+        Task {
+            do {
+                // Update the progress in our list
+                await MainActor.run {
+                    if let index = self.readingProgressList.firstIndex(where: { $0.bookID == progress.bookID }) {
+                        self.readingProgressList[index] = progress
+                    } else {
+                        self.readingProgressList.append(progress)
+                    }
+                }
+                
+                // Save the entire list to persistence
+                try persistenceService.saveReadingProgress(readingProgressList)
+                debugPrint("✅ AppCoordinator: ReadingProgress saved successfully")
+                
+            } catch {
+                debugPrint("❌ AppCoordinator: Failed to save ReadingProgress: \(error)")
+                await MainActor.run {
+                    self.handleError(error)
+                }
+            }
+        }
+    }
+    
+    /// Get ReadingProgress for a specific book
+    /// - Parameter bookID: The book's content hash
+    /// - Returns: ReadingProgress if found, nil otherwise
+    func getReadingProgress(for bookID: String) -> ReadingProgress? {
+        return readingProgressList.first { $0.bookID == bookID }
+    }
+    
     // MARK: - Private Methods
     
     /// Set up any observers or subscriptions
@@ -252,6 +344,12 @@ class AppCoordinator: ObservableObject {
     /// Handle app entering background
     private func handleAppBackground() {
         // Save any pending data
+        debugPrint("📱 AppCoordinator: App entering background, saving current state")
+        
+        // Save current user settings
+        saveUserSettings(userSettings)
+        
+        // The ReaderViewModel will handle saving its own progress through app lifecycle notifications
     }
     
     // MARK: - Deinit

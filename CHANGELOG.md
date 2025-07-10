@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### PERSIST-5: State Persistence Lifecycle Integration (2025-01-09)
+- **Complete App Lifecycle Integration**: Integrated PersistenceService into application lifecycle for seamless data persistence
+- **App Startup Loading**: Automatic loading of UserSettings and ReadingProgress from persistent storage on app launch
+- **Immediate Settings Persistence**: UserSettings saved immediately when changed in settings panel with reactive UI updates
+- **Reading Progress Management**: Comprehensive reading progress tracking with automatic saving on page changes and app lifecycle events
+- **App Background Handling**: State automatically saved when app enters background or terminates to prevent data loss
+- **Position Restoration**: Books open to last read position with fallback to beginning when no progress exists
+- **Lifecycle Observers**: Notification-based app state monitoring for reliable persistence triggers
+- **Error Handling Integration**: Graceful degradation with comprehensive error reporting through coordinator
+- **Memory Management**: Proper cleanup with weak references and efficient state management
+- **Future-Ready Architecture**: Foundation for character-based position tracking and cloud sync capabilities
+
+#### PERSIST-4: PersistenceService Implementation (2025-01-09)
+- **Complete PersistenceService**: Implemented comprehensive persistence service centralizing all data storage operations
+- **UserSettings Persistence**: JSON-based UserDefaults storage with automatic synchronization and fallback to defaults
+- **ReadingProgress Persistence**: JSON file storage in Application Support directory with ISO8601 date encoding
+- **Directory Management**: Automatic creation of app-specific Application Support subdirectory with error handling
+- **Error Handling System**: Custom PersistenceError enum with detailed error descriptions and underlying error tracking
+- **Singleton Architecture**: Thread-safe shared instance with type-safe methods for different data types
+- **Atomic Operations**: Complete data replacement operations to prevent corruption during save/load cycles
+- **Comprehensive Logging**: Debug logging throughout persistence operations for monitoring and troubleshooting
+- **Graceful Degradation**: Fallback mechanisms returning defaults when saved data is unavailable or corrupted
+- **Future-Ready Integration**: Service designed for immediate integration into ViewModels and app lifecycle management
+
 ### Fixed
 
 #### LibraryViewModel Book Loading Fix (2025-01-09)
@@ -16,8 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fallback Sample Book**: Maintains sample book as fallback when no imported books are found for testing purposes
 - **Asynchronous Loading**: Implemented proper async/await pattern with background processing and MainActor UI updates
 - **Error Handling**: Added comprehensive error handling with graceful degradation to sample book on failures
-- **Auto-refresh on Import**: Enhanced notification system to refresh entire book list when new books are imported
-- **Sorted Display**: Books are automatically sorted by import date (newest first) for better user experience
+- **Auto-refresh on Import**: Enhanced notification system to refresh entire book list from storage after new imports
 
 **User Experience Improvements**:
 - Library now displays all imported books instead of only sample book
