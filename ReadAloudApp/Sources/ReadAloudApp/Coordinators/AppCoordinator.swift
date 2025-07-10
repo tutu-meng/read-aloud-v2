@@ -11,6 +11,7 @@ import Combine
 // MARK: - Notification Names
 extension Notification.Name {
     static let bookAdded = Notification.Name("bookAdded")
+    static let bookUpdated = Notification.Name("bookUpdated")
 }
 
 /// AppCoordinator manages the overall application flow and dependencies
@@ -121,6 +122,17 @@ class AppCoordinator: ObservableObject {
         let settings = userSettings ?? self.userSettings
         debugPrint("🏭 AppCoordinator: Creating PaginationService with TextSource and UserSettings")
         return PaginationService(textSource: textSource, userSettings: settings)
+    }
+    
+    /// Create PaginationService with pre-extracted text content (encoding-aware)
+    /// - Parameters:
+    ///   - textContent: The pre-extracted text content with correct encoding
+    ///   - userSettings: Optional user settings (defaults to coordinator's settings)
+    /// - Returns: Configured PaginationService instance
+    func makePaginationService(textContent: String, userSettings: UserSettings? = nil) -> PaginationService {
+        let settings = userSettings ?? self.userSettings
+        debugPrint("🏭 AppCoordinator: Creating PaginationService with pre-extracted text content (\(textContent.count) chars)")
+        return PaginationService(textContent: textContent, userSettings: settings)
     }
     
     // MARK: - ViewModels Factory Methods (Dependency Injection)
@@ -306,6 +318,21 @@ class AppCoordinator: ObservableObject {
     /// - Returns: ReadingProgress if found, nil otherwise
     func getReadingProgress(for bookID: String) -> ReadingProgress? {
         return readingProgressList.first { $0.bookID == bookID }
+    }
+    
+    /// Update a book's metadata (e.g., encoding changes)
+    /// - Parameter book: The updated book
+    func updateBook(_ book: Book) {
+        debugPrint("📚 AppCoordinator: Updating book: \(book.title)")
+        
+        // Notify the LibraryViewModel to update the book
+        NotificationCenter.default.post(
+            name: .bookUpdated,
+            object: nil,
+            userInfo: ["book": book]
+        )
+        
+        debugPrint("✅ AppCoordinator: Book update notification sent")
     }
     
     // MARK: - Private Methods

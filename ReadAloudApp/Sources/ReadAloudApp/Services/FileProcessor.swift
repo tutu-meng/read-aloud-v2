@@ -6,6 +6,7 @@
 //  Enhanced for FILE-2: Memory-mapped file loading
 //  Enhanced for FILE-3: Streaming file loading with NSFileHandle
 //  Enhanced for PERSIST-2: File copying and hash calculation
+//  Enhanced for FILE-7: Character encoding detection and override
 //
 
 import Foundation
@@ -80,11 +81,11 @@ public class FileProcessor {
         }
     }
     
-    /// Process an imported file: copy to Documents, calculate hash, and create Book
+    /// Process an imported file: copy to Documents, calculate hash, detect encoding, and create Book
     /// - Parameters:
     ///   - sourceURL: The original file URL from document picker
     ///   - customTitle: Optional custom title for the book
-    /// - Returns: A new Book instance with all metadata
+    /// - Returns: A new Book instance with all metadata including detected encoding
     /// - Throws: AppError if processing fails
     public func processImportedFile(from sourceURL: URL, customTitle: String? = nil) async throws -> Book {
         debugPrint("📄 FileProcessor: Processing imported file: \(sourceURL.lastPathComponent)")
@@ -98,7 +99,11 @@ public class FileProcessor {
         // Step 3: Calculate content hash
         let contentHash = try await calculateContentHash(for: localFileURL)
         
-        // Step 4: Create Book instance
+        // Step 4: Detect best encoding for the file
+        let detectedEncoding = try await detectBestEncoding(for: localFileURL)
+        debugPrint("📄 FileProcessor: Detected encoding: \(detectedEncoding)")
+        
+        // Step 5: Create Book instance with detected encoding
         let title = customTitle ?? sourceURL.deletingPathExtension().lastPathComponent
         let book = Book(
             id: UUID(),
@@ -106,13 +111,68 @@ public class FileProcessor {
             fileURL: localFileURL,
             contentHash: contentHash,
             importedDate: Date(),
-            fileSize: fileSize
+            fileSize: fileSize,
+            textEncoding: detectedEncoding
         )
         
         debugPrint("✅ FileProcessor: Successfully processed imported file")
-        debugPrint("📖 Book created: \(book.title) (\(book.fileSize) bytes)")
+        debugPrint("📖 Book created: \(book.title) (\(book.fileSize) bytes, encoding: \(book.textEncoding))")
         
         return book
+    }
+    
+    /// Extract text content from a file using the specified encoding
+    /// - Parameters:
+    ///   - url: The file URL to read
+    ///   - encoding: The text encoding to use
+    /// - Returns: String content of the file
+    /// - Throws: AppError if reading fails
+    public func extractTextContent(from url: URL, using encoding: String.Encoding) async throws -> String {
+        debugPrint("📄 FileProcessor: Extracting text content using encoding: \(encoding)")
+        
+        do {
+            let data = try Data(contentsOf: url)
+            guard let string = String(data: data, encoding: encoding) else {
+                throw AppError.encodingError(filename: url.lastPathComponent)
+            }
+            debugPrint("✅ FileProcessor: Successfully extracted \(string.count) characters")
+            return string
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to extract text content: \(error)")
+            if error is AppError {
+                throw error
+            } else {
+                throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
+            }
+        }
+    }
+    
+    /// Extract text content from TextSource using the specified encoding
+    /// - Parameters:
+    ///   - textSource: The TextSource to read from
+    ///   - encoding: The text encoding to use
+    ///   - filename: Filename for error reporting
+    /// - Returns: String content
+    /// - Throws: AppError if extraction fails
+    public func extractTextContent(from textSource: TextSource, using encoding: String.Encoding, filename: String) async throws -> String {
+        debugPrint("📄 FileProcessor: Extracting text content from TextSource using encoding: \(encoding)")
+        
+        switch textSource {
+        case .memoryMapped(let nsData):
+            guard let string = String(data: nsData as Data, encoding: encoding) else {
+                throw AppError.encodingError(filename: filename)
+            }
+            debugPrint("✅ FileProcessor: Successfully extracted \(string.count) characters from memory-mapped data")
+            return string
+            
+        case .streaming(let fileHandle):
+            let data = fileHandle.readDataToEndOfFile()
+            guard let string = String(data: data, encoding: encoding) else {
+                throw AppError.encodingError(filename: filename)
+            }
+            debugPrint("✅ FileProcessor: Successfully extracted \(string.count) characters from streaming data")
+            return string
+        }
     }
     
     /// Asynchronously loads text from the specified file URL.
@@ -149,6 +209,86 @@ public class FileProcessor {
         } else {
             debugPrint("🔄 FileProcessor: Using streaming loading strategy")
             return try await loadTextUsingStreaming(from: url)
+        }
+    }
+    
+    // MARK: - Encoding Detection Methods
+    
+    /// Detect the best encoding for a text file using a fallback chain
+    /// - Parameter url: The file URL to analyze
+    /// - Returns: The name of the best encoding found
+    /// - Throws: AppError if file cannot be read
+    public func detectBestEncoding(for url: URL) async throws -> String {
+        debugPrint("🔍 FileProcessor: Detecting encoding for: \(url.lastPathComponent)")
+        
+        do {
+            // Read a sample of the file for encoding detection (first 8KB should be enough)
+            let sampleData = try Data(contentsOf: url).prefix(8192)
+            
+            // Try encodings in order of preference
+            let encodingsToTry: [(String, String.Encoding)] = [
+                ("UTF-8", .utf8),
+                ("UTF-16", .utf16),
+                ("ASCII", .ascii),
+                ("ISO-8859-1", .isoLatin1),
+                ("Windows-1252", .windowsCP1252),
+                ("Shift_JIS", .shiftJIS),
+                ("EUC-JP", .japaneseEUC)
+            ]
+            
+            for (encodingName, encoding) in encodingsToTry {
+                if let _ = String(data: sampleData, encoding: encoding) {
+                    debugPrint("✅ FileProcessor: Successfully detected encoding: \(encodingName)")
+                    return encodingName
+                }
+            }
+            
+            // If no encoding works, try more exotic ones
+            let exoticEncodings: [(String, String.Encoding)] = [
+                ("GBK", Book.stringEncoding(for: "GBK")),
+                ("Big5", Book.stringEncoding(for: "Big5"))
+            ]
+            
+            for (encodingName, encoding) in exoticEncodings {
+                if let _ = String(data: sampleData, encoding: encoding) {
+                    debugPrint("✅ FileProcessor: Successfully detected exotic encoding: \(encodingName)")
+                    return encodingName
+                }
+            }
+            
+            // Last resort: default to UTF-8
+            debugPrint("⚠️ FileProcessor: Could not detect encoding, defaulting to UTF-8")
+            return "UTF-8"
+            
+        } catch {
+            debugPrint("❌ FileProcessor: Failed to read file for encoding detection: \(error)")
+            throw AppError.fileReadFailed(filename: url.lastPathComponent, underlyingError: error)
+        }
+    }
+    
+    /// Validate that a file can be properly decoded with the specified encoding
+    /// - Parameters:
+    ///   - url: The file URL to validate
+    ///   - encoding: The encoding to test
+    /// - Returns: True if the file can be decoded with the encoding
+    public func validateEncoding(for url: URL, using encoding: String.Encoding) async -> Bool {
+        debugPrint("🔍 FileProcessor: Validating encoding for: \(url.lastPathComponent)")
+        
+        do {
+            // Read a sample of the file
+            let sampleData = try Data(contentsOf: url).prefix(8192)
+            
+            // Try to decode with the specified encoding
+            if let _ = String(data: sampleData, encoding: encoding) {
+                debugPrint("✅ FileProcessor: Encoding validation successful")
+                return true
+            } else {
+                debugPrint("❌ FileProcessor: Encoding validation failed")
+                return false
+            }
+        } catch {
+            debugPrint("❌ FileProcessor: Error during encoding validation: \(error)")
+            return false
         }
     }
     

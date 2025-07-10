@@ -42,6 +42,7 @@
 		ED2FBE1A65158F4AE41563EC /* SampleBooks in Resources */ = {isa = PBXBuildFile; fileRef = 33672C6E1D4F446096A9D66E /* SampleBooks */; };
 		F4DEB0C3C17778A693AE29C2 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636737A823801C528D61F871 /* DocumentPicker.swift */; };
 		F884954F4AD56D24FF1FDE92 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF9214D4A349A0F4B20D744 /* AppError.swift */; };
+		FE205B0C99803D4044A18718 /* BookSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001D4F208F40834B252248C8 /* BookSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		001D4F208F40834B252248C8 /* BookSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookSettingsView.swift; sourceTree = "<group>"; };
 		012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorTests.swift; sourceTree = "<group>"; };
 		04305907DB623F234AD3C0D0 /* PaginationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationService.swift; sourceTree = "<group>"; };
 		04BB15698225E88273853704 /* ReadAloudApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ReadAloudApp-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 		045E64E663F5FB4AC74F28DE /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				001D4F208F40834B252248C8 /* BookSettingsView.swift */,
 				1D4237D0FECF4BB27AB5B149 /* ContentView.swift */,
 				636737A823801C528D61F871 /* DocumentPicker.swift */,
 				6665876891CDE2E095C49DFA /* LibraryView.swift */,
@@ -305,6 +308,7 @@
 				3CFB82D23DA0E837CC91E6FE /* AppCoordinator.swift in Sources */,
 				F884954F4AD56D24FF1FDE92 /* AppError.swift in Sources */,
 				C8F455AE9CD2C88613903FB2 /* Book.swift in Sources */,
+				FE205B0C99803D4044A18718 /* BookSettingsView.swift in Sources */,
 				7DBECE0E21E771EBA78AD697 /* ContentView.swift in Sources */,
 				F4DEB0C3C17778A693AE29C2 /* DocumentPicker.swift in Sources */,
 				812D76906FAD2E74226B6919 /* FileProcessor.swift in Sources */,

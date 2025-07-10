@@ -107,6 +107,10 @@ class LibraryViewModel: ObservableObject {
         // Calculate content hash
         let contentHash = try await calculateContentHash(for: fileURL)
         
+        // Detect encoding using FileProcessor
+        let fileProcessor = FileProcessor()
+        let detectedEncoding = try await fileProcessor.detectBestEncoding(for: fileURL)
+        
         // Create book title from filename
         let title = fileURL.deletingPathExtension().lastPathComponent
         
@@ -116,7 +120,8 @@ class LibraryViewModel: ObservableObject {
             fileURL: fileURL,
             contentHash: contentHash,
             importedDate: creationDate,
-            fileSize: fileSize
+            fileSize: fileSize,
+            textEncoding: detectedEncoding
         )
     }
     
@@ -183,6 +188,25 @@ class LibraryViewModel: ObservableObject {
         }
     }
     
+    /// Update an existing book in the library
+    /// - Parameter book: The updated book
+    @MainActor
+    func updateBook(_ book: Book) {
+        debugPrint("📚 LibraryViewModel: Updating book: \(book.title)")
+        
+        // Find and update the book by content hash
+        if let index = books.firstIndex(where: { $0.contentHash == book.contentHash }) {
+            books[index] = book
+            debugPrint("✅ LibraryViewModel: Book updated successfully")
+        } else {
+            debugPrint("⚠️ LibraryViewModel: Book not found for update, adding as new")
+            books.append(book)
+        }
+        
+        // Sort books by import date (newest first)
+        books.sort { $0.importedDate > $1.importedDate }
+    }
+    
     /// Refresh the book list by reloading from storage
     func refreshBooks() {
         debugPrint("🔄 LibraryViewModel: Refreshing book list")
@@ -208,6 +232,17 @@ class LibraryViewModel: ObservableObject {
                 Task { @MainActor in
                     // Refresh the entire book list to ensure we have the most up-to-date data
                     self?.refreshBooks()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Listen for book updated notifications
+        NotificationCenter.default.publisher(for: .bookUpdated)
+            .compactMap { $0.userInfo?["book"] as? Book }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] book in
+                Task { @MainActor in
+                    self?.updateBook(book)
                 }
             }
             .store(in: &cancellables)

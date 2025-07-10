@@ -10,15 +10,15 @@ import Foundation
 import SwiftUI
 import CoreText
 
-/// PaginationService handles text layout and pagination calculations
-/// This service is responsible for calculating page breaks based on text content,
+/// PaginationService handles text pagination using Core Text for precise layout calculations
+/// This service takes text content and user settings to determine page breaks based on
 /// font settings, and view dimensions
 class PaginationService {
     
     // MARK: - Properties
     
-    /// The text source to be paginated
-    private let textSource: TextSource
+    /// The pre-extracted text content to be paginated (encoding-aware)
+    private let textContent: String
     
     /// User settings affecting layout
     private let userSettings: UserSettings
@@ -34,15 +34,33 @@ class PaginationService {
     
     // MARK: - Initialization
     
-    /// Initialize PaginationService with TextSource and UserSettings
+    /// Initialize PaginationService with pre-extracted text content and UserSettings
+    /// - Parameters:
+    ///   - textContent: The pre-extracted text content (with correct encoding applied)
+    ///   - userSettings: The UserSettings object containing layout preferences
+    init(textContent: String, userSettings: UserSettings) {
+        self.textContent = textContent
+        self.userSettings = userSettings
+        self.layoutCache = LayoutCache()
+        debugPrint("📄 PaginationService: Initializing with pre-extracted text content (\(textContent.count) chars) and UserSettings")
+    }
+    
+    /// Legacy initializer for backward compatibility with TextSource
     /// - Parameters:
     ///   - textSource: The TextSource object containing the text to be paginated
     ///   - userSettings: The UserSettings object containing layout preferences
-    init(textSource: TextSource, userSettings: UserSettings) {
-        self.textSource = textSource
-        self.userSettings = userSettings
-        self.layoutCache = LayoutCache()
-        debugPrint("📄 PaginationService: Initializing with TextSource and UserSettings")
+    /// - Note: This initializer extracts text using UTF-8 and should be avoided for encoding-sensitive content
+    convenience init(textSource: TextSource, userSettings: UserSettings) {
+        let extractedText: String
+        switch textSource {
+        case .memoryMapped(let nsData):
+            extractedText = String(data: nsData as Data, encoding: .utf8) ?? ""
+        case .streaming(let fileHandle):
+            let data = fileHandle.readDataToEndOfFile()
+            extractedText = String(data: data, encoding: .utf8) ?? ""
+        }
+        self.init(textContent: extractedText, userSettings: userSettings)
+        debugPrint("⚠️ PaginationService: Using legacy TextSource initializer with UTF-8 encoding")
     }
     
     // MARK: - Public API Methods
@@ -346,7 +364,7 @@ class PaginationService {
         // Create attributed string with user settings
         let my_pageview = PageView(content: fullText, pageIndex: 0)
         let attributedString = my_pageview.createAttributedString(from: fullText, settings: userSettings)
-        
+
         // Calculate the full layout asynchronously
         let pageRanges = await calculateFullLayoutAsync(bounds: bounds, attributedString: attributedString)
         
@@ -449,36 +467,11 @@ class PaginationService {
         return hash
     }
     
-    /// Get the full text content from the TextSource
-    /// - Returns: Full text content as String, or nil if unable to retrieve
+    /// Get the full text content from the pre-extracted text
+    /// - Returns: Full text content as String
     private func getFullTextContent() -> String? {
-        debugPrint("📄 PaginationService: getFullTextContent() called")
-        
-        switch textSource {
-        case .memoryMapped(let nsData):
-            // Convert NSData to String
-            guard let string = String(data: nsData as Data, encoding: .utf8) else {
-                debugPrint("⚠️ PaginationService: Failed to decode memory-mapped data as UTF-8")
-                return nil
-            }
-            debugPrint("📄 PaginationService: Retrieved \(string.count) characters from memory-mapped source")
-            return string
-            
-        case .streaming(let fileHandle):
-            // Read all data from the file handle
-            do {
-                let data = fileHandle.readDataToEndOfFile()
-                guard let string = String(data: data, encoding: .utf8) else {
-                    debugPrint("⚠️ PaginationService: Failed to decode streaming data as UTF-8")
-                    return nil
-                }
-                debugPrint("📄 PaginationService: Retrieved \(string.count) characters from streaming source")
-                return string
-            } catch {
-                debugPrint("⚠️ PaginationService: Error reading from streaming source: \(error)")
-                return nil
-            }
-        }
+        debugPrint("📄 PaginationService: getFullTextContent() returning pre-extracted content (\(textContent.count) chars)")
+        return textContent
     }
     
     // MARK: - Existing Private Methods
@@ -488,14 +481,8 @@ class PaginationService {
     private func getTextLength() -> Int {
         // TODO: Implement proper text length calculation based on TextSource type
         // This is a placeholder implementation for PGN-1
-        switch textSource {
-        case .memoryMapped(let nsData):
-            return nsData.length
-        case .streaming(_):
-            // For streaming, we'll need to read chunks to estimate length
-            // For now, return a placeholder
-            return 10000
-        }
+        // Since textContent is now directly passed, we can return its length
+        return textContent.count
     }
     
     /// Generate a cache key for the given parameters

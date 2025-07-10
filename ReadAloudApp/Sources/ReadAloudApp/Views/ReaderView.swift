@@ -43,7 +43,7 @@ struct ReaderView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView(viewModel: viewModel.makeSettingsViewModel(), isSheet: true)
+                BookSettingsView(readerViewModel: viewModel)
             }
         }
     }

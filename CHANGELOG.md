@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### FILE-7: Character Encoding Detection and Selection (2025-01-09)
+- **Complete Encoding Support System**: Implemented comprehensive character encoding detection and selection for text files
+- **Critical Architecture Fix**: Resolved encoding inconsistency between text extraction and pagination by modifying PaginationService to accept pre-extracted text content instead of re-extracting from TextSource
+- **Automatic Encoding Detection**: Robust detection chain with UTF-8 → UTF-16 → Windows-1252 → ISO-8859-1 fallback strategy
+- **Book-Specific Encoding Storage**: Enhanced Book model with `textEncoding` property for persistent encoding preferences
+- **BookSettingsView Interface**: Created dedicated settings view for book-specific configuration including encoding selection
+- **Encoding Override Capability**: Full book reprocessing with new encoding while preserving reading progress
+- **FileProcessor Enhancement**: Added `detectBestEncoding()` and encoding-aware text extraction methods
+- **ReaderViewModel Integration**: Comprehensive encoding management with book update capabilities
+- **PaginationService Refactor**: Modified to use pre-extracted text content ensuring encoding consistency throughout pipeline
+- **LibraryViewModel Updates**: Enhanced book creation and update handling with automatic encoding detection
+- **AppCoordinator Factory**: Added encoding-aware PaginationService creation methods
+- **Supported Encodings**: UTF-8, UTF-16, Windows-1252, ISO-8859-1, ASCII with graceful fallback chain
+
+**Technical Architecture**:
+- Encoding detection with confidence-based fallback chain
+- Book metadata updates through coordinator pattern
+- Automatic encoding detection during file import
+- Clear separation of concerns across services
+- Future-ready architecture for additional encodings
+
+**User Benefits**:
+- Automatic handling of diverse text file encodings
+- Clear UI for encoding override when text appears garbled
+- Persistent encoding preferences per book
+- Seamless integration with existing reading experience
+- No data loss during encoding changes
+
 #### PERSIST-5: State Persistence Lifecycle Integration (2025-01-09)
 - **Complete App Lifecycle Integration**: Integrated PersistenceService into application lifecycle for seamless data persistence
 - **App Startup Loading**: Automatic loading of UserSettings and ReadingProgress from persistent storage on app launch

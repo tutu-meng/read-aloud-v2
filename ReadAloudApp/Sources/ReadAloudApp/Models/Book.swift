@@ -27,6 +27,9 @@ public struct Book: Identifiable, Codable, Hashable {
     /// File size in bytes
     public let fileSize: Int64
     
+    /// Text encoding used for this book (defaults to UTF-8)
+    public let textEncoding: String
+    
     // MARK: - Initialization
     
     public init(id: UUID = UUID(), 
@@ -34,12 +37,77 @@ public struct Book: Identifiable, Codable, Hashable {
          fileURL: URL, 
          contentHash: String,
          importedDate: Date = Date(),
-         fileSize: Int64 = 0) {
+         fileSize: Int64 = 0,
+         textEncoding: String = "UTF-8") {
         self.id = id
         self.title = title
         self.fileURL = fileURL
         self.contentHash = contentHash
         self.importedDate = importedDate
         self.fileSize = fileSize
+        self.textEncoding = textEncoding
+    }
+    
+    // MARK: - Encoding Support
+    
+    /// Get the String.Encoding for this book's text encoding
+    public var stringEncoding: String.Encoding {
+        return Book.stringEncoding(for: textEncoding)
+    }
+    
+    /// Convert encoding name to String.Encoding
+    public static func stringEncoding(for encodingName: String) -> String.Encoding {
+        switch encodingName.uppercased() {
+        case "UTF-8":
+            return .utf8
+        case "UTF-16":
+            return .utf16
+        case "UTF-32":
+            return .utf32
+        case "ASCII":
+            return .ascii
+        case "ISO-8859-1", "LATIN-1":
+            return .isoLatin1
+        case "WINDOWS-1252", "CP1252":
+            return .windowsCP1252
+        case "SHIFT_JIS", "SHIFT-JIS":
+            return .shiftJIS
+        case "EUC-JP":
+            return .japaneseEUC
+        case "GBK", "GB18030":
+            return .init(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+        case "BIG5":
+            return .init(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.big5.rawValue)))
+        default:
+            return .utf8 // Default fallback
+        }
+    }
+    
+    /// Get list of supported encodings for UI
+    public static var supportedEncodings: [String] {
+        return [
+            "UTF-8",
+            "UTF-16", 
+            "ASCII",
+            "ISO-8859-1",
+            "Windows-1252",
+            "Shift_JIS",
+            "EUC-JP",
+            "GBK",
+            "Big5"
+        ]
+    }
+    
+    /// Create a new Book with updated encoding
+    public func withEncoding(_ encoding: String) -> Book {
+        return Book(
+            id: self.id,
+            title: self.title,
+            fileURL: self.fileURL,
+            contentHash: self.contentHash,
+            importedDate: self.importedDate,
+            fileSize: self.fileSize,
+            textEncoding: encoding
+        )
     }
 } 

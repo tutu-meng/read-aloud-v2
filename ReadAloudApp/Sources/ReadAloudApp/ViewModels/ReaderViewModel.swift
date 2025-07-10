@@ -24,7 +24,8 @@ class ReaderViewModel: ObservableObject {
     @Published var isLoading = true
     @Published var isSpeaking = false
     
-    let book: Book
+    /// The book being read
+    var book: Book
     private let coordinator: AppCoordinator
     private var cancellables = Set<AnyCancellable>()
     private var bookPages: [String] = []
@@ -94,11 +95,11 @@ class ReaderViewModel: ObservableObject {
     
     /// Re-paginate content with current settings (BUG-1 FIX - now async)
     private func repaginateContent() async {
-        guard let textSource = currentTextSource else { return }
+        guard !fullBookContent.isEmpty else { return }
         
-        // Create a new PaginationService with current settings
+        // Create a new PaginationService with pre-extracted text content (encoding-aware)
         currentPaginationService = coordinator.makePaginationService(
-            textSource: textSource,
+            textContent: fullBookContent,
             userSettings: coordinator.userSettings
         )
         
@@ -106,18 +107,16 @@ class ReaderViewModel: ObservableObject {
         totalPages = currentPaginationService?.totalPageCount() ?? 0
         
         // Use the new async paginateText method with Core Text calculations (BUG-1 FIX)
-        if !fullBookContent.isEmpty {
-            bookPages = await coordinator.makePaginationService(
-                textSource: textSource,
-                userSettings: coordinator.userSettings
-            ).paginateText(
-                content: fullBookContent,
-                settings: coordinator.userSettings,
-                viewSize: currentContentSize
-            )
-            
-            totalPages = bookPages.count
-        }
+        bookPages = await coordinator.makePaginationService(
+            textContent: fullBookContent,
+            userSettings: coordinator.userSettings
+        ).paginateText(
+            content: fullBookContent,
+            settings: coordinator.userSettings,
+            viewSize: currentContentSize
+        )
+        
+        totalPages = bookPages.count
         
         // Ensure current page is valid
         if currentPage >= totalPages {
@@ -171,10 +170,10 @@ class ReaderViewModel: ObservableObject {
                 if self.currentViewSize != .zero {
                     await self.repaginateContent()
                 } else {
-                    // Fallback pagination until view size is available
+                    // Fallback pagination until view size is available (using encoding-aware approach)
                     await MainActor.run {
                         self.currentPaginationService = self.coordinator.makePaginationService(
-                            textSource: textSource,
+                            textContent: content,
                             userSettings: self.coordinator.userSettings
                         )
                     }
@@ -209,24 +208,14 @@ class ReaderViewModel: ObservableObject {
         }
     }
     
-    /// Extract text content from TextSource for display
+    /// Extract text content from TextSource for display using Book's encoding
     private func extractTextContent(from textSource: TextSource) async throws -> String {
-        switch textSource {
-        case .memoryMapped(let nsData):
-            // Convert NSData to String
-            guard let string = String(data: nsData as Data, encoding: .utf8) else {
-                throw AppError.fileReadFailed(filename: book.title, underlyingError: nil)
-            }
-            return string
-            
-        case .streaming(let fileHandle):
-            // Read from FileHandle
-            let data = fileHandle.readDataToEndOfFile()
-            guard let string = String(data: data, encoding: .utf8) else {
-                throw AppError.fileReadFailed(filename: book.title, underlyingError: nil)
-            }
-            return string
-        }
+        // Use the FileProcessor's encoding-aware extraction method
+        return try await coordinator.fileProcessor.extractTextContent(
+            from: textSource,
+            using: book.stringEncoding,
+            filename: book.title
+        )
     }
     
     /// Update the page content based on current page
@@ -339,5 +328,50 @@ class ReaderViewModel: ObservableObject {
         // In a real implementation, this would use the actual text content
         let estimatedCharsPerPage = fullBookContent.count / max(totalPages, 1)
         return page * estimatedCharsPerPage
+    }
+    
+    // MARK: - Encoding Management Methods
+    
+    /// Change the book's encoding and reprocess the content
+    /// - Parameter newEncoding: The new encoding to use
+    func changeBookEncoding(to newEncoding: String) {
+        debugPrint("📄 ReaderViewModel: Changing book encoding to: \(newEncoding)")
+        
+        // Update the book with new encoding
+        let updatedBook = book.withEncoding(newEncoding)
+        
+        // Save the updated book to persistence
+        coordinator.updateBook(updatedBook)
+        
+        // Update our local book reference
+        self.book = updatedBook
+        
+        // Clear current content and pagination cache
+        clearPaginationCache()
+        
+        // Reload the book with new encoding
+        loadBook()
+    }
+    
+    /// Get available encodings for the UI
+    var availableEncodings: [String] {
+        return Book.supportedEncodings
+    }
+    
+    /// Get the current book's encoding
+    var currentEncoding: String {
+        return book.textEncoding
+    }
+    
+    /// Clear pagination cache to force re-processing
+    private func clearPaginationCache() {
+        debugPrint("📄 ReaderViewModel: Clearing pagination cache")
+        currentTextSource = nil
+        currentPaginationService = nil
+        bookPages = []
+        fullBookContent = ""
+        totalPages = 0
+        currentPage = 0
+        pageContent = ""
     }
 } 
