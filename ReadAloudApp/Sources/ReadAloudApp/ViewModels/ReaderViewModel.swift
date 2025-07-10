@@ -134,10 +134,16 @@ class ReaderViewModel: ObservableObject {
         currentViewSize = size
         currentContentSize = CGSize(width: size.width, height: size.height - 100)
         
-        // Re-paginate if we have content (now async)
-        if currentTextSource != nil {
+        // Re-paginate if we have content (now async with immediate display)
+        if !fullBookContent.isEmpty {
             Task {
-                await repaginateContent()
+                // Show current content immediately while re-paginating
+                await MainActor.run {
+                    self.showInitialContent()
+                }
+                
+                // Perform accurate pagination in background
+                await self.repaginateContent()
             }
         }
     }
@@ -164,35 +170,14 @@ class ReaderViewModel: ObservableObject {
                     self.currentTextSource = textSource
                     self.fullBookContent = content
                     self.isLoading = false
+                    
+                    // Show content immediately with temporary pagination
+                    self.showInitialContent()
                 }
                 
-                // Perform pagination after updating the main actor properties
-                if self.currentViewSize != .zero {
-                    await self.repaginateContent()
-                } else {
-                    // Fallback pagination until view size is available (using encoding-aware approach)
-                    await MainActor.run {
-                        self.currentPaginationService = self.coordinator.makePaginationService(
-                            textContent: content,
-                            userSettings: self.coordinator.userSettings
-                        )
-                    }
-                    
-                    let pages = await self.currentPaginationService?.paginateText(
-                        content: content,
-                        settings: self.coordinator.userSettings,
-                        viewSize: self.currentContentSize // Default iPhone size
-                    ) ?? []
-                    
-                    await MainActor.run {
-                        self.bookPages = pages
-                        self.totalPages = self.bookPages.count
-                        self.updatePageContent()
-                        
-                        // Restore saved page position after pagination
-                        self.restoreSavedPosition()
-                    }
-                }
+                // Perform full pagination in background
+                await performBackgroundPagination(content: content)
+                
             } catch {
                 // Handle loading error
                 await MainActor.run {
@@ -204,6 +189,74 @@ class ReaderViewModel: ObservableObject {
                     // Report error to coordinator
                     self.coordinator.handleError(error)
                 }
+            }
+        }
+    }
+    
+    /// Show initial content immediately with estimated pagination
+    @MainActor
+    private func showInitialContent() {
+        debugPrint("📄 ReaderViewModel: Showing initial content immediately")
+        
+        // Create temporary pagination service for immediate display
+        currentPaginationService = coordinator.makePaginationService(
+            textContent: fullBookContent,
+            userSettings: coordinator.userSettings
+        )
+        
+        // Show first page content immediately with estimated pagination
+        let estimatedCharsPerPage = max(1000, fullBookContent.count / 50) // Rough estimate
+        let startIndex = currentPage * estimatedCharsPerPage
+        
+        if startIndex < fullBookContent.count {
+            let endIndex = min(startIndex + estimatedCharsPerPage, fullBookContent.count)
+            let startIdx = fullBookContent.index(fullBookContent.startIndex, offsetBy: startIndex)
+            let endIdx = fullBookContent.index(fullBookContent.startIndex, offsetBy: endIndex)
+            
+            pageContent = String(fullBookContent[startIdx..<endIdx])
+            totalPages = max(1, fullBookContent.count / estimatedCharsPerPage)
+            
+            debugPrint("📄 ReaderViewModel: Showing estimated page content (\(pageContent.count) chars)")
+        } else {
+            // Fallback to beginning of book
+            let endIndex = min(estimatedCharsPerPage, fullBookContent.count)
+            pageContent = String(fullBookContent.prefix(endIndex))
+            totalPages = max(1, fullBookContent.count / estimatedCharsPerPage)
+            currentPage = 0
+        }
+    }
+    
+    /// Perform accurate pagination in the background
+    private func performBackgroundPagination(content: String) async {
+        debugPrint("📄 ReaderViewModel: Starting background pagination")
+        
+        let currentPageBeforePagination = await MainActor.run { currentPage }
+        
+        // Perform pagination based on view size
+        let hasValidViewSize = await MainActor.run { currentViewSize != .zero }
+        if hasValidViewSize {
+            await repaginateContent()
+        } else {
+            // Fallback pagination with default size
+            let pages = await currentPaginationService?.paginateText(
+                content: content,
+                settings: coordinator.userSettings,
+                viewSize: currentContentSize
+            ) ?? []
+            
+            await MainActor.run {
+                self.bookPages = pages
+                self.totalPages = self.bookPages.count
+                
+                // Update current page content with accurate pagination
+                self.updatePageContent()
+                
+                // Restore saved page position if it changed
+                if currentPageBeforePagination != self.currentPage {
+                    self.restoreSavedPosition()
+                }
+                
+                debugPrint("📄 ReaderViewModel: Background pagination complete (\(pages.count) pages)")
             }
         }
     }
@@ -247,6 +300,35 @@ class ReaderViewModel: ObservableObject {
     func goToPage(_ page: Int) {
         guard page >= 0 && page < totalPages else { return }
         currentPage = page
+        
+        // If we have accurate pages, use them
+        if !bookPages.isEmpty && page < bookPages.count {
+            pageContent = bookPages[page]
+        } else if !fullBookContent.isEmpty {
+            // Otherwise, show estimated content immediately
+            Task { @MainActor in
+                showEstimatedPageContent(for: page)
+            }
+        }
+        
+        // Save progress
+        saveCurrentProgress()
+    }
+    
+    /// Show estimated content for a specific page
+    @MainActor
+    private func showEstimatedPageContent(for page: Int) {
+        let estimatedCharsPerPage = max(1000, fullBookContent.count / max(totalPages, 1))
+        let startIndex = page * estimatedCharsPerPage
+        
+        if startIndex < fullBookContent.count {
+            let endIndex = min(startIndex + estimatedCharsPerPage, fullBookContent.count)
+            let startIdx = fullBookContent.index(fullBookContent.startIndex, offsetBy: startIndex)
+            let endIdx = fullBookContent.index(fullBookContent.startIndex, offsetBy: endIndex)
+            
+            pageContent = String(fullBookContent[startIdx..<endIdx])
+            debugPrint("📄 ReaderViewModel: Showing estimated content for page \(page)")
+        }
     }
     
     /// Start/stop text-to-speech
@@ -328,50 +410,5 @@ class ReaderViewModel: ObservableObject {
         // In a real implementation, this would use the actual text content
         let estimatedCharsPerPage = fullBookContent.count / max(totalPages, 1)
         return page * estimatedCharsPerPage
-    }
-    
-    // MARK: - Encoding Management Methods
-    
-    /// Change the book's encoding and reprocess the content
-    /// - Parameter newEncoding: The new encoding to use
-    func changeBookEncoding(to newEncoding: String) {
-        debugPrint("📄 ReaderViewModel: Changing book encoding to: \(newEncoding)")
-        
-        // Update the book with new encoding
-        let updatedBook = book.withEncoding(newEncoding)
-        
-        // Save the updated book to persistence
-        coordinator.updateBook(updatedBook)
-        
-        // Update our local book reference
-        self.book = updatedBook
-        
-        // Clear current content and pagination cache
-        clearPaginationCache()
-        
-        // Reload the book with new encoding
-        loadBook()
-    }
-    
-    /// Get available encodings for the UI
-    var availableEncodings: [String] {
-        return Book.supportedEncodings
-    }
-    
-    /// Get the current book's encoding
-    var currentEncoding: String {
-        return book.textEncoding
-    }
-    
-    /// Clear pagination cache to force re-processing
-    private func clearPaginationCache() {
-        debugPrint("📄 ReaderViewModel: Clearing pagination cache")
-        currentTextSource = nil
-        currentPaginationService = nil
-        bookPages = []
-        fullBookContent = ""
-        totalPages = 0
-        currentPage = 0
-        pageContent = ""
     }
 } 

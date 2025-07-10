@@ -82,32 +82,4 @@ public struct Book: Identifiable, Codable, Hashable {
             return .utf8 // Default fallback
         }
     }
-    
-    /// Get list of supported encodings for UI
-    public static var supportedEncodings: [String] {
-        return [
-            "UTF-8",
-            "UTF-16", 
-            "ASCII",
-            "ISO-8859-1",
-            "Windows-1252",
-            "Shift_JIS",
-            "EUC-JP",
-            "GBK",
-            "Big5"
-        ]
-    }
-    
-    /// Create a new Book with updated encoding
-    public func withEncoding(_ encoding: String) -> Book {
-        return Book(
-            id: self.id,
-            title: self.title,
-            fileURL: self.fileURL,
-            contentHash: self.contentHash,
-            importedDate: self.importedDate,
-            fileSize: self.fileSize,
-            textEncoding: encoding
-        )
-    }
 } 
