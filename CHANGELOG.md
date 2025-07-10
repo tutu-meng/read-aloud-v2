@@ -7,7 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+#### LibraryViewModel Book Loading Fix (2025-01-09)
+- **Fixed `loadBooks()` method**: Replaced hardcoded sample book loading with proper persistence from Documents directory
+- **Document Directory Scanning**: Implemented file system scanning to discover imported text files (.txt, .text extensions)
+- **Book Metadata Creation**: Added automatic Book object creation from file attributes with SHA256 content hash calculation
+- **Fallback Sample Book**: Maintains sample book as fallback when no imported books are found for testing purposes
+- **Asynchronous Loading**: Implemented proper async/await pattern with background processing and MainActor UI updates
+- **Error Handling**: Added comprehensive error handling with graceful degradation to sample book on failures
+- **Auto-refresh on Import**: Enhanced notification system to refresh entire book list when new books are imported
+- **Sorted Display**: Books are automatically sorted by import date (newest first) for better user experience
+
+**User Experience Improvements**:
+- Library now displays all imported books instead of only sample book
+- Real-time updates when importing new files through document picker
+- Proper loading states and error messages for better feedback
+- Persistent book storage across app launches
+
+**Technical Benefits**:
+- Proper separation of concerns with dedicated file scanning methods
+- CryptoKit integration for secure content hash calculation
+- Robust file attribute reading with proper error handling
+- Maintains compatibility with existing file import workflow
+
 ### Added
+
+#### PERSIST-3: Library View Implementation (2025-01-09)
+- **Complete Library View System**: Implemented comprehensive LibraryView as the application's main entry point
+- **Book Collection Display**: Created responsive List-based layout displaying all imported books with proper navigation
+- **BookRow Component**: Developed individual book row component with title display, file size formatting, and navigation indicators
+- **Empty State Design**: Implemented attractive empty state with informative messaging and call-to-action buttons
+- **Automatic Updates**: Integrated reactive updates using @Published properties and notification system for real-time library updates
+- **Navigation Integration**: Seamless coordinator-based navigation to ReaderView with proper book selection handling
+- **Import Integration**: Full integration with DocumentPicker for file import functionality
+- **Responsive Design**: Modern iOS design patterns following HIG guidelines with proper accessibility support
+
+**User Experience Benefits**:
+- Intuitive main navigation hub for accessing book collection
+- Immediate visual feedback for newly imported books without app restart
+- Clean, organized interface with clear visual hierarchy
+- Responsive interactions with smooth navigation transitions
+- Informative empty state guiding users to import their first book
+
+**Technical Implementation**:
+- MVVM-C architecture with proper separation of concerns
+- Combine framework integration for reactive programming
+- MainActor isolation for thread-safe UI updates
+- Notification-based decoupled communication system
+- ByteCountFormatter integration for proper file size display
+
+**Architecture Benefits**:
+- Testable design with clear dependency injection
+- Scalable foundation for future library enhancements
+- Publisher-subscriber pattern for decoupled updates
+- Coordinator pattern for centralized navigation management
 
 #### Documentation Update: Comprehensive Project Documentation Refresh (2025-01-08)
 - **Developer Guide Enhancement**: Updated complete architecture documentation with current implementation status

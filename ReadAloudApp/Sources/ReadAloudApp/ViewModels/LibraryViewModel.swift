@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import CryptoKit
 
 /// LibraryViewModel manages the state and logic for the library view
 class LibraryViewModel: ObservableObject {
@@ -29,22 +30,129 @@ class LibraryViewModel: ObservableObject {
     
     /// Load books from storage
     func loadBooks() {
-        // TODO: Implement loading books from PersistenceService
-        // For now, adding sample book for UI testing
+        isLoading = true
         
-        // Check if sample book exists
+        Task {
+            do {
+                let loadedBooks = try await loadBooksFromDocuments()
+                
+                await MainActor.run {
+                    self.books = loadedBooks
+                    self.isLoading = false
+                    debugPrint("📚 LibraryViewModel: Loaded \(loadedBooks.count) books from storage")
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    self.errorMessage = "Failed to load books: \(error.localizedDescription)"
+                    debugPrint("❌ LibraryViewModel: Failed to load books: \(error)")
+                    
+                    // Fallback to sample book for testing
+                    self.loadSampleBook()
+                }
+            }
+        }
+    }
+    
+    /// Load books from the app's Documents directory
+    /// This method scans the Documents directory for imported text files
+    /// and creates Book objects for each discovered file
+    private func loadBooksFromDocuments() async throws -> [Book] {
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileManager = FileManager.default
+        
+        // Get all files in the Documents directory
+        let fileURLs = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.fileSizeKey, .creationDateKey], options: .skipsHiddenFiles)
+        
+        // Filter for text files
+        let textFiles = fileURLs.filter { url in
+            let pathExtension = url.pathExtension.lowercased()
+            return pathExtension == "txt" || pathExtension == "text"
+        }
+        
+        var books: [Book] = []
+        
+        // Create Book objects for each text file
+        for fileURL in textFiles {
+            do {
+                let book = try await createBookFromFile(fileURL)
+                books.append(book)
+            } catch {
+                debugPrint("⚠️ LibraryViewModel: Failed to create book from file \(fileURL.lastPathComponent): \(error)")
+                // Continue with other files instead of failing completely
+            }
+        }
+        
+        // Sort books by import date (newest first)
+        books.sort { $0.importedDate > $1.importedDate }
+        
+        // If no books found, add sample book for testing
+        if books.isEmpty {
+            debugPrint("📚 LibraryViewModel: No books found in Documents, adding sample book")
+            books.append(createSampleBook())
+        }
+        
+        return books
+    }
+    
+    /// Create a Book object from a file URL
+    private func createBookFromFile(_ fileURL: URL) async throws -> Book {
+        let fileManager = FileManager.default
+        
+        // Get file attributes
+        let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
+        let fileSize = attributes[.size] as? Int64 ?? 0
+        let creationDate = attributes[.creationDate] as? Date ?? Date()
+        
+        // Calculate content hash
+        let contentHash = try await calculateContentHash(for: fileURL)
+        
+        // Create book title from filename
+        let title = fileURL.deletingPathExtension().lastPathComponent
+        
+        return Book(
+            id: UUID(),
+            title: title,
+            fileURL: fileURL,
+            contentHash: contentHash,
+            importedDate: creationDate,
+            fileSize: fileSize
+        )
+    }
+    
+    /// Calculate SHA256 hash for file content
+    private func calculateContentHash(for url: URL) async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    let data = try Data(contentsOf: url)
+                    let hash = SHA256.hash(data: data)
+                    let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+                    continuation.resume(returning: hashString)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    /// Create the sample book for testing
+    private func createSampleBook() -> Book {
         let sampleBookPath = Bundle.main.path(forResource: "alice_in_wonderland", ofType: "txt", inDirectory: "SampleBooks")
             ?? "Resources/SampleBooks/alice_in_wonderland.txt"
         
-        let sampleBook = Book(
+        return Book(
             title: "Alice's Adventures in Wonderland",
             fileURL: URL(fileURLWithPath: sampleBookPath),
             contentHash: "sample-alice-hash",
             importedDate: Date(),
             fileSize: 5102
         )
-        
-        books = [sampleBook]
+    }
+    
+    /// Load sample book as fallback
+    private func loadSampleBook() {
+        books = [createSampleBook()]
     }
     
     /// Handle book selection
@@ -67,9 +175,18 @@ class LibraryViewModel: ObservableObject {
         if !books.contains(where: { $0.contentHash == book.contentHash }) {
             books.append(book)
             debugPrint("✅ LibraryViewModel: Book added successfully")
+            
+            // Sort books by import date (newest first)
+            books.sort { $0.importedDate > $1.importedDate }
         } else {
             debugPrint("⚠️ LibraryViewModel: Book already exists with same content hash")
         }
+    }
+    
+    /// Refresh the book list by reloading from storage
+    func refreshBooks() {
+        debugPrint("🔄 LibraryViewModel: Refreshing book list")
+        loadBooks()
     }
     
     /// Remove a book from the library
@@ -89,7 +206,8 @@ class LibraryViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] book in
                 Task { @MainActor in
-                    self?.addBook(book)
+                    // Refresh the entire book list to ensure we have the most up-to-date data
+                    self?.refreshBooks()
                 }
             }
             .store(in: &cancellables)
