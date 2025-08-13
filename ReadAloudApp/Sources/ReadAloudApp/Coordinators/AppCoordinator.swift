@@ -247,24 +247,27 @@ class AppCoordinator: ObservableObject {
         debugPrint("📊 AppCoordinator: Loading initial settings from persistence")
         
         Task {
+            var loadedSettings: UserSettings = .default
+            var loadedProgress: [ReadingProgress] = []
+            
+            // Load settings independently so a failure in progress does not reset settings
             do {
-                // Load UserSettings from persistence
-                let settings = try persistenceService.loadUserSettings()
-                
-                // Load ReadingProgress from persistence
-                let progressList = try persistenceService.loadReadingProgress()
-                
-                await MainActor.run {
-                    self.userSettings = settings
-                    self.readingProgressList = progressList
-                    debugPrint("✅ AppCoordinator: Loaded settings and \(progressList.count) reading progress entries")
-                }
-                
+                loadedSettings = try persistenceService.loadUserSettings()
             } catch {
-                await MainActor.run {
-                    debugPrint("⚠️ AppCoordinator: Failed to load settings, using defaults: \(error)")
-                    // userSettings and readingProgressList already have default values
-                }
+                debugPrint("⚠️ AppCoordinator: Failed to load settings, using defaults: \(error)")
+            }
+            
+            // Load reading progress independently
+            do {
+                loadedProgress = try persistenceService.loadReadingProgress()
+            } catch {
+                debugPrint("⚠️ AppCoordinator: Failed to load reading progress, using empty list: \(error)")
+            }
+            
+            await MainActor.run {
+                self.userSettings = loadedSettings
+                self.readingProgressList = loadedProgress
+                debugPrint("✅ AppCoordinator: Loaded settings and \(loadedProgress.count) reading progress entries")
             }
         }
     }
@@ -273,17 +276,14 @@ class AppCoordinator: ObservableObject {
     /// - Parameter settings: The UserSettings to save
     func saveUserSettings(_ settings: UserSettings) {
         debugPrint("💾 AppCoordinator: Saving UserSettings to persistence")
-        
-        Task {
-            do {
-                try persistenceService.saveUserSettings(settings)
-                debugPrint("✅ AppCoordinator: UserSettings saved successfully")
-            } catch {
-                debugPrint("❌ AppCoordinator: Failed to save UserSettings: \(error)")
-                await MainActor.run {
-                    self.handleError(error)
-                }
-            }
+        // Update in-memory immediately to keep UI consistent
+        self.userSettings = settings
+        do {
+            try persistenceService.saveUserSettings(settings)
+            debugPrint("✅ AppCoordinator: UserSettings saved successfully")
+        } catch {
+            debugPrint("❌ AppCoordinator: Failed to save UserSettings: \(error)")
+            self.handleError(error)
         }
     }
     

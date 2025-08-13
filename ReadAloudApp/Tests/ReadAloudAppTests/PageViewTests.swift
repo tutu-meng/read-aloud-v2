@@ -91,6 +91,31 @@ final class PageViewTests: XCTestCase {
         XCTAssertEqual(pageView.content, content)
         XCTAssertEqual(pageView.pageIndex, 4)
     }
+
+    // MARK: - Regression: Ensure attributes cover full UTF-16 range and char wrapping is set
+    func testAttributedStringCoversFullUTF16RangeAndCharWrapping() {
+        // Include multi-codepoint graphemes and CJK to stress UTF-16 length vs Character count
+        let text = "末尾测试🙂中文🚀"
+        let pv = PageView(content: text, pageIndex: 0)
+        let settings = UserSettings.default
+        let attr = pv.createAttributedString(from: text, settings: settings)
+
+        let nsLen = (text as NSString).length
+        // Extract paragraph style at the last UTF-16 index-1
+        let range = NSRange(location: nsLen - 1, length: 1)
+        let attrs = attr.attributes(at: nsLen - 1, effectiveRange: nil)
+        let font = attrs[.font] as? UIFont
+        let color = attrs[.foregroundColor] as? UIColor
+        let para = attrs[.paragraphStyle] as? NSParagraphStyle
+
+        XCTAssertNotNil(font)
+        XCTAssertNotNil(color)
+        XCTAssertNotNil(para)
+        XCTAssertEqual(para?.lineBreakMode, .byCharWrapping)
+        // Sanity: ensure attributed length equals UTF-16 length
+        XCTAssertEqual(attr.length, nsLen)
+        XCTAssertEqual(range.location, nsLen - 1)
+    }
     
     // MARK: - Test PageView Initialization Edge Cases
     

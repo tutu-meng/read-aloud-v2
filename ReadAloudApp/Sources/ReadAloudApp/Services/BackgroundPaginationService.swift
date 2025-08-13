@@ -230,10 +230,10 @@ class BackgroundPaginationService {
                 break 
             }
             
-            // Extract page content
-            let startIdx = content.index(content.startIndex, offsetBy: range.location)
-            let endIdx = content.index(startIdx, offsetBy: min(range.length, content.count - range.location))
-            let pageContent = String(content[startIdx..<endIdx])
+            // Extract page content using NSString to respect UTF-16 indices from CoreText
+            let nsContent = content as NSString
+            let safeLen = min(range.length, max(0, nsContent.length - range.location))
+            let pageContent = safeLen > 0 ? nsContent.substring(with: NSRange(location: range.location, length: safeLen)) : ""
             
             // Create page range
             let pageRange = PaginationCache.PageRange(
@@ -243,7 +243,7 @@ class BackgroundPaginationService {
             )
             
             pages.append(pageRange)
-            currentIndex = range.location + range.length
+            currentIndex = range.location + safeLen
         }
         
         return (pages, currentIndex)

@@ -73,20 +73,20 @@ struct ReaderView: View {
                         pageIndex: pageIndex
                     )
                     .tag(pageIndex)
-                    .frame(width: geometry.size.width, height: geometry.size.height - 100)
+                    .frame(width: geometry.size.width, height: geometry.size.height - 80)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.default, value: viewModel.currentPage)
             .onAppear {
-                // Provide view size to viewModel for pagination calculations
-                let contentSize = CGSize(width: geometry.size.width, height: geometry.size.height - 100)
-                viewModel.updateViewSize(contentSize)
+                // Provide exact text drawable size to viewModel for pagination calculations
+                let textSize = LayoutMetrics.computeTextDrawableSize(container: geometry.size)
+                viewModel.updateViewSize(textSize)
             }
             .onChange(of: geometry.size) { _, newSize in
                 // Update view size when geometry changes
-                let contentSize = CGSize(width: newSize.width, height: newSize.height - 100)
-                viewModel.updateViewSize(contentSize)
+                let textSize = LayoutMetrics.computeTextDrawableSize(container: newSize)
+                viewModel.updateViewSize(textSize)
             }
             
             // Page indicator

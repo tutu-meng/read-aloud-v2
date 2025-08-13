@@ -56,7 +56,9 @@ struct PaginationCache: Codable {
             settings.fontName,
             "\(settings.fontSize)",
             "\(settings.lineSpacing)",
-            "\(Int(viewSize.width))x\(Int(viewSize.height))"
+            "\(Int(viewSize.width))x\(Int(viewSize.height))",
+            // Layout version to invalidate caches when drawable metrics change
+            "pad16v1"
         ]
         return components.joined(separator: "-")
     }

@@ -204,6 +204,7 @@ class ReaderViewModel: ObservableObject {
         // Use actual book content if available
         if !bookPages.isEmpty && currentPage < bookPages.count {
             pageContent = bookPages[currentPage]
+            print("pageContent: \(pageContent)")
         } else if !isPaginationComplete {
             // Show loading message for unpaginated pages
             pageContent = """

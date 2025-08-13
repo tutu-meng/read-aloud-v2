@@ -51,7 +51,7 @@ public struct PageView: UIViewRepresentable {
         let textColor = getTextColor(for: settings.theme)
         
         // Apply styling
-        let fullRange = NSRange(location: 0, length: text.count)
+        let fullRange = NSRange(location: 0, length: (text as NSString).length)
         attributedString.addAttribute(.font, value: font, range: fullRange)
         attributedString.addAttribute(.foregroundColor, value: textColor, range: fullRange)
         
@@ -59,6 +59,7 @@ public struct PageView: UIViewRepresentable {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 4 * settings.lineSpacing
         paragraphStyle.paragraphSpacing = 8 * settings.lineSpacing
+        paragraphStyle.lineBreakMode = .byCharWrapping
         attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRange)
         
         return attributedString
@@ -69,12 +70,18 @@ public struct PageView: UIViewRepresentable {
         // Configure appearance
         textView.backgroundColor = getBackgroundColor(for: settings.theme)
         textView.textColor = getTextColor(for: settings.theme)
-        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        textView.textContainerInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+
+        textView.contentInset = .zero
+        textView.scrollIndicatorInsets = .zero
+        if #available(iOS 11.0, *) {
+            textView.contentInsetAdjustmentBehavior = .never
+        }
         
         // Configure text container
         textView.textContainer.lineFragmentPadding = 0
         textView.textContainer.maximumNumberOfLines = 0
-        textView.textContainer.lineBreakMode = .byWordWrapping
+        textView.textContainer.lineBreakMode = .byCharWrapping
     }
     
     /// Get UIFont based on font name and size
