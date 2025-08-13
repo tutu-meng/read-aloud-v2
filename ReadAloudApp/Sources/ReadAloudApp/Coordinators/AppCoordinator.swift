@@ -56,6 +56,8 @@ class AppCoordinator: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     // PGN-10: Background pagination service
     private var backgroundPaginationService: BackgroundPaginationService?
+    // Cache currently active ReaderViewModel to prevent frequent reinitialization
+    private var cachedReaderViewModel: ReaderViewModel?
     
     // MARK: - Initialization
     
@@ -93,6 +95,10 @@ class AppCoordinator: ObservableObject {
     /// Navigate to the reader view with a selected book
     func navigateToReader(with book: Book) {
         debugPrint("📖 AppCoordinator: Navigating to reader with book: \(book.title)")
+        // If switching books, clear cached VM
+        if let cached = cachedReaderViewModel, cached.book.contentHash != book.contentHash {
+            cachedReaderViewModel = nil
+        }
         selectedBook = book
         currentView = .reader
     }
@@ -102,6 +108,8 @@ class AppCoordinator: ObservableObject {
         debugPrint("📚 AppCoordinator: Navigating to library")
         currentView = .library
         selectedBook = nil
+        // Clear cached VM when leaving reader
+        cachedReaderViewModel = nil
     }
     
     /// Show settings
@@ -150,8 +158,13 @@ class AppCoordinator: ObservableObject {
     
     /// Create ReaderViewModel with dependencies
     func makeReaderViewModel(for book: Book) -> ReaderViewModel {
+        if let cached = cachedReaderViewModel, cached.book.contentHash == book.contentHash {
+            return cached
+        }
         debugPrint("🏭 AppCoordinator: Creating ReaderViewModel for book: \(book.title)")
-        return ReaderViewModel(book: book, coordinator: self)
+        let vm = ReaderViewModel(book: book, coordinator: self)
+        cachedReaderViewModel = vm
+        return vm
     }
     
     /// Create SettingsViewModel with dependencies
