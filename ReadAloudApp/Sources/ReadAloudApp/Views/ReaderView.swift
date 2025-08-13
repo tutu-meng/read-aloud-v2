@@ -73,7 +73,7 @@ struct ReaderView: View {
                         pageIndex: pageIndex
                     )
                     .tag(pageIndex)
-                    .frame(width: geometry.size.width, height: geometry.size.height - 80)
+                    .frame(width: geometry.size.width, height: geometry.size.height-100)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))

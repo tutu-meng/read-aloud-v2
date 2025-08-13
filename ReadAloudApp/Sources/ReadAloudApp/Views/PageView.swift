@@ -41,6 +41,15 @@ public struct PageView: UIViewRepresentable {
         // Create NSAttributedString with proper formatting
         let attributedString = createAttributedString(from: content, settings: appCoordinator.userSettings)
         uiView.attributedText = attributedString
+
+        // Debug: print effective sizes used by UITextView/TextKit
+        #if DEBUG
+        let bounds = uiView.bounds.size
+        let inset = uiView.textContainerInset
+        let padding = uiView.textContainer.lineFragmentPadding
+        let effectiveDrawableWidth = max(0, bounds.width - inset.left - inset.right - (padding * 2))
+        debugPrint("📐 PageView[\(pageIndex)]: bounds=\(bounds), contentInset=\(uiView.contentInset), textContainerInset=\(inset), lineFragmentPadding=\(padding), effectiveDrawableWidth=\(effectiveDrawableWidth)")
+        #endif
     }
     
     func createAttributedString(from text: String, settings: UserSettings) -> NSAttributedString {
@@ -82,6 +91,7 @@ public struct PageView: UIViewRepresentable {
         textView.textContainer.lineFragmentPadding = 0
         textView.textContainer.maximumNumberOfLines = 0
         textView.textContainer.lineBreakMode = .byCharWrapping
+        
     }
     
     /// Get UIFont based on font name and size

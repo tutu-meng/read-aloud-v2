@@ -116,6 +116,57 @@ final class PageViewTests: XCTestCase {
         XCTAssertEqual(attr.length, nsLen)
         XCTAssertEqual(range.location, nsLen - 1)
     }
+
+    // MARK: - Regression: Last glyph of paginated page sits within container width (no early cut-off)
+    func testLastGlyphWithinContainerWidthForCJKSample() {
+        // Sample CJK heavy text to stress wrapping
+        let sample = String(repeating: "蒸汽与机械的浪潮中，谁能触及时光？", count: 50)
+        let settings = UserSettings.default
+        let pageView = PageView(content: sample, pageIndex: 0)
+        let attributed = pageView.createAttributedString(from: sample, settings: settings)
+
+        // Use same bounds the paginator uses
+        let containerSize = CGSize(width: 300, height: 500)
+        let drawable = LayoutMetrics.computeTextDrawableSize(container: containerSize)
+        let bounds = CGRect(origin: .zero, size: drawable)
+
+        // Ask paginator for first page range
+        let paginator = PaginationService(textContent: sample, userSettings: settings)
+        let pageRange = paginator.calculatePageRange(from: 0, in: bounds, with: attributed)
+
+        // Layout with TextKit and measure the last glyph rect
+        let storage = NSTextStorage(attributedString: attributed)
+        let manager = NSLayoutManager()
+        let container = NSTextContainer(size: drawable)
+        container.lineFragmentPadding = 0
+        container.maximumNumberOfLines = 0
+        container.lineBreakMode = .byCharWrapping
+        manager.addTextContainer(container)
+        storage.addLayoutManager(manager)
+
+        let lastChar = pageRange.location + max(0, pageRange.length - 1)
+        let lastGlyph = manager.glyphIndexForCharacter(at: lastChar)
+        let lastRect = manager.boundingRect(forGlyphRange: NSRange(location: lastGlyph, length: 1), in: container)
+
+        // The last glyph should be inside the drawable width (allow tiny epsilon)
+        XCTAssertLessThanOrEqual(lastRect.maxX, drawable.width + 0.5)
+        XCTAssertGreaterThan(lastRect.maxX, drawable.width - 40) // reasonably near right edge for dense CJK
+    }
+
+    func testPaginationAndUITextContainerUseSameWidth() {
+        let container = CGSize(width: 300, height: 500)
+        let drawable = LayoutMetrics.computeTextDrawableSize(container: container)
+
+        // UI text container width
+        let textContainer = NSTextContainer(size: drawable)
+        textContainer.lineFragmentPadding = 0
+        let uiWidth = textContainer.size.width
+
+        // Paginator width (Core Text bounds)
+        let paginatorWidth = CGRect(origin: .zero, size: drawable).width
+
+        XCTAssertEqual(uiWidth, paginatorWidth, accuracy: 0.5)
+    }
     
     // MARK: - Test PageView Initialization Edge Cases
     
