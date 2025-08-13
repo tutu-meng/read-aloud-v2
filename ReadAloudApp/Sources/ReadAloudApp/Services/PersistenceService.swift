@@ -39,6 +39,8 @@ class PersistenceService {
     func overrideUserDefaultsForTesting(_ defaults: UserDefaults) {
         userDefaults = defaults
     }
+
+    // Removed SQLite implementation details; now delegated to DatabaseService/PaginationStore.
     
     // MARK: - UserSettings Persistence
     
@@ -236,69 +238,53 @@ class PersistenceService {
         }
     }
 
-    // MARK: - Pagination Cache Stub APIs (used by ReaderViewModel under PGN-9/10)
-    // These are minimal stubs to satisfy calls; full implementation may exist elsewhere.
+    // MARK: - Pagination Cache APIs (SQLite-backed)
     func loadPaginationCache(bookHash: String, settingsKey: String) throws -> PaginationCache? {
-        // Resolve path under Application Support/PaginationCache/<bookHash>/pagination-<settingsKey>.json
-        // If not present, return nil.
-        let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
-            .appendingPathComponent("PaginationCache")
-            .appendingPathComponent(bookHash)
-        let fileURL = baseDir.appendingPathComponent("pagination-\(settingsKey).json")
-        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
-        let data = try Data(contentsOf: fileURL)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(PaginationCache.self, from: data)
+        let fallback = loadLastViewSize()
+        return try PaginationStore.shared.fetchCache(bookHash: bookHash, settingsKey: settingsKey, fallbackViewSize: fallback)
     }
 
     func savePaginationCache(_ cache: PaginationCache) throws {
-        let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
-            .appendingPathComponent("PaginationCache")
-            .appendingPathComponent(cache.bookHash)
-        try FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
-        let fileURL = baseDir.appendingPathComponent("pagination-\(cache.settingsKey).json")
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(cache)
-        try data.write(to: fileURL)
+        try PaginationStore.shared.upsertBatch(
+            bookHash: cache.bookHash,
+            settingsKey: cache.settingsKey,
+            viewSize: cache.viewSize,
+            pages: cache.pages,
+            lastProcessedIndex: cache.lastProcessedIndex,
+            isComplete: cache.isComplete,
+            totalPages: cache.isComplete ? cache.pages.count : nil
+        )
+    }
+
+    /// Incrementally upsert only the provided pages for a given (bookHash, settingsKey)
+    func upsertPaginationBatch(bookHash: String,
+                               settingsKey: String,
+                               viewSize: CGSize,
+                               pages: [PaginationCache.PageRange],
+                               lastProcessedIndex: Int,
+                               isComplete: Bool,
+                               totalPages: Int?) throws {
+        try PaginationStore.shared.upsertBatch(
+            bookHash: bookHash,
+            settingsKey: settingsKey,
+            viewSize: viewSize,
+            pages: pages,
+            lastProcessedIndex: lastProcessedIndex,
+            isComplete: isComplete,
+            totalPages: totalPages
+        )
     }
 
     /// Remove all pagination caches for a given book
     func clearPaginationCache(for bookHash: String) {
-        do {
-            let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
-                .appendingPathComponent("PaginationCache")
-                .appendingPathComponent(bookHash)
-            if FileManager.default.fileExists(atPath: baseDir.path) {
-                try FileManager.default.removeItem(at: baseDir)
-            }
-        } catch {
-            debugPrint("⚠️ PersistenceService: Failed to clear pagination cache for book \(bookHash): \(error)")
-        }
+        do { try PaginationStore.shared.deleteAllForBook(bookHash) }
+        catch { debugPrint("⚠️ PersistenceService: Failed to clear pagination cache for book \(bookHash): \(error)") }
     }
 
     /// Remove all pagination caches for a book except the one matching keepSettingsKey
     func cleanupPaginationCaches(for bookHash: String, keepSettingsKey: String) {
-        do {
-            let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
-                .appendingPathComponent("PaginationCache")
-                .appendingPathComponent(bookHash)
-            guard FileManager.default.fileExists(atPath: baseDir.path) else { return }
-            let keepFileName = "pagination-\(keepSettingsKey).json"
-            if let enumerator = FileManager.default.enumerator(at: baseDir, includingPropertiesForKeys: nil) {
-                for case let url as URL in enumerator {
-                    if url.lastPathComponent.hasPrefix("pagination-") && url.pathExtension == "json" {
-                        if url.lastPathComponent != keepFileName {
-                            try? FileManager.default.removeItem(at: url)
-                        }
-                    }
-                }
-            }
-        } catch {
-            debugPrint("⚠️ PersistenceService: Failed to cleanup caches for book \(bookHash): \(error)")
-        }
+        do { try PaginationStore.shared.deleteAllExcept(bookHash: bookHash, keepSettingsKey: keepSettingsKey) }
+        catch { debugPrint("⚠️ PersistenceService: Failed to cleanup caches for book \(bookHash): \(error)") }
     }
 
     /// Validate that all books in the library still have valid file URLs

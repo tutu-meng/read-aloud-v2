@@ -105,7 +105,7 @@ class BackgroundPaginationService {
                     viewSize: viewSize
                 )
                 
-                let cache = try? await persistenceService.loadPaginationCache(
+                let cache = try? persistenceService.loadPaginationCache(
                     bookHash: book.contentHash,
                     settingsKey: cacheKey
                 )
@@ -190,18 +190,16 @@ class BackgroundPaginationService {
                 pages.append(contentsOf: batchResult.pages)
                 currentIndex = batchResult.lastProcessedIndex
                 
-                // Save progress
-                let cache = PaginationCache(
+                // Save progress incrementally to SQLite
+                try persistenceService.upsertPaginationBatch(
                     bookHash: book.contentHash,
                     settingsKey: cacheKey,
                     viewSize: viewSize,
-                    pages: pages,
+                    pages: batchResult.pages,
                     lastProcessedIndex: currentIndex,
                     isComplete: currentIndex >= content.count,
-                    lastUpdated: Date()
+                    totalPages: currentIndex >= content.count ? (pages.count) : nil
                 )
-                
-                try persistenceService.savePaginationCache(cache)
                 
                 debugPrint("💾 BackgroundPaginationService: Saved \(pages.count) pages (progress: \(currentIndex)/\(content.count))")
                 

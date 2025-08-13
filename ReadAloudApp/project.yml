@@ -24,6 +24,7 @@ targets:
       TARGETED_DEVICE_FAMILY: "1,2"
       ENABLE_PREVIEWS: YES
       DEVELOPMENT_ASSET_PATHS: "Sources/ReadAloudApp/rsc"
+      OTHER_LDFLAGS: "-lsqlite3"
     dependencies: []
   ReadAloudAppTests:
     type: bundle.unit-test

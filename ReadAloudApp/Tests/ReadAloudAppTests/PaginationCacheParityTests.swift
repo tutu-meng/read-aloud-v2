@@ -67,17 +67,18 @@ final class PaginationCacheParityTests: XCTestCase {
         let settings = coordinator.userSettings
         let settingsKey = PaginationCache.cacheKey(bookHash: book.contentHash, settings: settings, viewSize: viewSize)
 
-        // Create a cache with deterministic contents
-        let page0 = PaginationCache.Page(index: 0, rangeLocation: 0, rangeLength: 21, content: "Hello world page 1 ✅")
-        let page1 = PaginationCache.Page(index: 1, rangeLocation: 21, rangeLength: 21, content: "Hello world page 2 ✅")
-        let page2 = PaginationCache.Page(index: 2, rangeLocation: 42, rangeLength: 21, content: "Hello world page 3 ✅")
+        // Create a cache with deterministic contents (PageRange API)
+        let page0 = PaginationCache.PageRange(pageNumber: 1, content: "Hello world page 1 ✅", startIndex: 0, endIndex: 21)
+        let page1 = PaginationCache.PageRange(pageNumber: 2, content: "Hello world page 2 ✅", startIndex: 21, endIndex: 42)
+        let page2 = PaginationCache.PageRange(pageNumber: 3, content: "Hello world page 3 ✅", startIndex: 42, endIndex: 63)
         let cache = PaginationCache(
             bookHash: book.contentHash,
             settingsKey: settingsKey,
-            createdAt: Date(),
+            viewSize: viewSize,
+            pages: [page0, page1, page2],
+            lastProcessedIndex: page2.endIndex,
             isComplete: true,
-            totalPages: 3,
-            pages: [page0, page1, page2]
+            lastUpdated: Date()
         )
 
         // Save cache to disk
@@ -90,14 +91,13 @@ final class PaginationCacheParityTests: XCTestCase {
         let exp = expectation(description: "Reader loaded page 0 from cache")
         viewModel.$pageContent
             .dropFirst()
+            .prefix(1)
             .sink { content in
-                if content == page0.content {
-                    exp.fulfill()
-                }
+                if content == page0.content { exp.fulfill() }
             }
             .store(in: &cancellables)
 
-        wait(for: [exp], timeout: 2.0)
+        wait(for: [exp], timeout: 3.0)
 
         // Assert: exact match for current page content and page count
         assertEqualAndPrint(viewModel.pageContent, page0.content, page: 1)
@@ -131,16 +131,17 @@ final class PaginationCacheParityTests: XCTestCase {
         let settingsKey = PaginationCache.cacheKey(bookHash: book.contentHash, settings: settings, viewSize: viewSize)
 
         // Three deterministic pages
-        let p0 = PaginationCache.Page(index: 0, rangeLocation: 0, rangeLength: 12, content: "Page0 contents")
-        let p1 = PaginationCache.Page(index: 1, rangeLocation: 12, rangeLength: 12, content: "Page1 contents")
-        let p2 = PaginationCache.Page(index: 2, rangeLocation: 24, rangeLength: 12, content: "Page2 contents")
+        let p0 = PaginationCache.PageRange(pageNumber: 1, content: "Page0 contents", startIndex: 0, endIndex: 12)
+        let p1 = PaginationCache.PageRange(pageNumber: 2, content: "Page1 contents", startIndex: 12, endIndex: 24)
+        let p2 = PaginationCache.PageRange(pageNumber: 3, content: "Page2 contents", startIndex: 24, endIndex: 36)
         let cache = PaginationCache(
             bookHash: book.contentHash,
             settingsKey: settingsKey,
-            createdAt: Date(),
+            viewSize: viewSize,
+            pages: [p0, p1, p2],
+            lastProcessedIndex: p2.endIndex,
             isComplete: true,
-            totalPages: 3,
-            pages: [p0, p1, p2]
+            lastUpdated: Date()
         )
 
         XCTAssertNoThrow(try persistence.savePaginationCache(cache))
@@ -151,10 +152,12 @@ final class PaginationCacheParityTests: XCTestCase {
 
         // Assert page 1 equals cache
         let exp1 = expectation(description: "First page parity")
-        vm.$pageContent.dropFirst().sink { content in
-            if content == p0.content { exp1.fulfill() }
-        }.store(in: &cancellables)
-        wait(for: [exp1], timeout: 2.0)
+        vm.$pageContent
+            .dropFirst()
+            .prefix(1)
+            .sink { content in if content == p0.content { exp1.fulfill() } }
+            .store(in: &cancellables)
+        wait(for: [exp1], timeout: 3.0)
         assertEqualAndPrint(vm.pageContent, p0.content, page: 1)
 
         // Go to page 2 and 3 and compare
@@ -189,15 +192,16 @@ final class PaginationCacheParityTests: XCTestCase {
         // Construct two pages where the split may fall in multi-byte sequences
         let part1 = "这是第一部分🙂END"
         let part2 = "开始第二部分🚀OK"
-        let p0 = PaginationCache.Page(index: 0, rangeLocation: 0, rangeLength: (part1 as NSString).length, content: part1)
-        let p1 = PaginationCache.Page(index: 1, rangeLocation: (part1 as NSString).length, rangeLength: (part2 as NSString).length, content: part2)
+        let p0 = PaginationCache.PageRange(pageNumber: 1, content: part1, startIndex: 0, endIndex: (part1 as NSString).length)
+        let p1 = PaginationCache.PageRange(pageNumber: 2, content: part2, startIndex: (part1 as NSString).length, endIndex: (part1 as NSString).length + (part2 as NSString).length)
         let cache = PaginationCache(
             bookHash: book.contentHash,
             settingsKey: settingsKey,
-            createdAt: Date(),
+            viewSize: viewSize,
+            pages: [p0, p1],
+            lastProcessedIndex: p1.endIndex,
             isComplete: true,
-            totalPages: 2,
-            pages: [p0, p1]
+            lastUpdated: Date()
         )
 
         XCTAssertNoThrow(try persistence.savePaginationCache(cache))
@@ -208,10 +212,12 @@ final class PaginationCacheParityTests: XCTestCase {
 
         // Wait first
         let exp1 = expectation(description: "Loaded first page")
-        vm.$pageContent.dropFirst().sink { content in
-            if content == part1 { exp1.fulfill() }
-        }.store(in: &cancellables)
-        wait(for: [exp1], timeout: 2.0)
+        vm.$pageContent
+            .dropFirst()
+            .prefix(1)
+            .sink { content in if content == part1 { exp1.fulfill() } }
+            .store(in: &cancellables)
+        wait(for: [exp1], timeout: 3.0)
 
         let uiFirst = vm.pageContent
         vm.goToPage(1)

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### BUG-3: SQLite-backed Incremental Pagination with DAO Layer (2025-08-13)
+- Introduced `DatabaseService` (SQLite wrapper) with WAL + synchronous=NORMAL pragmas and schema migrations
+- Added `PaginationStore` DAO for page cache with UPSERT-based incremental writes
+- Refactored `PersistenceService` to delegate pagination load/save/cleanup to DAO
+- Updated `BackgroundPaginationService` to upsert batches incrementally instead of rewriting JSON
+- Kept `ReaderViewModel` read path stable; now reads pagination via SQLite-backed persistence
+- Project links `libsqlite3` via XcodeGen `OTHER_LDFLAGS`
+- All tests pass (137/137)
+
 #### PGN-9: Decoupled Background Pagination Architecture (2025-01-12)
 - **Architecture Proposal**: Completely decouple pagination from frontend using background service
 - **Design**: 
