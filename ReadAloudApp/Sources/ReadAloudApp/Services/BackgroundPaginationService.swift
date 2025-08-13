@@ -182,7 +182,8 @@ class BackgroundPaginationService {
                     startIndex: currentIndex,
                     settings: settings,
                     viewSize: viewSize,
-                    batchSize: batchSize
+                    batchSize: batchSize,
+                    processedPagesCount: pages.count
                 )
                 
                 // Add new pages
@@ -223,7 +224,8 @@ class BackgroundPaginationService {
                                startIndex: Int,
                                settings: UserSettings,
                                viewSize: CGSize,
-                               batchSize: Int) async -> (pages: [PaginationCache.PageRange], lastProcessedIndex: Int) {
+                                batchSize: Int,
+                                processedPagesCount: Int) async -> (pages: [PaginationCache.PageRange], lastProcessedIndex: Int) {
         
         var pages: [PaginationCache.PageRange] = []
         var currentIndex = startIndex
@@ -233,7 +235,7 @@ class BackgroundPaginationService {
         let pageView = PageView(content: "", pageIndex: 0)
         let attributedString = pageView.createAttributedString(from: content, settings: settings)
         
-        for _ in 0..<batchSize {
+        for batchPageOffset in 0..<batchSize {
             guard currentIndex < content.count else { break }
             
             // Calculate page range using Core Text from current position
@@ -254,8 +256,10 @@ class BackgroundPaginationService {
             let safeLen = min(range.length, max(0, nsContent.length - range.location))
             let pageContent = safeLen > 0 ? nsContent.substring(with: NSRange(location: range.location, length: safeLen)) : ""
             
-            // Create page range
+            // Create page range with page number (1-based)
+            let pageNumber = processedPagesCount + pages.count + 1
             let pageRange = PaginationCache.PageRange(
+                pageNumber: pageNumber,
                 content: pageContent,
                 startIndex: range.location,
                 endIndex: range.location + range.length

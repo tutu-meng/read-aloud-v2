@@ -34,13 +34,13 @@ struct PaginationCache: Codable {
     
     /// Represents a single page's content and range
     struct PageRange: Codable {
+        /// 1-based page number
+        let pageNumber: Int
         /// The actual text content of the page
         let content: String
-        
-        /// Starting character index in the full text
+        /// Starting character index in the full text (UTF-16 based)
         let startIndex: Int
-        
-        /// Ending character index in the full text
+        /// Ending character index in the full text (UTF-16 based, exclusive)
         let endIndex: Int
     }
     
