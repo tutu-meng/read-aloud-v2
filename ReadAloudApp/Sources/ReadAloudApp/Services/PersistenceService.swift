@@ -265,6 +265,42 @@ class PersistenceService {
         try data.write(to: fileURL)
     }
 
+    /// Remove all pagination caches for a given book
+    func clearPaginationCache(for bookHash: String) {
+        do {
+            let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
+                .appendingPathComponent("PaginationCache")
+                .appendingPathComponent(bookHash)
+            if FileManager.default.fileExists(atPath: baseDir.path) {
+                try FileManager.default.removeItem(at: baseDir)
+            }
+        } catch {
+            debugPrint("⚠️ PersistenceService: Failed to clear pagination cache for book \(bookHash): \(error)")
+        }
+    }
+
+    /// Remove all pagination caches for a book except the one matching keepSettingsKey
+    func cleanupPaginationCaches(for bookHash: String, keepSettingsKey: String) {
+        do {
+            let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
+                .appendingPathComponent("PaginationCache")
+                .appendingPathComponent(bookHash)
+            guard FileManager.default.fileExists(atPath: baseDir.path) else { return }
+            let keepFileName = "pagination-\(keepSettingsKey).json"
+            if let enumerator = FileManager.default.enumerator(at: baseDir, includingPropertiesForKeys: nil) {
+                for case let url as URL in enumerator {
+                    if url.lastPathComponent.hasPrefix("pagination-") && url.pathExtension == "json" {
+                        if url.lastPathComponent != keepFileName {
+                            try? FileManager.default.removeItem(at: url)
+                        }
+                    }
+                }
+            }
+        } catch {
+            debugPrint("⚠️ PersistenceService: Failed to cleanup caches for book \(bookHash): \(error)")
+        }
+    }
+
     /// Validate that all books in the library still have valid file URLs
     /// - Parameter books: Array of books to validate
     /// - Returns: Array of books with valid file URLs (removes books whose files no longer exist)

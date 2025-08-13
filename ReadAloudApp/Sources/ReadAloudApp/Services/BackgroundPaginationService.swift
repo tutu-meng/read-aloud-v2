@@ -54,6 +54,8 @@ class BackgroundPaginationService {
         
         // Start background task
         currentTask = Task {
+            // On startup, remove any stale caches that don't match current settings/view size
+            await cleanupStaleCaches()
             await monitorLoop()
         }
     }
@@ -107,6 +109,8 @@ class BackgroundPaginationService {
                     bookHash: book.contentHash,
                     settingsKey: cacheKey
                 )
+                // Remove any other cache files for this book to keep only the current key
+                persistenceService.cleanupPaginationCaches(for: book.contentHash, keepSettingsKey: cacheKey)
                 
                 if cache == nil || !(cache?.isComplete ?? true) {
                     // Found a book that needs pagination
@@ -117,6 +121,21 @@ class BackgroundPaginationService {
             }
         } catch {
             debugPrint("❌ BackgroundPaginationService: Error checking books: \(error)")
+        }
+    }
+
+    /// Remove non-current pagination caches for all books at startup
+    private func cleanupStaleCaches() async {
+        do {
+            let books = try persistenceService.loadBookLibrary()
+            guard let settings = try? persistenceService.loadUserSettings() else { return }
+            let viewSize = persistenceService.loadLastViewSize()
+            for book in books {
+                let key = PaginationCache.cacheKey(bookHash: book.contentHash, settings: settings, viewSize: viewSize)
+                persistenceService.cleanupPaginationCaches(for: book.contentHash, keepSettingsKey: key)
+            }
+        } catch {
+            debugPrint("⚠️ BackgroundPaginationService: cleanupStaleCaches failed: \(error)")
         }
     }
     
