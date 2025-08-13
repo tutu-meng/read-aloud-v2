@@ -17,6 +17,11 @@ final class SettingsIntegrationTests: XCTestCase {
     override func setUp() {
         super.setUp()
         coordinator = AppCoordinator()
+        // Use a dedicated UserDefaults suite for isolation
+        let testDefaults = UserDefaults(suiteName: "com.readaloudapp.tests")!
+        PersistenceService.shared.overrideUserDefaultsForTesting(testDefaults)
+        // Clear any prior state
+        testDefaults.removePersistentDomain(forName: "com.readaloudapp.tests")
         book = Book(
             title: "Test Book",
             fileURL: URL(fileURLWithPath: "/test/path"),
@@ -179,6 +184,32 @@ final class SettingsIntegrationTests: XCTestCase {
         XCTAssertEqual(settingsViewModel.userSettings.theme, "light")
         XCTAssertEqual(settingsViewModel.userSettings.lineSpacing, 1.2)
         XCTAssertEqual(settingsViewModel.userSettings.speechRate, 1.0)
+    }
+    
+    func testUserSettingsPersistAcrossAppStarts() {
+        // Modify and save settings
+        var s = coordinator.userSettings
+        s.fontName = "Georgia"
+        s.fontSize = 21.0
+        s.theme = "dark"
+        s.lineSpacing = 1.6
+        s.speechRate = 1.3
+        coordinator.saveUserSettings(s)
+        
+        // Simulate a fresh app start with the same persistence backend
+        let newCoordinator = AppCoordinator()
+        let loadExpectation = XCTestExpectation(description: "Settings loaded")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            loadExpectation.fulfill()
+        }
+        wait(for: [loadExpectation], timeout: 1.0)
+        
+        // Verify settings are exactly as saved
+        XCTAssertEqual(newCoordinator.userSettings.fontName, "Georgia")
+        XCTAssertEqual(newCoordinator.userSettings.fontSize, 21.0)
+        XCTAssertEqual(newCoordinator.userSettings.theme, "dark")
+        XCTAssertEqual(newCoordinator.userSettings.lineSpacing, 1.6)
+        XCTAssertEqual(newCoordinator.userSettings.speechRate, 1.3)
     }
     
     func testSettingsViewModelModification() {

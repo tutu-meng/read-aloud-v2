@@ -28,8 +28,17 @@ class PersistenceService {
     /// Shared singleton instance
     static let shared = PersistenceService()
     
+    /// Backing store for user defaults (injected for testability)
+    private var userDefaults: UserDefaults = .standard
+    
     /// Private initializer to enforce singleton pattern
     private init() {}
+    
+    /// TESTING ONLY: Override the UserDefaults store used by this service
+    /// - Parameter defaults: The UserDefaults instance to use (e.g., a test suite)
+    func overrideUserDefaultsForTesting(_ defaults: UserDefaults) {
+        userDefaults = defaults
+    }
     
     // MARK: - UserSettings Persistence
     
@@ -44,8 +53,8 @@ class PersistenceService {
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(settings)
             
-            UserDefaults.standard.set(data, forKey: Self.userSettingsKey)
-            UserDefaults.standard.synchronize()
+            userDefaults.set(data, forKey: Self.userSettingsKey)
+            userDefaults.synchronize()
             
             debugPrint("✅ PersistenceService: UserSettings saved successfully")
         } catch {
@@ -60,7 +69,7 @@ class PersistenceService {
     func loadUserSettings() throws -> UserSettings {
         debugPrint("📖 PersistenceService: Loading UserSettings")
         
-        guard let data = UserDefaults.standard.data(forKey: Self.userSettingsKey) else {
+        guard let data = userDefaults.data(forKey: Self.userSettingsKey) else {
             debugPrint("📝 PersistenceService: No saved UserSettings found, returning defaults")
             return UserSettings.default
         }
@@ -342,11 +351,11 @@ class PersistenceService {
     // MARK: - View Size Persistence (minimal API for ReaderViewModel)
     func saveLastViewSize(_ size: CGSize) {
         let dict: [String: CGFloat] = ["width": size.width, "height": size.height]
-        UserDefaults.standard.set(dict, forKey: "ReadAloudApp.LastViewSize")
+        userDefaults.set(dict, forKey: "ReadAloudApp.LastViewSize")
     }
     
     func loadLastViewSize() -> CGSize {
-        if let dict = UserDefaults.standard.dictionary(forKey: "ReadAloudApp.LastViewSize") as? [String: CGFloat],
+        if let dict = userDefaults.dictionary(forKey: "ReadAloudApp.LastViewSize") as? [String: CGFloat],
            let w = dict["width"], let h = dict["height"] {
             return CGSize(width: w, height: h)
         }

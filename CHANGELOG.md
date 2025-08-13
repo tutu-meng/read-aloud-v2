@@ -9,6 +9,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### PGN-9: Decoupled Background Pagination Architecture (2025-01-12)
+- **Architecture Proposal**: Completely decouple pagination from frontend using background service
+- **Design**: 
+  - Background service monitors and paginates books independently
+  - Frontend only reads from pagination cache
+  - No direct communication between components
+  - Polling-based UI updates every 2 seconds
+- **Key Insight**: Page navigation becomes purely UI state - no effect on pagination
+- **Benefits**:
+  - **Navigation Independence**: Page turning doesn't trigger repagination (fixes PGN-6 root cause)
+  - Much simpler frontend code (~70% reduction)
+  - Crash resilient - pagination continues after app restart
+  - Better separation of concerns
+  - Easier testing and maintenance
+  - Can process multiple books in queue
+  - No complex delegate patterns or callbacks
+- **Repagination Triggers**: Only settings changes, view size changes, or content modifications
+- **Comparison**: Created detailed comparison showing PGN-9 superior to PGN-8 approach
+- **Recommendation**: Implement PGN-9 instead of PGN-8 for cleaner architecture
+
+#### PGN-8: Incremental Pagination with Persistence (2025-01-12)
+- **Feature Request**: Implement progressive pagination that delivers accurate pages in batches of 10 with persistent caching
+- **Motivation**: Provide perfect pagination immediately and preserve pagination work across sessions
+- **Design**: 
+  - PaginationService processes pages incrementally and delivers via callbacks
+  - Pagination results saved to disk every 10 pages
+  - Resume capability from last processed page on subsequent opens
+  - Cache keyed by book hash + settings + view size
+- **Benefits**: 
+  - First 10 pages ready in 1-2 seconds with perfect pagination
+  - No placeholder or estimated content ever shown
+  - Progressive loading as user reads
+  - Instant opening for previously paginated books
+  - Pagination work preserved across app sessions
+  - Resume from where pagination left off
+  - Better battery life by avoiding redundant calculations
+- **Impact**: Would supersede PGN-7 by eliminating need for estimated content entirely
+- **Storage**: Documents/PaginationCache/{bookHash}/pagination-{settingsKey}.json
+
+#### PGN-7: Placeholder Content Bug Discovered (2025-01-12)
+- **Bug Identified**: After fixing PGN-6, discovered that pages show placeholder text instead of actual book content during navigation
+- **Issue**: `updatePageContent()` method doesn't check for `fullBookContent` before showing placeholder
+- **Impact**: Users see generic placeholder text instead of real book content when navigating before pagination completes
+- **Status**: Bug documented, may be superseded by PGN-8 incremental pagination feature
+
+#### PGN-6: Fix Page Navigation Reload Bug (2025-01-12)
+- **Critical Bug Fix**: Fixed issue where navigating pages during initial pagination would reload the view and reset to page 1
+- **Root Cause**: ContentView was recreating ReaderViewModel on every render due to missing caching mechanism
+- **Solution Implemented**: Added ReaderViewModel caching in AppCoordinator to preserve instance during view updates
+- **Cache Lifecycle**: Cache is maintained during reading session and cleared when leaving reader or switching books
+- **User Impact**: Navigation now works immediately and correctly during pagination, no more page resets
+- **Technical Details**: 
+  - Added `cachedReaderViewModel` property to AppCoordinator
+  - Modified `makeReaderViewModel()` to return cached instance for same book
+  - Clear cache in `navigateToLibrary()` and when switching books
+  - Ensures fresh load from persistence when reopening books
+
+#### Documentation: Book Opening and Navigation Workflow (2025-01-12)
+- **Comprehensive Workflow Documentation**: Created detailed documentation explaining the book opening and navigation workflow
+- **Two-Phase Loading Strategy**: Documented immediate display with estimated pagination followed by background Core Text pagination
+- **Navigation Flow**: Detailed explanation of how users can navigate before pagination completes
+- **Mermaid Sequence Diagram**: Visual representation of the complete workflow from book selection to page display
+- **Performance Characteristics**: Documented expected load times and user experience metrics
+- **Technical Implementation Details**: Code examples showing key components and their interactions
+
 #### Immediate Content Display Enhancement (2025-01-09)
 - **Progressive Content Loading**: Content now displays immediately while pagination happens in background
 - **Estimated Pagination**: Shows estimated page content instantly using character-based calculation
