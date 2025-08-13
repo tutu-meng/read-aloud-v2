@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 /// PersistenceService handles saving and loading of application state
 /// This service centralizes all persistence logic for UserSettings and ReadingProgress
@@ -128,17 +129,43 @@ class PersistenceService {
 
     // MARK: - Book Library Persistence
 
-    /// Save array of Book objects to a JSON file in Application Support directory
+    /// Save array of Book objects to JSON using a container-agnostic relative path under Documents
     /// - Parameter books: Array of Book objects to save
     /// - Throws: PersistenceError if encoding, directory creation, or file writing fails
     func saveBookLibrary(_ books: [Book]) throws {
         debugPrint("💾 PersistenceService: Saving \(books.count) Book entries")
         
+        struct PersistedBook: Codable {
+            let id: UUID
+            let title: String
+            let relativePath: String
+            let contentHash: String
+            let importedDate: Date
+            let fileSize: Int64
+            let textEncoding: String
+        }
+        
         do {
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let docsPath = docs.path.hasSuffix("/") ? docs.path : docs.path + "/"
+            let mapped = books.map { b -> PersistedBook in
+                let fullPath = b.fileURL.path
+                let rel = fullPath.hasPrefix(docsPath) ? String(fullPath.dropFirst(docsPath.count)) : b.fileURL.lastPathComponent
+                return PersistedBook(
+                    id: b.id,
+                    title: b.title,
+                    relativePath: rel,
+                    contentHash: b.contentHash,
+                    importedDate: b.importedDate,
+                    fileSize: b.fileSize,
+                    textEncoding: b.textEncoding
+                )
+            }
+            
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
             encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(books)
+            let data = try encoder.encode(mapped)
             
             let fileURL = try getBookLibraryFileURL()
             try data.write(to: fileURL)
@@ -150,7 +177,7 @@ class PersistenceService {
         }
     }
 
-    /// Load and decode array of Book objects from JSON file
+    /// Load and decode array of Book objects from JSON file (expects relative paths)
     /// - Returns: Array of Book objects, empty array if none found
     /// - Throws: PersistenceError if decoding fails
     func loadBookLibrary() throws -> [Book] {
@@ -167,13 +194,66 @@ class PersistenceService {
             let data = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            let books = try decoder.decode([Book].self, from: data)
+            
+            struct PersistedBook: Codable {
+                let id: UUID
+                let title: String
+                let relativePath: String
+                let contentHash: String
+                let importedDate: Date
+                let fileSize: Int64
+                let textEncoding: String
+            }
+            
+            let persisted = try decoder.decode([PersistedBook].self, from: data)
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let books: [Book] = persisted.map { p in
+                let url = docs.appendingPathComponent(p.relativePath)
+                return Book(
+                    id: p.id,
+                    title: p.title,
+                    fileURL: url,
+                    contentHash: p.contentHash,
+                    importedDate: p.importedDate,
+                    fileSize: p.fileSize,
+                    textEncoding: p.textEncoding
+                )
+            }
             debugPrint("✅ PersistenceService: Loaded \(books.count) Book entries")
             return books
         } catch {
             debugPrint("❌ PersistenceService: Failed to decode book library: \(error)")
             throw PersistenceError.decodingFailed(underlyingError: error)
         }
+    }
+
+    // MARK: - Pagination Cache Stub APIs (used by ReaderViewModel under PGN-9/10)
+    // These are minimal stubs to satisfy calls; full implementation may exist elsewhere.
+    func loadPaginationCache(bookHash: String, settingsKey: String) throws -> PaginationCache? {
+        // Resolve path under Application Support/PaginationCache/<bookHash>/pagination-<settingsKey>.json
+        // If not present, return nil.
+        let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
+            .appendingPathComponent("PaginationCache")
+            .appendingPathComponent(bookHash)
+        let fileURL = baseDir.appendingPathComponent("pagination-\(settingsKey).json")
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+        let data = try Data(contentsOf: fileURL)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(PaginationCache.self, from: data)
+    }
+
+    func savePaginationCache(_ cache: PaginationCache) throws {
+        let baseDir = try getBookLibraryFileURL().deletingLastPathComponent()
+            .appendingPathComponent("PaginationCache")
+            .appendingPathComponent(cache.bookHash)
+        try FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
+        let fileURL = baseDir.appendingPathComponent("pagination-\(cache.settingsKey).json")
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(cache)
+        try data.write(to: fileURL)
     }
 
     /// Validate that all books in the library still have valid file URLs
@@ -257,6 +337,20 @@ class PersistenceService {
     /// - Returns: String path to the Application Support directory
     func getApplicationSupportPath() -> String? {
         return try? getReadingProgressFileURL().deletingLastPathComponent().path
+    }
+    
+    // MARK: - View Size Persistence (minimal API for ReaderViewModel)
+    func saveLastViewSize(_ size: CGSize) {
+        let dict: [String: CGFloat] = ["width": size.width, "height": size.height]
+        UserDefaults.standard.set(dict, forKey: "ReadAloudApp.LastViewSize")
+    }
+    
+    func loadLastViewSize() -> CGSize {
+        if let dict = UserDefaults.standard.dictionary(forKey: "ReadAloudApp.LastViewSize") as? [String: CGFloat],
+           let w = dict["width"], let h = dict["height"] {
+            return CGSize(width: w, height: h)
+        }
+        return CGSize(width: 390, height: 844)
     }
 }
 

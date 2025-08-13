@@ -1,0 +1,65 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "95dc7aeb9d2ac389edf7ecccf294bc6e78f34a71f37d9033acafab6badae1cec"
+    }
+  ],
+  "containerPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/ReadAloudApp.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "undefined_arch",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : true,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator18.5",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "i386",
+        "x86_64"
+      ],
+      "targetArchitecture" : "undefined_arch"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Products",
+      "derivedDataPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim",
+      "indexDataStoreFolderPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "SDKROOT" : "iphonesimulator18.5"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "CLANG_COVERAGE_MAPPING" : "YES",
+          "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/ProfileData",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

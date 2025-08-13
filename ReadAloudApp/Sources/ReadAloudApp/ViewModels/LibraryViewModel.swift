@@ -43,11 +43,8 @@ class LibraryViewModel: ObservableObject {
         
         Task {
             do {
-                // Load books from persistent library
-                let loadedBooks = await coordinator.loadBookLibrary()
-                
-                // If no books in library, scan Documents directory for migration
-                let finalBooks = loadedBooks.isEmpty ? try await migrateDocumentsToLibrary() : loadedBooks
+                // Load books from persistent library only
+                let finalBooks = await coordinator.loadBookLibrary()
                 
                 await MainActor.run {
                     self.books = finalBooks
@@ -64,87 +61,7 @@ class LibraryViewModel: ObservableObject {
         }
     }
     
-    /// Migrate existing books from Documents directory to persistent library (one-time migration)
-    /// This method scans the Documents directory for text files and adds them to the persistent library
-    private func migrateDocumentsToLibrary() async throws -> [Book] {
-        debugPrint("📚 LibraryViewModel: Migrating books from Documents directory to persistent library")
-        
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileManager = FileManager.default
-        
-        // Get all files in the Documents directory
-        let fileURLs = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.fileSizeKey, .creationDateKey], options: .skipsHiddenFiles)
-        
-        // Filter for text files
-        let textFiles = fileURLs.filter { url in
-            let pathExtension = url.pathExtension.lowercased()
-            return pathExtension == "txt" || pathExtension == "text"
-        }
-        
-        var books: [Book] = []
-        
-        // Create Book objects for each text file
-        for fileURL in textFiles {
-            do {
-                let book = try await createBookFromFile(fileURL)
-                books.append(book)
-                
-                // Add each book to the persistent library
-                await coordinator.addBookToLibrary(book)
-            } catch {
-                debugPrint("⚠️ LibraryViewModel: Failed to migrate book from file \(fileURL.lastPathComponent): \(error)")
-                // Continue with other files instead of failing completely
-            }
-        }
-        
-        // Sort books by import date (newest first)
-        books.sort { $0.importedDate > $1.importedDate }
-        
-        debugPrint("📚 LibraryViewModel: Migration complete - added \(books.count) books to persistent library")
-        return books
-    }
-    
-    /// Create a Book object from a file URL
-    private func createBookFromFile(_ fileURL: URL) async throws -> Book {
-        let fileManager = FileManager.default
-        
-        // Get file attributes
-        let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
-        let fileSize = attributes[.size] as? Int64 ?? 0
-        let creationDate = attributes[.creationDate] as? Date ?? Date()
-        
-        // Calculate content hash
-        let contentHash = try await calculateContentHash(for: fileURL)
-        
-        // Create book title from filename
-        let title = fileURL.deletingPathExtension().lastPathComponent
-        
-        return Book(
-            id: UUID(),
-            title: title,
-            fileURL: fileURL,
-            contentHash: contentHash,
-            importedDate: creationDate,
-            fileSize: fileSize,
-            textEncoding: "UTF-8" // Default to UTF-8, user will be asked to select if needed
-        )
-    }
-    
-    /// Calculate SHA256 hash for file content
-    private func calculateContentHash(for url: URL) async throws -> String {
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .background).async {
-                do {
-                    let data = try Data(contentsOf: url)
-                    let hash = SHA256.hash(data: data)
-                    let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
-                    continuation.resume(returning: hashString)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
+    // Documents migration path removed: encoding must be chosen by user during import
     
     @MainActor
     
@@ -164,9 +81,12 @@ class LibraryViewModel: ObservableObject {
         // Remove from local books array
         books.removeAll { $0.id == book.id }
         
-        // Remove from persistent library
+        // Remove from persistent library and optional file deletion
         Task {
             await coordinator.removeBookFromLibrary(book)
+            if deleteFile {
+                deleteBookFile(book)
+            }
         }
         
         // Optionally delete the file

@@ -123,33 +123,42 @@ public class FileProcessor {
     
     // MARK: - Book Creation Methods
     
-    /// Create a book from a file URL with a specific encoding
+    /// Create a book from a file URL with a specific encoding.
+    /// Copies the file into the app's Documents to ensure persistence, then computes metadata.
     /// - Parameters:
-    ///   - url: The file URL
+    ///   - url: The source file URL (from document picker)
     ///   - encoding: The specific encoding to use
-    /// - Returns: A Book instance
+    /// - Returns: A Book instance pointing to the copied file in Documents
     /// - Throws: AppError if the file cannot be processed
     public func createBook(from url: URL, encoding: String) async throws -> Book {
         debugPrint("📄 FileProcessor: Creating book with specific encoding: \(encoding)")
         
         do {
-            // Get file info
-            let fileSize = try getFileSize(for: url)
+            // Determine if the source is already inside our Documents directory
+            let documentsDirectory = try getDocumentsDirectory()
+            let standardized = url.standardizedFileURL
+            let docsPath = documentsDirectory.path
+            let srcPath = standardized.path
+            let isInDocuments = srcPath == docsPath || srcPath.hasPrefix(docsPath + "/")
+
+            // Use existing file if already in Documents, otherwise copy it in
+            let localFileURL: URL = isInDocuments ? standardized : (try await copyFileToDocuments(from: url))
             let title = url.deletingPathExtension().lastPathComponent
             
-            // Create content hash
-            let contentHash = try await generateContentHash(for: url)
+            // Compute metadata on the copied file
+            let fileSize = try getFileSize(for: localFileURL)
+            let contentHash = try await calculateContentHash(for: localFileURL)
             
-            // Create book with specified encoding
+            // Create book with specified encoding and local URL
             let book = Book(
                 title: title,
-                fileURL: url,
+                fileURL: localFileURL,
                 contentHash: contentHash,
                 fileSize: fileSize,
                 textEncoding: encoding
             )
             
-            debugPrint("✅ FileProcessor: Book created successfully with \(encoding) encoding")
+            debugPrint("✅ FileProcessor: Book created successfully with \(encoding) encoding at \(localFileURL.path)")
             return book
             
         } catch {

@@ -9,7 +9,11 @@ import SwiftUI
 
 /// ReaderView displays the paginated content of a book
 struct ReaderView: View {
-    @ObservedObject var viewModel: ReaderViewModel
+    @StateObject private var viewModel: ReaderViewModel
+    
+    init(viewModel: ReaderViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
     @State private var showingSettings = false
     
     var body: some View {
@@ -26,7 +30,7 @@ struct ReaderView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Library") {
-                        viewModel.goBackToLibrary()
+                        viewModel.closeBook()
                     }
                 }
                 
@@ -43,7 +47,7 @@ struct ReaderView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView(viewModel: viewModel.makeSettingsViewModel(), isSheet: true)
+                SettingsView(viewModel: SettingsViewModel(coordinator: viewModel.coordinator), isSheet: true)
             }
         }
     }

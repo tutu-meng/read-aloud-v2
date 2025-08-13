@@ -35,10 +35,8 @@ final class SettingsIntegrationTests: XCTestCase {
     // MARK: - ReaderViewModel Settings Integration Tests
     
     func testReaderViewModelCanCreateSettingsViewModel() {
-        let readerViewModel = ReaderViewModel(book: book, coordinator: coordinator)
-        
-        let settingsViewModel = readerViewModel.makeSettingsViewModel()
-        
+        _ = ReaderViewModel(book: book, coordinator: coordinator)
+        let settingsViewModel = SettingsViewModel(coordinator: coordinator)
         XCTAssertNotNil(settingsViewModel)
         XCTAssertEqual(settingsViewModel.userSettings.fontName, "System")
         XCTAssertEqual(settingsViewModel.userSettings.fontSize, 16.0)
@@ -46,15 +44,10 @@ final class SettingsIntegrationTests: XCTestCase {
     }
     
     func testReaderViewModelSettingsViewModelIndependence() {
-        let readerViewModel = ReaderViewModel(book: book, coordinator: coordinator)
-        
-        let settingsViewModel1 = readerViewModel.makeSettingsViewModel()
-        let settingsViewModel2 = readerViewModel.makeSettingsViewModel()
-        
-        // Should create separate instances
+        _ = ReaderViewModel(book: book, coordinator: coordinator)
+        let settingsViewModel1 = SettingsViewModel(coordinator: coordinator)
+        let settingsViewModel2 = SettingsViewModel(coordinator: coordinator)
         XCTAssertFalse(settingsViewModel1 === settingsViewModel2)
-        
-        // But should have the same initial settings
         XCTAssertEqual(settingsViewModel1.userSettings.fontName, settingsViewModel2.userSettings.fontName)
         XCTAssertEqual(settingsViewModel1.userSettings.fontSize, settingsViewModel2.userSettings.fontSize)
     }
@@ -114,8 +107,6 @@ final class SettingsIntegrationTests: XCTestCase {
     // MARK: - UserSettings Validation Tests
     
     func testUserSettingsRangeValidation() {
-        let settingsViewModel = SettingsViewModel(coordinator: coordinator)
-        
         // Test font size range
         XCTAssertTrue(UserSettings.fontSizeRange.contains(12.0))
         XCTAssertTrue(UserSettings.fontSizeRange.contains(32.0))

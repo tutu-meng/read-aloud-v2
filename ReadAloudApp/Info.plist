@@ -44,5 +44,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+    <!-- Enable Files app access to app's Documents folder and open-in-place -->
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
 </dict>
 </plist>

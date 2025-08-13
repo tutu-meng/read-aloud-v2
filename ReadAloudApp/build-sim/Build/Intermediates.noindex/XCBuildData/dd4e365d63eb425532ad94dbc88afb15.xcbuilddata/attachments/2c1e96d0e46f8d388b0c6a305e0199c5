@@ -1,0 +1,238 @@
+{
+  "" : {
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp-master.dia",
+    "emit-module-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp-master-emit-module.dia",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp-master.swiftdeps"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Coordinators/AppCoordinator.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppCoordinator~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Models/Book.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/Book~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Models/LayoutCache.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LayoutCache~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Models/PaginationCache.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationCache~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Models/ReadingProgress.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadingProgress~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Models/UserSettings.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/UserSettings~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/ReadAloudApp.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReadAloudApp~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Services/BackgroundPaginationService.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/BackgroundPaginationService~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Services/FileProcessor.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/FileProcessor~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Services/InteroperabilityService.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/InteroperabilityService~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Services/PaginationService.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PaginationService~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Services/PersistenceService.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PersistenceService~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Utilities/AppError.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/AppError~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/ViewModels/LibraryViewModel.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryViewModel~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/ViewModels/ReaderViewModel.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderViewModel~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/ViewModels/SettingsViewModel.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsViewModel~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/ContentView.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/DocumentPicker.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/DocumentPicker~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/EncodingSelectionView.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/EncodingSelectionView~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/LibraryView.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/LibraryView~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/PageView.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/PageView~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/ReaderView.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/ReaderView~partial.swiftmodule"
+  },
+  "/Users/qsu/git/read-aloud-v2/ReadAloudApp/Sources/ReadAloudApp/Views/SettingsView.swift" : {
+    "const-values" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.d",
+    "diagnostics" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.dia",
+    "index-unit-output-path" : "/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.o",
+    "swift-dependencies" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView.swiftdeps",
+    "swiftmodule" : "/Users/qsu/git/read-aloud-v2/ReadAloudApp/build-sim/Build/Intermediates.noindex/ReadAloudApp.build/Debug-iphonesimulator/ReadAloudApp.build/Objects-normal/arm64/SettingsView~partial.swiftmodule"
+  }
+}

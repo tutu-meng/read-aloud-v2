@@ -229,7 +229,7 @@ class PaginationService {
     ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
     /// - Returns: NSRange representing the exact characters that fit perfectly on the page
     /// - Note: This function performs Core Text calculations on the current thread
-    private func calculatePageRange(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) -> NSRange {
+    func calculatePageRange(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) -> NSRange {
         debugPrint("📄 PaginationService: calculatePageRange(from: \(startIndex), in: \(bounds))")
         debugPrint("📄 BOUNDS DEBUG: width=\(bounds.width), height=\(bounds.height), area=\(bounds.width * bounds.height)")
         

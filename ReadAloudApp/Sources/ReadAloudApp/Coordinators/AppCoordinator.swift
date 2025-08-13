@@ -54,6 +54,8 @@ class AppCoordinator: ObservableObject {
     
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
+    // PGN-10: Background pagination service
+    private var backgroundPaginationService: BackgroundPaginationService?
     
     // MARK: - Initialization
     
@@ -81,6 +83,9 @@ class AppCoordinator: ObservableObject {
         
         // Load any initial data
         loadInitialData()
+
+        // PGN-10: Start background pagination service
+        startBackgroundPagination()
     }
     
     // MARK: - Navigation Methods
@@ -217,6 +222,22 @@ class AppCoordinator: ObservableObject {
     /// Clear any error messages
     func clearError() {
         errorMessage = nil
+    }
+    
+    // MARK: - PGN-10 Background Pagination
+    private func startBackgroundPagination() {
+        debugPrint("🔄 AppCoordinator: Starting background pagination service")
+        backgroundPaginationService = BackgroundPaginationService(
+            persistenceService: persistenceService,
+            fileProcessor: fileProcessor
+        )
+        backgroundPaginationService?.startMonitoring()
+    }
+    
+    private func stopBackgroundPagination() {
+        debugPrint("⏹️ AppCoordinator: Stopping background pagination service")
+        backgroundPaginationService?.stopMonitoring()
+        backgroundPaginationService = nil
     }
     
     // MARK: - Persistence Methods

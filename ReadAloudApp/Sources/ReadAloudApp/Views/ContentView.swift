@@ -42,6 +42,10 @@ struct ContentView: View {
                 .animation(.easeInOut, value: appCoordinator.errorMessage)
             }
         }
+        .onAppear {
+            // PGN-10: Ensure services and observers start on app launch
+            appCoordinator.start()
+        }
     }
 }
 
