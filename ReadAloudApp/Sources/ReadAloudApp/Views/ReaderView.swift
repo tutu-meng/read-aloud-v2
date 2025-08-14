@@ -104,20 +104,7 @@ struct ReaderView: View {
             
             Spacer()
             
-            let percent: Int = {
-                if viewModel.isPaginationComplete, viewModel.totalPages > 0 {
-                    let p = (Double(viewModel.currentPage + 1) / Double(max(viewModel.totalPages, 1))) * 100.0
-                    return min(100, max(0, Int(round(p))))
-                } else {
-                    let clamped = min(1.0, max(0.0, viewModel.paginationProgress))
-                    return Int(round(clamped * 100.0))
-                }
-            }()
-
-            Text("\(percent)%")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .accessibilityLabel("Reading progress \(percent) percent")
+            // Removed percentage indicator per UI-5 follow-up; keep left page text only
         }
         .frame(height: 30)
     }
