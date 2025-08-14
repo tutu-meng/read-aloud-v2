@@ -145,6 +145,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Changed
+
+#### UI-5: Replace reader dots with percentage indicator (2025-08-13)
+- Refactored lower-right progress indicator in `ReaderView` to show a percentage instead of dots
+- Uses existing state only:
+  - Complete: `(currentPage+1)/totalPages`
+  - Incomplete: `paginationProgress` (0–1)
+- Minimal UI change; no new view models or services introduced
+
 #### LibraryViewModel Book Loading Fix (2025-01-09)
 - **Fixed `loadBooks()` method**: Replaced hardcoded sample book loading with proper persistence from Documents directory
 - **Document Directory Scanning**: Implemented file system scanning to discover imported text files (.txt, .text extensions)
