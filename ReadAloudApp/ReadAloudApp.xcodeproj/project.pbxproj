@@ -13,6 +13,7 @@
 		1801FDC2327F4E94F84AE5FC /* UIWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFB9F8F95AD1BE27E96D230 /* UIWorkflowTests.swift */; };
 		2C031E61C271E8A13A9046D1 /* FileProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469941E2ACF5571370930148 /* FileProcessorTests.swift */; };
 		2D149114DBBEBDA6502D5AD7 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1040D469B519A8AC62C3A24 /* DatabaseService.swift */; };
+		2D829D381BF74D41D01444E1 /* SystemSpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A21B58832B24D3DCC8FA25 /* SystemSpeechService.swift */; };
 		3555BB1C39ED981BA2F81DB7 /* ReadAloudAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */; };
 		380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F67CE39BF5C3A274CC5D7 /* SettingsViewModel.swift */; };
 		39173CA7DD4B8AB2DEE69401 /* ReaderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD5D124C50B1B157E30FC97B /* ReaderViewModel.swift */; };
@@ -91,6 +92,7 @@
 		5F00BA17693C60EF0CFA2B83 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		636737A823801C528D61F871 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
 		6665876891CDE2E095C49DFA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		69A21B58832B24D3DCC8FA25 /* SystemSpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSpeechService.swift; sourceTree = "<group>"; };
 		70872506A8DE169C5706F0A2 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
 		72A5AD42BF8F0681E2FC34C6 /* PaginationCacheParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationCacheParityTests.swift; sourceTree = "<group>"; };
 		82DB5016E46D5A32D7C30F6B /* ReadAloudAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadAloudAppTests.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				C694508CD72BACCF80AA6510 /* LegacyTextProcessor.m */,
 				04305907DB623F234AD3C0D0 /* PaginationService.swift */,
 				70872506A8DE169C5706F0A2 /* PersistenceService.swift */,
+				69A21B58832B24D3DCC8FA25 /* SystemSpeechService.swift */,
 				03C06A417EDD422CF831120F /* Database */,
 			);
 			path = Services;
@@ -380,6 +383,7 @@
 				083C791871E87045BF4FDF9D /* ReadingProgress.swift in Sources */,
 				8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */,
 				380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */,
+				2D829D381BF74D41D01444E1 /* SystemSpeechService.swift in Sources */,
 				D0B5CFEFDE0C4B128A1B9D25 /* UserSettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

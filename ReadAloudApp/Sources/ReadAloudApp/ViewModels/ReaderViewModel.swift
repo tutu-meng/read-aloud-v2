@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+import AVFoundation
 
 /// ReaderViewModel manages the state and logic for the reader view
 /// PGN-9: Simplified to only read from pagination cache
@@ -38,6 +39,7 @@ class ReaderViewModel: ObservableObject {
     private var currentContentSize: CGSize = .zero
     private var currentReadingProgress: ReadingProgress?
     private var cacheCheckTimer: Timer?
+    private let speech: SpeechSynthesizing = SystemSpeechService()
     
     // MARK: - Initialization
     init(book: Book, coordinator: AppCoordinator) {
@@ -205,6 +207,11 @@ class ReaderViewModel: ObservableObject {
         if !bookPages.isEmpty && currentPage < bookPages.count {
             pageContent = bookPages[currentPage]
             print("pageContent: \(pageContent)")
+            if isSpeaking {
+                speech.stop()
+                let rate = coordinator.userSettings.speechRate
+                speech.speak(pageContent, rate: rate)
+            }
         } else if !isPaginationComplete {
             // Show loading message for unpaginated pages
             pageContent = """
@@ -254,8 +261,17 @@ class ReaderViewModel: ObservableObject {
     
     /// Toggle text-to-speech
     func toggleSpeech() {
-        isSpeaking.toggle()
-        // TTS implementation would go here
+        if isSpeaking {
+            speech.pause()
+            isSpeaking = false
+        } else {
+            let text = pageContent
+            let rate = coordinator.userSettings.speechRate
+            if !text.isEmpty {
+                speech.speak(text, rate: rate)
+            }
+            isSpeaking = true
+        }
     }
     
     // MARK: - View Size Management
@@ -343,6 +359,7 @@ class ReaderViewModel: ObservableObject {
     
     deinit {
         cacheCheckTimer?.invalidate()
+        speech.stop()
         debugPrint("♻️ ReaderViewModel: Deinitialized for book: \(book.title)")
     }
 }

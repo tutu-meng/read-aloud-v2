@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### TTS-1: Text-to-Speech for Current Page (2025-08-13)
+- Added `SystemSpeechService` wrapping `AVSpeechSynthesizer` with a small `SpeechSynthesizing` protocol
+- Implemented `ReaderViewModel.toggleSpeech()` to speak current `pageContent`, pause/resume on tap
+- On page change during speech, stop and speak the new page automatically
+- Clean shutdown on deinit to stop any ongoing speech
+- All tests pass (137/137)
+
 #### BUG-3: SQLite-backed Incremental Pagination with DAO Layer (2025-08-13)
 - Introduced `DatabaseService` (SQLite wrapper) with WAL + synchronous=NORMAL pragmas and schema migrations
 - Added `PaginationStore` DAO for page cache with UPSERT-based incremental writes
