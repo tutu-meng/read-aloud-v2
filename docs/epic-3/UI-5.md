@@ -80,4 +80,12 @@ flowchart LR
 - Changing other chrome layout or adding progress bar.
 - Character-based percentage; we standardize on page-based.
 
+---
+
+#### Update (2025-08-13)
+- Decision: Remove the percentage indicator altogether for now.
+- Rationale: The percent did not reliably update on page change using only existing view state without adding new observers/computed state in `ReaderViewModel`. To avoid partial/incorrect UX, we reverted to showing only the left-side text ("Page X of Y").
+- Status: Implemented. Bottom bar now displays only "Page X of Y"; no dots, no percent.
+- Next step (optional, future): Reintroduce a stable percent by computing a `progressPercent` in `ReaderViewModel` that updates on `currentPage`, `totalPages`, and `paginationProgress` changes, then bind the view to that single source of truth.
+
 
