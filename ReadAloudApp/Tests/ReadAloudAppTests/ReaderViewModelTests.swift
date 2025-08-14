@@ -122,18 +122,44 @@ final class ReaderViewModelTests: XCTestCase {
     func testToggleSpeech() {
         // Given
         XCTAssertFalse(viewModel.isSpeaking)
-        
+        // Ensure language set to avoid first-time picker
+        var settings = coordinator.userSettings
+        settings.speechLanguageCode = "en-US"
+        coordinator.saveUserSettings(settings)
+
         // When
         viewModel.toggleSpeech()
-        
+
         // Then
         XCTAssertTrue(viewModel.isSpeaking)
-        
+
         // When
         viewModel.toggleSpeech()
-        
+
         // Then
         XCTAssertFalse(viewModel.isSpeaking)
+    }
+
+    func testTTSPickerShownFirstTimeAndConfirmSelectionStartsSpeech() {
+        // Given: ensure no language is set (clear any persisted value)
+        coordinator.saveUserSettings(UserSettings())
+        XCTAssertNil(coordinator.userSettings.speechLanguageCode)
+        XCTAssertFalse(viewModel.isSpeaking)
+
+        // When: first toggle should prompt picker instead of starting speech
+        viewModel.toggleSpeech()
+
+        // Then
+        XCTAssertTrue(viewModel.shouldPresentTTSPicker)
+        XCTAssertFalse(viewModel.isSpeaking)
+
+        // When: confirm selection
+        viewModel.confirmTTSLanguageSelection(code: "en-US")
+
+        // Then: language saved and speech started
+        XCTAssertEqual(coordinator.userSettings.speechLanguageCode, "en-US")
+        XCTAssertTrue(viewModel.isSpeaking)
+        XCTAssertFalse(viewModel.shouldPresentTTSPicker)
     }
     
     // MARK: - Navigation Tests

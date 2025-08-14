@@ -28,6 +28,7 @@ class ReaderViewModel: ObservableObject {
     @Published var isSpeaking = false
     @Published var isPaginationComplete = false
     @Published var paginationProgress: Double = 0.0
+    @Published var shouldPresentTTSPicker = false
     
     /// The book being read
     var book: Book
@@ -210,7 +211,11 @@ class ReaderViewModel: ObservableObject {
             if isSpeaking {
                 speech.stop()
                 let rate = coordinator.userSettings.speechRate
-                speech.speak(pageContent, rate: rate)
+                if let code = coordinator.userSettings.speechLanguageCode {
+                    speech.speak(pageContent, rate: rate, languageCode: code)
+                } else {
+                    speech.speak(pageContent, rate: rate)
+                }
             }
         } else if !isPaginationComplete {
             // Show loading message for unpaginated pages
@@ -261,6 +266,11 @@ class ReaderViewModel: ObservableObject {
     
     /// Toggle text-to-speech
     func toggleSpeech() {
+        // First-time prompt if language not chosen yet
+        if coordinator.userSettings.speechLanguageCode == nil && !isSpeaking {
+            shouldPresentTTSPicker = true
+            return
+        }
         if isSpeaking {
             speech.pause()
             isSpeaking = false
@@ -268,10 +278,30 @@ class ReaderViewModel: ObservableObject {
             let text = pageContent
             let rate = coordinator.userSettings.speechRate
             if !text.isEmpty {
-                speech.speak(text, rate: rate)
+                if let code = coordinator.userSettings.speechLanguageCode {
+                    speech.speak(text, rate: rate, languageCode: code)
+                } else {
+                    speech.speak(text, rate: rate)
+                }
             }
             isSpeaking = true
         }
+    }
+
+    /// Confirm and save TTS language selection then start speaking
+    func confirmTTSLanguageSelection(code: String) {
+        var settings = coordinator.userSettings
+        settings.speechLanguageCode = code
+        coordinator.saveUserSettings(settings)
+        shouldPresentTTSPicker = false
+
+        // Auto-start speaking after selection
+        let text = pageContent
+        let rate = coordinator.userSettings.speechRate
+        if !text.isEmpty {
+            speech.speak(text, rate: rate, languageCode: code)
+        }
+        isSpeaking = true
     }
     
     // MARK: - View Size Management

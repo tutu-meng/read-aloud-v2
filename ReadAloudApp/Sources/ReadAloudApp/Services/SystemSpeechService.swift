@@ -4,6 +4,7 @@ import AVFoundation
 protocol SpeechSynthesizing {
     var isSpeaking: Bool { get }
     func speak(_ text: String, rate: Float)
+    func speak(_ text: String, rate: Float, languageCode: String)
     func pause()
     func stop()
 }
@@ -21,6 +22,17 @@ final class SystemSpeechService: NSObject, SpeechSynthesizing, AVSpeechSynthesiz
         guard !text.isEmpty else { return }
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = clampRate(rate)
+        synthesizer.speak(utterance)
+        isSpeaking = true
+    }
+
+    func speak(_ text: String, rate: Float, languageCode: String) {
+        guard !text.isEmpty else { return }
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.rate = clampRate(rate)
+        if let voice = AVSpeechSynthesisVoice(language: languageCode) {
+            utterance.voice = voice
+        }
         synthesizer.speak(utterance)
         isSpeaking = true
     }

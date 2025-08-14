@@ -25,6 +25,9 @@ struct UserSettings: Codable {
     /// Speech rate for text-to-speech (1.0 = normal speed)
     var speechRate: Float
     
+    /// Optional BCP-47 speech language code used for TTS (e.g., "en-US", "zh-CN")
+    var speechLanguageCode: String?
+    
     // MARK: - Initialization
     
     /// Initialize with default values
@@ -33,13 +36,15 @@ struct UserSettings: Codable {
         fontSize: CGFloat = 16.0,
         theme: String = "light",
         lineSpacing: CGFloat = 1.2,
-        speechRate: Float = 1.0
+        speechRate: Float = 1.0,
+        speechLanguageCode: String? = nil
     ) {
         self.fontName = fontName
         self.fontSize = fontSize
         self.theme = theme
         self.lineSpacing = lineSpacing
         self.speechRate = speechRate
+        self.speechLanguageCode = speechLanguageCode
     }
 }
 

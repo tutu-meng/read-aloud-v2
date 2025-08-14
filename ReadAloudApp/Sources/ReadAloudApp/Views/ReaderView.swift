@@ -49,6 +49,20 @@ struct ReaderView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView(viewModel: SettingsViewModel(coordinator: viewModel.coordinator), isSheet: true)
             }
+            .actionSheet(isPresented: Binding<Bool>(
+                get: { viewModel.shouldPresentTTSPicker },
+                set: { _ in }
+            )) {
+                ActionSheet(
+                    title: Text("Choose TTS language"),
+                    message: Text("This will be used for reading aloud."),
+                    buttons: [
+                        .default(Text("English (United States)")) { viewModel.confirmTTSLanguageSelection(code: "en-US") },
+                        .default(Text("Chinese (Simplified)")) { viewModel.confirmTTSLanguageSelection(code: "zh-CN") },
+                        .cancel { viewModel.shouldPresentTTSPicker = false }
+                    ]
+                )
+            }
         }
     }
     
