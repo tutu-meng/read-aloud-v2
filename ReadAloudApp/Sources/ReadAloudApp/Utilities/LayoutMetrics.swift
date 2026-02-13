@@ -8,7 +8,7 @@ import CoreGraphics
 /// Centralized layout metrics used for pagination and display
 enum LayoutMetrics {
     /// Height reserved for bottom chrome (page indicator, etc.) in ReaderView
-    static let chromeBottomHeight: CGFloat = 100
+    static let chromeBottomHeight: CGFloat = 32
     /// Horizontal inset applied inside PageView's text container
     static let horizontalContentInset: CGFloat = 16
     /// Vertical inset applied inside PageView's text container

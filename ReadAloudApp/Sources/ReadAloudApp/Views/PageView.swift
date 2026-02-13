@@ -61,7 +61,9 @@ public struct PageView: UIViewRepresentable {
         // Configure appearance
         textView.backgroundColor = getBackgroundColor(for: settings.theme)
         textView.textColor = getTextColor(for: settings.theme)
-        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        // Extra 8pt bottom buffer accommodates Core Text/UITextView layout differences
+        // Pagination calculates with 16pt insets, display shows with 24pt bottom for safety margin
+        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16)
 
         textView.contentInset = .zero
         textView.scrollIndicatorInsets = .zero

@@ -105,14 +105,14 @@ struct ReaderView: View {
     private var pageIndicator: some View {
         HStack {
             Text("Page \(viewModel.currentPage + 1) of \(viewModel.totalPages)")
-                .font(.caption)
+                .font(.caption2)  // Smaller font for compact display
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             // Removed percentage indicator per UI-5 follow-up; keep left page text only
         }
-        .frame(height: 30)
+        .frame(height: 8)
     }
     
 }

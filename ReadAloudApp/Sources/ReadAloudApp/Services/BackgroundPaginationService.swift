@@ -8,11 +8,14 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 /// Notification posted after each pagination batch is saved to SQLite.
 /// `userInfo` contains "bookHash" (String) and "pageCount" (Int).
+/// Notification posted when user interacts with the reader (page flip).
 extension Notification.Name {
     static let paginationBatchCompleted = Notification.Name("com.readAloud.paginationBatchCompleted")
+    static let userInteractionOccurred = Notification.Name("com.readAloud.userInteraction")
 }
 
 /// Service that monitors and paginates books in the background
@@ -29,7 +32,14 @@ class BackgroundPaginationService {
     /// Incremented when settings change to signal in-progress pagination to stop
     private var generationID: Int = 0
 
-    // Batch size for incremental pagination
+    /// Time of last detected user interaction
+    private var lastUserInteractionTime = Date.distantPast
+    private var cancellables = Set<AnyCancellable>()
+
+    /// Minimum idle time before resuming pagination (seconds)
+    private let requiredIdleTime: TimeInterval = 2.0
+
+    // Batch size for incremental pagination (restored for faster completion when idle)
     private let batchSize = 10
     
     // Monitor interval in seconds
@@ -45,7 +55,16 @@ class BackgroundPaginationService {
             label: "com.readAloud.pagination",
             qos: .background
         )
-        debugPrint("🔄 BackgroundPaginationService: Initialized")
+
+        // Listen for user interaction to pause pagination
+        NotificationCenter.default.publisher(for: .userInteractionOccurred)
+            .sink { [weak self] _ in
+                self?.lastUserInteractionTime = Date()
+                debugPrint("⏸️ BackgroundPaginationService: User activity detected, pausing")
+            }
+            .store(in: &cancellables)
+
+        debugPrint("🔄 BackgroundPaginationService: Initialized with adaptive pausing")
     }
     
     // MARK: - Public Methods
@@ -56,16 +75,22 @@ class BackgroundPaginationService {
             debugPrint("⚠️ BackgroundPaginationService: Already running")
             return
         }
-        
+
         isRunning = true
-        debugPrint("▶️ BackgroundPaginationService: Starting monitoring")
-        
-        // Start background task
-        currentTask = Task {
+        debugPrint("▶️ BackgroundPaginationService: Starting monitoring with adaptive pausing")
+
+        // Start background task with explicit low priority
+        currentTask = Task(priority: .utility) {
             // On startup, remove any stale caches that don't match current settings/view size
             await cleanupStaleCaches()
             await monitorLoop()
         }
+    }
+
+    /// Check if we should pause for user activity
+    private func shouldPauseForUserActivity() -> Bool {
+        let timeSinceInteraction = Date().timeIntervalSince(lastUserInteractionTime)
+        return timeSinceInteraction < requiredIdleTime
     }
     
     /// Signal that settings or view size changed, cancelling any in-progress pagination.
@@ -89,9 +114,13 @@ class BackgroundPaginationService {
     private func monitorLoop() async {
         while isRunning {
             await checkAndProcessNextBook()
-            
-            // Sleep for monitor interval
-            try? await Task.sleep(nanoseconds: UInt64(monitorInterval * 1_000_000_000))
+
+            // Adaptive delay: short checks during activity, long when idle
+            let delay = shouldPauseForUserActivity()
+                ? 1.0  // Short check interval during activity
+                : monitorInterval  // Normal 5s interval when idle
+
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
     }
     
@@ -226,8 +255,13 @@ class BackgroundPaginationService {
                     userInfo: ["bookHash": book.contentHash, "pageCount": pages.count]
                 )
 
-                // Small delay to not hog resources
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                // Adaptive delay: only delay when user is idle
+                // Skip delay during user activity to let monitor loop check and pause
+                if !shouldPauseForUserActivity() {
+                    // Short delay when idle for cooperative scheduling
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+                }
+                // If user is active, skip delay and exit batch loop for immediate pause check
             }
             
             if currentIndex >= content.count {
@@ -256,8 +290,14 @@ class BackgroundPaginationService {
         let attributedString = TextStyling.createAttributedString(from: content, settings: settings)
         
         for batchPageOffset in 0..<batchSize {
+            // Check for user activity before each page calculation
+            if shouldPauseForUserActivity() {
+                debugPrint("⏸️ BackgroundPaginationService: Pausing mid-batch due to user activity")
+                break  // Exit batch early, will retry in next monitor cycle
+            }
+
             guard currentIndex < content.count else { break }
-            
+
             // Calculate page range using Core Text from current position
             let range = await paginationService.calculatePageRange(
                 from: currentIndex,

@@ -17,8 +17,10 @@ class ReaderViewModel: ObservableObject {
     @Published var currentPage = 0 {
         didSet {
             if currentPage != oldValue && !isLoading {
+                lastUserInteractionTime = Date()
+                NotificationCenter.default.post(name: .userInteractionOccurred, object: nil)
                 updatePageContent()
-                saveCurrentProgress()
+                debouncedSaveProgress()
             }
         }
     }
@@ -29,6 +31,9 @@ class ReaderViewModel: ObservableObject {
     @Published var isPaginationComplete = false
     @Published var paginationProgress: Double = 0.0
     @Published var shouldPresentTTSPicker = false
+
+    /// Track last user interaction for pagination coordination
+    @Published private(set) var lastUserInteractionTime = Date.distantPast
     
     /// The book being read
     var book: Book
@@ -45,6 +50,7 @@ class ReaderViewModel: ObservableObject {
     private var currentContentSize: CGSize = .zero
     private var currentReadingProgress: ReadingProgress?
     private var viewSizeDebounceTask: Task<Void, Never>?
+    private var progressSaveDebounceTask: Task<Void, Never>?
     private let speech: SpeechSynthesizing = SystemSpeechService()
     
     // MARK: - Initialization
@@ -400,6 +406,22 @@ class ReaderViewModel: ObservableObject {
         }
     }
     
+    /// Debounced progress save: wait 1 second after last page change to avoid blocking UI
+    private func debouncedSaveProgress() {
+        // Cancel any pending save
+        progressSaveDebounceTask?.cancel()
+
+        // Schedule new save after user stops flipping pages
+        progressSaveDebounceTask = Task {
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second debounce
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                self.saveCurrentProgress()
+            }
+        }
+    }
+
     /// Save current reading progress
     private func saveCurrentProgress() {
         guard var progress = currentReadingProgress else { return }

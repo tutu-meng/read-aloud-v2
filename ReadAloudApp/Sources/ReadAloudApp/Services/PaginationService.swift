@@ -26,12 +26,15 @@ class PaginationService {
     
     /// Layout cache for performance optimization
     private let layoutCache: LayoutCache
-    
+
     /// Cache for paginated content to avoid recalculation
     private var paginationCache: [String: [String]] = [:]
-    
+
     /// Current view dimensions
     private var currentViewSize: CGSize?
+
+    /// Reusable UITextView for pagination calculations (reduces MainActor overhead)
+    @MainActor private static var sharedPaginationTextView: UITextView?
 
     /// Create a UITextView configured identically to SinglePageViewController (main thread only).
     @MainActor private static func makePaginationTextView() -> UITextView {
@@ -235,14 +238,9 @@ class PaginationService {
     
     // MARK: - PGN-5: Core calculatePageRange Function Implementation
     
-    /// Calculate the character range that fits within the given bounds using a real UITextView.
-    /// This guarantees the pagination layout matches the display layout exactly — same TextKit
-    /// stack, same internal adjustments, zero discrepancy.
-    /// - Parameters:
-    ///   - startIndex: Starting character index in the full attributed string to measure from
-    ///   - bounds: Exact drawable bounds (text area without insets)
-    ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
-    /// - Returns: NSRange representing the exact characters that fit on the page
+    /// Calculate the character range using standalone TextKit (background-thread safe).
+    /// Uses NSTextStorage/NSLayoutManager/NSTextContainer — same engine as UITextView
+    /// but without requiring MainActor. This ensures layout parity with display.
     func calculatePageRange(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) async -> NSRange {
         guard bounds.width > 0, bounds.height > 0 else {
             return NSRange(location: startIndex, length: 0)
@@ -254,25 +252,29 @@ class PaginationService {
         let subRange = NSRange(location: startIndex, length: attributedString.length - startIndex)
         let subAttr = attributedString.attributedSubstring(from: subRange)
 
-        return await MainActor.run {
-            let tv = PaginationService.makePaginationTextView()
-            let inset: CGFloat = 16
-            // Frame = drawable size + insets (UITextView subtracts insets internally)
-            tv.frame = CGRect(
-                x: 0, y: 0,
-                width: bounds.width + 2 * inset,
-                height: bounds.height + 2 * inset
-            )
-            tv.attributedText = subAttr
-            tv.layoutManager.ensureLayout(for: tv.textContainer)
+        // Standalone TextKit stack — same engine as UITextView, runs on any thread
+        let storage = NSTextStorage(attributedString: subAttr)
+        let layoutManager = NSLayoutManager()
+        layoutManager.usesFontLeading = true
+        layoutManager.allowsNonContiguousLayout = false
 
-            let glyphRange = tv.layoutManager.glyphRange(for: tv.textContainer)
-            let charRangeRelative = tv.layoutManager.characterRange(
-                forGlyphRange: glyphRange, actualGlyphRange: nil
-            )
+        // Reduce height by small buffer so UITextView (with its subtle internal
+        // layout differences) never clips the last line
+        let adjustedSize = CGSize(width: bounds.size.width, height: bounds.size.height - 2)
+        let textContainer = NSTextContainer(size: adjustedSize)
+        textContainer.lineFragmentPadding = 0
+        textContainer.maximumNumberOfLines = 0
+        textContainer.lineBreakMode = .byCharWrapping
 
-            return NSRange(location: startIndex + charRangeRelative.location, length: charRangeRelative.length)
-        }
+        layoutManager.addTextContainer(textContainer)
+        storage.addLayoutManager(layoutManager)
+
+        layoutManager.ensureLayout(for: textContainer)
+
+        let glyphRange = layoutManager.glyphRange(for: textContainer)
+        let charRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+
+        return NSRange(location: startIndex + charRange.location, length: charRange.length)
     }
     
     /// Calculate the full layout for the entire document (PGN-3)

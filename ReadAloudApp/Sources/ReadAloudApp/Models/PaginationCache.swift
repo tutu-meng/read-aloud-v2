@@ -58,7 +58,8 @@ struct PaginationCache: Codable {
             "\(settings.lineSpacing)",
             "\(Int(viewSize.width))x\(Int(viewSize.height))",
             // Layout version to invalidate caches when drawable metrics change
-            "pad16v4"
+            // v7: standalone TextKit (background-safe) + 24pt display bottom buffer
+            "pad16v7"
         ]
         return components.joined(separator: "-")
     }

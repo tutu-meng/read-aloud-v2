@@ -138,7 +138,9 @@ class SinglePageViewController: UIViewController {
         tv.isEditable = false
         tv.isSelectable = false
         tv.isScrollEnabled = false
-        tv.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        // Extra 8pt bottom buffer accommodates Core Text/UITextView layout differences
+        // Pagination calculates with 16pt insets, display shows with 24pt bottom for safety margin
+        tv.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16)
         tv.contentInset = .zero
         tv.textContainer.lineFragmentPadding = 0
         tv.textContainer.maximumNumberOfLines = 0
