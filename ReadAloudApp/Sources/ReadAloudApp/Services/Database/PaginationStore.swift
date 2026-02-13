@@ -164,6 +164,66 @@ final class PaginationStore {
         }
     }
 
+    /// Fetch a single page by page number (1-based). Returns nil if not found.
+    func fetchPage(bookHash: String, settingsKey: String, pageNumber: Int) throws -> PaginationCache.PageRange? {
+        return try db.perform { dbh in
+            let sql = "SELECT page_number, content, start_index, end_index FROM page_cache WHERE book_hash=? AND settings_key=? AND page_number=?;"
+            var stmt: OpaquePointer?
+            guard sqlite3_prepare_v2(dbh, sql, -1, &stmt, nil) == SQLITE_OK else {
+                let msg = String(cString: sqlite3_errmsg(dbh))
+                throw NSError(domain: "SQLite", code: 18, userInfo: [NSLocalizedDescriptionKey: "prepare fetchPage: \(msg)"])
+            }
+            defer { sqlite3_finalize(stmt) }
+            sqlite3_bind_text(stmt, 1, (bookHash as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, (settingsKey as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_int(stmt, 3, Int32(pageNumber))
+            guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+            let pn = Int(sqlite3_column_int(stmt, 0))
+            let contentC = sqlite3_column_text(stmt, 1)
+            let content = contentC != nil ? String(cString: contentC!) : ""
+            let startIdx = Int(sqlite3_column_int(stmt, 2))
+            let endIdx = Int(sqlite3_column_int(stmt, 3))
+            return PaginationCache.PageRange(pageNumber: pn, content: content, startIndex: startIdx, endIndex: endIdx)
+        }
+    }
+
+    /// Fetch page count for a (bookHash, settingsKey) pair.
+    func fetchPageCount(bookHash: String, settingsKey: String) throws -> Int {
+        return try db.perform { dbh in
+            let sql = "SELECT COUNT(1) FROM page_cache WHERE book_hash=? AND settings_key=?;"
+            var stmt: OpaquePointer?
+            guard sqlite3_prepare_v2(dbh, sql, -1, &stmt, nil) == SQLITE_OK else {
+                let msg = String(cString: sqlite3_errmsg(dbh))
+                throw NSError(domain: "SQLite", code: 19, userInfo: [NSLocalizedDescriptionKey: "prepare fetchPageCount: \(msg)"])
+            }
+            defer { sqlite3_finalize(stmt) }
+            sqlite3_bind_text(stmt, 1, (bookHash as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, (settingsKey as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            guard sqlite3_step(stmt) == SQLITE_ROW else { return 0 }
+            return Int(sqlite3_column_int(stmt, 0))
+        }
+    }
+
+    /// Fetch only metadata (no page content). Returns nil if no meta row exists.
+    func fetchMeta(bookHash: String, settingsKey: String) throws -> (isComplete: Bool, totalPages: Int?, lastProcessedIndex: Int)? {
+        return try db.perform { dbh in
+            let sql = "SELECT last_processed_index, is_complete, total_pages FROM page_meta WHERE book_hash=? AND settings_key=?;"
+            var stmt: OpaquePointer?
+            guard sqlite3_prepare_v2(dbh, sql, -1, &stmt, nil) == SQLITE_OK else {
+                let msg = String(cString: sqlite3_errmsg(dbh))
+                throw NSError(domain: "SQLite", code: 20, userInfo: [NSLocalizedDescriptionKey: "prepare fetchMeta: \(msg)"])
+            }
+            defer { sqlite3_finalize(stmt) }
+            sqlite3_bind_text(stmt, 1, (bookHash as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, (settingsKey as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+            let lastProcessed = Int(sqlite3_column_int(stmt, 0))
+            let isComplete = sqlite3_column_int(stmt, 1) != 0
+            let totalPages: Int? = sqlite3_column_type(stmt, 2) != SQLITE_NULL ? Int(sqlite3_column_int(stmt, 2)) : nil
+            return (isComplete: isComplete, totalPages: totalPages, lastProcessedIndex: lastProcessed)
+        }
+    }
+
     func deleteAllForBook(_ bookHash: String) throws {
         _ = try db.inTransaction { dbh in
             try exec(dbh, sql: "DELETE FROM page_cache WHERE book_hash=?;", bind: [bookHash])

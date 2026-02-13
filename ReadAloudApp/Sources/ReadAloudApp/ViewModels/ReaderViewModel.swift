@@ -35,8 +35,12 @@ class ReaderViewModel: ObservableObject {
     let coordinator: AppCoordinator
     private let persistenceService: PersistenceService
     private var cancellables = Set<AnyCancellable>()
-    private var bookPages: [String] = []
-    private var pageStartIndices: [Int] = []
+    /// LRU page cache: page index (0-based) -> content string
+    private var pageCache: [Int: String] = [:]
+    private let pageCacheCapacity = 20
+    private var pageCacheOrder: [Int] = []  // tracks access order for LRU eviction
+    private var cachedPageCount: Int = 0
+    private var currentCacheKey: String = ""
     private var currentViewSize: CGSize = .zero
     private var currentContentSize: CGSize = .zero
     private var currentReadingProgress: ReadingProgress?
@@ -87,9 +91,10 @@ class ReaderViewModel: ObservableObject {
     private func handleSettingsChange() {
         debugPrint("📱 ReaderViewModel: Settings changed, will reload from new cache")
         
-        // Clear current pages
-        bookPages = []
-        pageStartIndices = []
+        // Clear cached state
+        clearPageCache()
+        currentCacheKey = ""
+        cachedPageCount = 0
         isPaginationComplete = false
         
         // Reload from cache with new settings
@@ -132,7 +137,7 @@ class ReaderViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    /// Load pages from pagination cache
+    /// Load pagination state from cache using lightweight meta query (no page content loaded)
     private func loadFromCache() async {
         let viewSize = currentViewSize.width > 0 ? currentViewSize : persistenceService.loadLastViewSize()
         let cacheKey = PaginationCache.cacheKey(
@@ -140,37 +145,36 @@ class ReaderViewModel: ObservableObject {
             settings: coordinator.userSettings,
             viewSize: viewSize
         )
-        
+
         do {
-            if let cache = try persistenceService.loadPaginationCache(
+            if let meta = try persistenceService.loadPaginationMeta(
                 bookHash: book.contentHash,
                 settingsKey: cacheKey
             ) {
+                let pageCount = try persistenceService.loadPageCount(
+                    bookHash: book.contentHash,
+                    settingsKey: cacheKey
+                )
+
                 await MainActor.run {
-                    // Update UI from cache
-                    self.bookPages = cache.pages.map { $0.content }
-                    self.pageStartIndices = cache.pages.map { $0.startIndex }
-                    self.totalPages = cache.isComplete ? self.bookPages.count : max(self.bookPages.count + 10, estimatedTotalPages())
-                    self.isPaginationComplete = cache.isComplete
-                    self.paginationProgress = Double(cache.pages.count) / Double(self.estimatedTotalPages())
+                    self.currentCacheKey = cacheKey
+                    self.cachedPageCount = pageCount
+                    self.totalPages = meta.isComplete ? pageCount : max(pageCount + 10, estimatedTotalPages())
+                    self.isPaginationComplete = meta.isComplete
+                    self.paginationProgress = Double(pageCount) / Double(self.estimatedTotalPages())
                     self.isLoading = false
-                    
-                    debugPrint("📖 ReaderViewModel: Loaded \(self.bookPages.count) pages from cache (complete: \(cache.isComplete))")
-                    
-                    // Update current page content if needed
-                    if self.currentPage < self.bookPages.count {
-                        self.updatePageContent()
-                    }
-                    
+
+                    debugPrint("📖 ReaderViewModel: Meta loaded - \(pageCount) pages (complete: \(meta.isComplete))")
+
+                    // Update current page content
+                    self.updatePageContent()
+
                     // Restore saved position after initial load
-                    if self.bookPages.count > 0 && self.currentPage == 0 {
+                    if pageCount > 0 && self.currentPage == 0 {
                         self.restoreSavedPosition()
                     }
-                    
-                    // No polling needed -- notification-driven via .paginationBatchCompleted
                 }
             } else {
-                // No cache yet, show loading state
                 await MainActor.run {
                     self.showLoadingState()
                 }
@@ -210,43 +214,63 @@ class ReaderViewModel: ObservableObject {
     
     /// Update the page content based on current page
     private func updatePageContent() {
-        // Use actual book content if available
-        if !bookPages.isEmpty && currentPage < bookPages.count {
-            pageContent = bookPages[currentPage]
-            print("pageContent: \(pageContent)")
-            if isSpeaking {
-                speech.stop()
-                let rate = coordinator.userSettings.speechRate
-                if let code = coordinator.userSettings.speechLanguageCode {
-                    speech.speak(pageContent, rate: rate, languageCode: code)
-                } else {
-                    speech.speak(pageContent, rate: rate)
-                }
+        let content = contentForPage(currentPage)
+        guard content != pageContent else { return } // idempotency guard
+        pageContent = content
+        if isSpeaking {
+            speech.stop()
+            let rate = coordinator.userSettings.speechRate
+            if let code = coordinator.userSettings.speechLanguageCode {
+                speech.speak(pageContent, rate: rate, languageCode: code)
+            } else {
+                speech.speak(pageContent, rate: rate)
             }
-        } else if !isPaginationComplete {
-            // Show loading message for unpaginated pages
-            pageContent = """
-            Page \(currentPage + 1) is being processed...
-            
-            Please wait while the background service prepares this page.
-            
-            You can navigate to already processed pages while waiting.
-            """
-        } else {
-            // Shouldn't happen, but provide fallback
-            pageContent = "Page \(currentPage + 1) of \(book.title)"
         }
     }
-    
-    /// Get content for a specific page (used by BookPagerView for adjacent pages)
+
+    /// Get content for a specific page, fetching from SQLite on cache miss.
+    /// Used by BookPagerView for adjacent pages and internally for current page.
     func contentForPage(_ page: Int) -> String {
-        if page >= 0 && page < bookPages.count {
-            return bookPages[page]
-        } else if !isPaginationComplete {
-            return "Page \(page + 1) is being processed..."
-        } else {
-            return ""
+        // Check LRU cache first
+        if let cached = pageCache[page] {
+            touchPageCache(page)
+            return cached
         }
+        // Fetch from SQLite (page_number is 1-based in DB)
+        guard !currentCacheKey.isEmpty else {
+            return !isPaginationComplete ? "Page \(page + 1) is being processed..." : ""
+        }
+        if let pageRange = try? persistenceService.loadPage(
+            bookHash: book.contentHash,
+            settingsKey: currentCacheKey,
+            pageNumber: page + 1
+        ) {
+            insertPageCache(page, content: pageRange.content)
+            return pageRange.content
+        }
+        return !isPaginationComplete ? "Page \(page + 1) is being processed..." : ""
+    }
+
+    // MARK: - LRU Page Cache
+
+    private func touchPageCache(_ page: Int) {
+        pageCacheOrder.removeAll { $0 == page }
+        pageCacheOrder.append(page)
+    }
+
+    private func insertPageCache(_ page: Int, content: String) {
+        pageCache[page] = content
+        touchPageCache(page)
+        // Evict oldest if over capacity
+        while pageCacheOrder.count > pageCacheCapacity {
+            let evicted = pageCacheOrder.removeFirst()
+            pageCache.removeValue(forKey: evicted)
+        }
+    }
+
+    private func clearPageCache() {
+        pageCache.removeAll()
+        pageCacheOrder.removeAll()
     }
 
     /// Navigate to a specific page
@@ -389,14 +413,19 @@ class ReaderViewModel: ObservableObject {
         debugPrint("📖 ReaderViewModel: Saved progress for \(book.title) - page \(currentPage)")
     }
     
-    /// Calculate character index for a given page using actual page boundaries
+    /// Calculate character index for a given page using actual page boundaries from SQLite
     private func calculateCharacterIndex(for page: Int) -> Int {
-        if page < pageStartIndices.count {
-            return pageStartIndices[page]
+        guard !currentCacheKey.isEmpty else {
+            return page * 1000 // fallback
         }
-        // Fallback estimate if page ranges not yet available
-        let avgCharsPerPage = 1000
-        return page * avgCharsPerPage
+        if let pageRange = try? persistenceService.loadPage(
+            bookHash: book.contentHash,
+            settingsKey: currentCacheKey,
+            pageNumber: page + 1
+        ) {
+            return pageRange.startIndex
+        }
+        return page * 1000 // fallback
     }
     
     // MARK: - Cleanup

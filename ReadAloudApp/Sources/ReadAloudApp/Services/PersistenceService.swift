@@ -312,6 +312,21 @@ class PersistenceService {
         )
     }
 
+    /// Fetch a single page from the cache by page number (1-based).
+    func loadPage(bookHash: String, settingsKey: String, pageNumber: Int) throws -> PaginationCache.PageRange? {
+        return try PaginationStore.shared.fetchPage(bookHash: bookHash, settingsKey: settingsKey, pageNumber: pageNumber)
+    }
+
+    /// Fetch the number of cached pages for a (bookHash, settingsKey).
+    func loadPageCount(bookHash: String, settingsKey: String) throws -> Int {
+        return try PaginationStore.shared.fetchPageCount(bookHash: bookHash, settingsKey: settingsKey)
+    }
+
+    /// Fetch pagination metadata only (no page content).
+    func loadPaginationMeta(bookHash: String, settingsKey: String) throws -> (isComplete: Bool, totalPages: Int?, lastProcessedIndex: Int)? {
+        return try PaginationStore.shared.fetchMeta(bookHash: bookHash, settingsKey: settingsKey)
+    }
+
     /// Remove all pagination caches for a given book
     func clearPaginationCache(for bookHash: String) {
         do { try PaginationStore.shared.deleteAllForBook(bookHash) }
