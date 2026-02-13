@@ -298,6 +298,8 @@ class AppCoordinator: ObservableObject {
             debugPrint("❌ AppCoordinator: Failed to save UserSettings: \(error)")
             self.handleError(error)
         }
+        // Cancel any in-progress pagination so it restarts with new settings
+        backgroundPaginationService?.invalidateCurrentPagination()
     }
     
     /// Save ReadingProgress to persistence

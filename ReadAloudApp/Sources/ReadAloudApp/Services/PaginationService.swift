@@ -355,9 +355,8 @@ class PaginationService {
         // No cached layout found, calculate the full layout
         debugPrint("📄 PaginationService: No cached layout found, calculating full layout")
         
-        // Create attributed string with user settings
-        let my_pageview = PageView(content: fullText, pageIndex: 0)
-        let attributedString = my_pageview.createAttributedString(from: fullText, settings: userSettings)
+        // Create attributed string with user settings using shared utility
+        let attributedString = TextStyling.createAttributedString(from: fullText, settings: userSettings)
 
         // Calculate the full layout asynchronously
         let pageRanges = await calculateFullLayoutAsync(bounds: bounds, attributedString: attributedString)

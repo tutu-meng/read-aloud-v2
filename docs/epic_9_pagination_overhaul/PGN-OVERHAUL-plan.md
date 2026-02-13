@@ -94,50 +94,47 @@ The current pagination system uses a **decoupled architecture** (PGN-9): `Backgr
 - Set `textView.isScrollEnabled = false` (pagination already calculates exact fit)
 - File: `PageView.swift`
 
-### Phase 2: Core Performance (the big wins)
+### Phase 2: Core Performance (the big wins) ✅ COMPLETE
 
-**2A. Replace TabView with UIPageViewController wrapper (P2 + P3)**
-- Create `BookPagerView` (`UIViewControllerRepresentable` wrapping `UIPageViewController`)
+**2A. Replace TabView with UIPageViewController wrapper (P2 + P3)** ✅
+- Created `BookPagerView` (`UIViewControllerRepresentable` wrapping `UIPageViewController`)
 - Only 3 views exist at any time: current, previous, next
 - Adjacent pages get real content from cache (no more "Loading..." flash)
-- Files: New `Views/BookPagerView.swift`, modify `ReaderView.swift`, `ReaderViewModel.swift`
+- Files: New `Views/BookPagerView.swift`, modified `ReaderView.swift`, `ReaderViewModel.swift`
 
-**2B. Replace polling with event-driven updates (P4)**
-- `BackgroundPaginationService` posts `Notification` after each batch commit
-- `ReaderViewModel` observes notification, calls `loadFromCache()` on receipt
-- Remove 2-second Timer from ReaderViewModel
+**2B. Replace polling with event-driven updates (P4)** ✅
+- `BackgroundPaginationService` posts `.paginationBatchCompleted` after each batch commit
+- `ReaderViewModel` observes notification via Combine, removed 2-second Timer
 - Files: `BackgroundPaginationService.swift`, `ReaderViewModel.swift`
 
-### Phase 3: Memory & Storage Optimization
+### Phase 3: Memory & Storage Optimization ✅ COMPLETE
 
-**3A. Lazy page loading from SQLite (P5)**
-- Add `fetchPage(bookHash:settingsKey:pageNumber:)` to `PaginationStore` (single-row query)
-- Add `fetchPageCount()` and `fetchMeta()` methods
-- Replace `bookPages: [String]` with LRU cache of ~20 pages
-- Natural fit with Phase 2A (windowed pager only needs 3 pages at a time)
+**3A. Lazy page loading from SQLite (P5)** ✅
+- Added `fetchPage()`, `fetchPageCount()`, `fetchMeta()` to `PaginationStore`
+- Added `loadPage()`, `loadPageCount()`, `loadPaginationMeta()` to `PersistenceService`
+- Replaced `bookPages: [String]` with 20-page LRU cache + on-demand SQLite fetch
+- `loadFromCache()` uses lightweight meta query (no page content loaded)
 - Files: `PaginationStore.swift`, `ReaderViewModel.swift`, `PersistenceService.swift`
 
-### Phase 4: UX Improvements
+### Phase 4: UX Improvements ✅ COMPLETE
 
-**4A. Priority pagination around current position (P6)**
-- On settings change, pass current `characterIndex` as priority hint
-- Background service paginates forward from that position first (~50 pages)
-- Then fills in from page 1 sequentially
-- Files: `BackgroundPaginationService.swift`, `ReaderViewModel.swift`
+**4A. Priority pagination around current position (P6)** — DEFERRED
+- Decided to defer: cancellation support (4B) addresses the worst symptom. Priority pagination requires significant architectural changes to support non-sequential page numbering in the cache.
 
-**4B. Add cancellation for stale pagination (P7)**
-- Cancel in-progress pagination task when settings change
-- Add per-book cancellation token checked in batch loop
-- File: `BackgroundPaginationService.swift`
+**4B. Add cancellation for stale pagination (P7)** ✅
+- Added `generationID` token to `BackgroundPaginationService`; batch loop checks for invalidation
+- Added `invalidateCurrentPagination()` public API
+- `AppCoordinator.saveUserSettings()` signals cancellation to background service
+- Files: `BackgroundPaginationService.swift`, `AppCoordinator.swift`
 
-**4C. Better estimated totalPages (P10)**
-- Factor in `book.textEncoding` (2 bytes/char for GBK)
-- Refine estimate using actual average chars/page from first few paginated pages
+**4C. Better estimated totalPages (P10)** ✅
+- Accounts for text encoding (GBK/GB18030/UTF-16 = 2 bytes/char)
+- Uses encoding-aware character density (~500 chars/page CJK, ~800 Latin)
 - File: `ReaderViewModel.swift`
 
-**4D. Extract `createAttributedString` to shared utility (P11)**
-- Create `Utilities/TextStyling.swift` with static method
-- Update `PageView`, `BackgroundPaginationService`, `PaginationService` to use it
+**4D. Extract `createAttributedString` to shared utility (P11)** ✅
+- Created `Utilities/TextStyling.swift` with `createAttributedString()`, `resolveFont()`, colors
+- Updated `PageView`, `BackgroundPaginationService`, `PaginationService` to use it
 - Files: New `Utilities/TextStyling.swift`, `PageView.swift`, `BackgroundPaginationService.swift`, `PaginationService.swift`
 
 ### Dependency Graph
@@ -148,18 +145,18 @@ Phase 1 (all parallel):          ✅ COMPLETE
   1B (Char index)   ───┤
   1C (Scroll disable) ─┘
            │
-Phase 2 (parallel with each other):
+Phase 2 (parallel):              ✅ COMPLETE
   2A (UIPageViewController) ──┐
   2B (Event-driven updates) ──┤
            │                  │
-Phase 3:   │                  │
+Phase 3:   │                  │  ✅ COMPLETE
   3A (Lazy loading) ──────────┘
            │
-Phase 4 (all parallel):
-  4A (Priority pagination)
-  4B (Cancellation)
-  4C (Better estimates)
-  4D (Extract TextStyling)
+Phase 4 (all parallel):          ✅ COMPLETE
+  4A (Priority pagination) — DEFERRED
+  4B (Cancellation) ✅
+  4C (Better estimates) ✅
+  4D (Extract TextStyling) ✅
 ```
 
 ## Verification

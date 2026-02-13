@@ -204,12 +204,15 @@ class ReaderViewModel: ObservableObject {
         debugPrint("⏳ ReaderViewModel: Showing loading state, waiting for pagination")
     }
     
-    /// Estimate total pages based on file size
+    /// Estimate total pages based on file size, adjusted for text encoding
     private func estimatedTotalPages() -> Int {
-        // Rough estimate: ~2000 characters per page
-        let charsPerPage = 2000
-        let estimatedChars = Int(book.fileSize)
-        return max(10, estimatedChars / charsPerPage)
+        let enc = book.textEncoding.uppercased()
+        // Multi-byte CJK encodings: ~2 bytes per character
+        let bytesPerChar: Double = (enc.contains("GBK") || enc.contains("GB18030") || enc.contains("UTF-16")) ? 2.0 : 1.0
+        let estimatedChars = Double(book.fileSize) / bytesPerChar
+        // CJK text fits ~500 chars per page; Latin ~800
+        let charsPerPage: Double = bytesPerChar > 1 ? 500 : 800
+        return max(10, Int(estimatedChars / charsPerPage))
     }
     
     /// Update the page content based on current page

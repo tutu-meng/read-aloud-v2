@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### PGN-OVERHAUL: Pagination System Improvement (2026-02-13)
+
+**Phase 1 – Correctness Bug Fixes**
+- Fixed LayoutMetrics/PageView vertical inset mismatch: aligned `textContainerInset` to `(16,16,16,16)`, eliminating ~32px wasted space per page (~100-200 fewer pages for large books)
+- Bumped cache version `pad16v1` → `pad16v2` to invalidate stale caches
+- Fixed character index placeholder: use actual `PageRange.startIndex` for reading position persistence instead of `page * 1000`
+- Disabled `PageView` scrolling (`isScrollEnabled = false`) to match pagination model
+- Added legacy `BookLibrary.json` migration (auto-converts `fileURL` → `relativePath` format)
+
+**Phase 2 – Core Performance**
+- Replaced `TabView+ForEach(0..<totalPages)` with `UIPageViewController` wrapper (`BookPagerView`): only 3 views at any time instead of thousands
+- Adjacent pages show real content from cache, eliminating "Loading page..." flash on every swipe
+- Replaced double-polling architecture (5s + 2s timers) with notification-driven updates via `.paginationBatchCompleted`; near-instant UI refresh, zero CPU waste when idle
+
+**Phase 3 – Memory Optimization**
+- Replaced bulk `bookPages:[String]` array with 20-page LRU cache + on-demand SQLite fetch
+- Added per-page query (`fetchPage`), page count (`fetchPageCount`), and metadata-only (`fetchMeta`) to `PaginationStore`
+- Memory drops from ~7MB (all pages in memory) to ~200KB (20-page window)
+- Added idempotency guard in `updatePageContent()` to prevent redundant TTS restarts
+
+**Phase 4 – UX & Code Quality**
+- Extracted `createAttributedString` from `PageView` into shared `TextStyling` utility; eliminates code smell of instantiating UI components in background services
+- Improved `estimatedTotalPages()`: accounts for text encoding (GBK/GB18030 = 2 bytes/char) and CJK character density
+- Added pagination cancellation: `BackgroundPaginationService.invalidateCurrentPagination()` stops stale pagination immediately on settings change via generationID token
+- `AppCoordinator.saveUserSettings()` now signals cancellation to background service
+
+All tests pass (138/138).
+
+### Previous
+
 #### TTS-1: Text-to-Speech for Current Page (2025-08-13)
 - Added `SystemSpeechService` wrapping `AVSpeechSynthesizer` with a small `SpeechSynthesizing` protocol
 - Implemented `ReaderViewModel.toggleSpeech()` to speak current `pageContent`, pause/resume on tap

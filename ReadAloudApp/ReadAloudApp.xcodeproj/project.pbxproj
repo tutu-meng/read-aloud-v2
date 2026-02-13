@@ -23,6 +23,7 @@
 		55027E2E84C114F7D1B20898 /* PaginationCacheParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A5AD42BF8F0681E2FC34C6 /* PaginationCacheParityTests.swift */; };
 		581EFCD04BF492E55DFC656F /* ReaderViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED9487EC5A6F108612A3AB1 /* ReaderViewModelTests.swift */; };
 		5B2B07E279B0D85D748F515E /* InteroperabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20918F2233B383FEBBF8534 /* InteroperabilityTests.swift */; };
+		61FA892F056640F32649E949 /* TextStyling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644CBDAF3C8D8B6594832A84 /* TextStyling.swift */; };
 		7229E5DE662150A2DB59451D /* ReaderViewModel.swift.bak in Resources */ = {isa = PBXBuildFile; fileRef = D7DA30786B7B641C2E5FB41C /* ReaderViewModel.swift.bak */; };
 		72A8FB5B1C3B688B2392787A /* PersistenceRelativePathsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958CDB8FDECDF41B6D96A504 /* PersistenceRelativePathsTests.swift */; };
 		7C6898699FAAD8C858D9C7FC /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DBE3A4D730A211FE9BF09 /* LibraryViewModel.swift */; };
@@ -92,6 +93,7 @@
 		5CF9214D4A349A0F4B20D744 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
 		5F00BA17693C60EF0CFA2B83 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		636737A823801C528D61F871 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
+		644CBDAF3C8D8B6594832A84 /* TextStyling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStyling.swift; sourceTree = "<group>"; };
 		6665876891CDE2E095C49DFA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		69A21B58832B24D3DCC8FA25 /* SystemSpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSpeechService.swift; sourceTree = "<group>"; };
 		70872506A8DE169C5706F0A2 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 			children = (
 				5CF9214D4A349A0F4B20D744 /* AppError.swift */,
 				B6DBDCF641546D8D0D176698 /* LayoutMetrics.swift */,
+				644CBDAF3C8D8B6594832A84 /* TextStyling.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -388,6 +391,7 @@
 				8F024ADAAB563C8883FC572A /* SettingsView.swift in Sources */,
 				380596B4FD356C6941611BB4 /* SettingsViewModel.swift in Sources */,
 				2D829D381BF74D41D01444E1 /* SystemSpeechService.swift in Sources */,
+				61FA892F056640F32649E949 /* TextStyling.swift in Sources */,
 				D0B5CFEFDE0C4B128A1B9D25 /* UserSettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -432,7 +436,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = Sources/ReadAloudApp/rsc;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -440,7 +444,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = com.readAloud.ReadAloudApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -455,7 +459,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = Sources/ReadAloudApp/rsc;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -463,7 +467,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = com.readAloud.ReadAloudApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";

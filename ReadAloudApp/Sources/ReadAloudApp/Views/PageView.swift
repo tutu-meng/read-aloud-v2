@@ -53,25 +53,7 @@ public struct PageView: UIViewRepresentable {
     }
     
     func createAttributedString(from text: String, settings: UserSettings) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: text)
-        
-        // Get font based on settings
-        let font = getFont(name: settings.fontName, size: settings.fontSize)
-        let textColor = getTextColor(for: settings.theme)
-        
-        // Apply styling
-        let fullRange = NSRange(location: 0, length: (text as NSString).length)
-        attributedString.addAttribute(.font, value: font, range: fullRange)
-        attributedString.addAttribute(.foregroundColor, value: textColor, range: fullRange)
-        
-        // Set paragraph style for line spacing
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 4 * settings.lineSpacing
-        paragraphStyle.paragraphSpacing = 8 * settings.lineSpacing
-        paragraphStyle.lineBreakMode = .byCharWrapping
-        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRange)
-        
-        return attributedString
+        return TextStyling.createAttributedString(from: text, settings: settings)
     }
     
     /// Configure UITextView with user settings

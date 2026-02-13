@@ -26,7 +26,9 @@ class BackgroundPaginationService {
     private let paginationQueue: DispatchQueue
     private var isRunning = false
     private var currentTask: Task<Void, Never>?
-    
+    /// Incremented when settings change to signal in-progress pagination to stop
+    private var generationID: Int = 0
+
     // Batch size for incremental pagination
     private let batchSize = 10
     
@@ -66,6 +68,13 @@ class BackgroundPaginationService {
         }
     }
     
+    /// Signal that settings or view size changed, cancelling any in-progress pagination.
+    /// The monitor loop will pick up the new settings on its next cycle.
+    func invalidateCurrentPagination() {
+        generationID += 1
+        debugPrint("🔄 BackgroundPaginationService: Pagination invalidated (gen \(generationID))")
+    }
+
     /// Stop monitoring
     func stopMonitoring() {
         debugPrint("⏹️ BackgroundPaginationService: Stopping monitoring")
@@ -178,9 +187,10 @@ class BackgroundPaginationService {
             // Start from existing progress or beginning
             var currentIndex = existingCache?.lastProcessedIndex ?? 0
             var pages = existingCache?.pages ?? []
-            
-            // Process in batches
-            while currentIndex < content.count && isRunning {
+            let startGen = generationID
+
+            // Process in batches; stop if generationID changes (settings invalidation)
+            while currentIndex < content.count && isRunning && generationID == startGen {
                 // Calculate next batch of pages
                 let batchResult = await calculateBatch(
                     paginationService: paginationService,
@@ -242,9 +252,8 @@ class BackgroundPaginationService {
         var currentIndex = startIndex
         let bounds = CGRect(origin: .zero, size: viewSize)
         
-        // Create attributed string for pagination
-        let pageView = PageView(content: "", pageIndex: 0)
-        let attributedString = pageView.createAttributedString(from: content, settings: settings)
+        // Create attributed string for pagination using shared utility
+        let attributedString = TextStyling.createAttributedString(from: content, settings: settings)
         
         for batchPageOffset in 0..<batchSize {
             guard currentIndex < content.count else { break }
