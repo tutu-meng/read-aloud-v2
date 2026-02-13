@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+#### BUG-5: Pagination Text Clipping (2026-02-13)
+- Fixed last line of page being clipped in UITextView display
+- Root cause: standalone TextKit (pagination) and UITextView's built-in TextKit calculate layout within ~0.05pt but not identically; `isScrollEnabled=false` clips any overflow
+- Applied 2pt height buffer in `PaginationService.calculatePageRange()` so pagination is slightly conservative
+- Added `PaginationLayoutParityTests` to detect and prevent regressions
+- Bumped cache version `pad16v2` → `pad16v3`
+- Also fixed viewSize race condition: debounced `updateViewSize` by 300ms to prevent cache key mismatch from geometry settling
+
 ### Added
 
 #### PGN-OVERHAUL: Pagination System Improvement (2026-02-13)
