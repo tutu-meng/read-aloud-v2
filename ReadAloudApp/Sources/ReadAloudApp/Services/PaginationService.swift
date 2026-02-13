@@ -247,7 +247,10 @@ class PaginationService {
         // Match UI defaults closely
         layoutManager.usesFontLeading = true
         layoutManager.allowsNonContiguousLayout = false
-        let textContainer = NSTextContainer(size: bounds.size)
+        // BUG-5: Reduce height by a small buffer so UITextView (which has subtle
+        // internal layout differences from standalone TextKit) never clips the last line.
+        let adjustedSize = CGSize(width: bounds.size.width, height: bounds.size.height - 2)
+        let textContainer = NSTextContainer(size: adjustedSize)
         textContainer.lineFragmentPadding = 0
         textContainer.maximumNumberOfLines = 0
         textContainer.lineBreakMode = .byCharWrapping
