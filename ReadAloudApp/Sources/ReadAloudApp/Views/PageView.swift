@@ -26,7 +26,7 @@ public struct PageView: UIViewRepresentable {
         // Configure as read-only
         textView.isEditable = false
         textView.isSelectable = false
-        textView.isScrollEnabled = true
+        textView.isScrollEnabled = false
         
         // Configure appearance with user settings
         configureTextView(textView, with: appCoordinator.userSettings)
@@ -79,7 +79,7 @@ public struct PageView: UIViewRepresentable {
         // Configure appearance
         textView.backgroundColor = getBackgroundColor(for: settings.theme)
         textView.textColor = getTextColor(for: settings.theme)
-        textView.textContainerInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
 
         textView.contentInset = .zero
         textView.scrollIndicatorInsets = .zero

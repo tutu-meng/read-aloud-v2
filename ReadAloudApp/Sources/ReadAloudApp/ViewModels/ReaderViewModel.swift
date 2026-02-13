@@ -36,6 +36,7 @@ class ReaderViewModel: ObservableObject {
     private let persistenceService: PersistenceService
     private var cancellables = Set<AnyCancellable>()
     private var bookPages: [String] = []
+    private var pageStartIndices: [Int] = []
     private var currentViewSize: CGSize = .zero
     private var currentContentSize: CGSize = .zero
     private var currentReadingProgress: ReadingProgress?
@@ -93,6 +94,7 @@ class ReaderViewModel: ObservableObject {
         
         // Clear current pages
         bookPages = []
+        pageStartIndices = []
         isPaginationComplete = false
         
         // Reload from cache with new settings
@@ -140,6 +142,7 @@ class ReaderViewModel: ObservableObject {
                 await MainActor.run {
                     // Update UI from cache
                     self.bookPages = cache.pages.map { $0.content }
+                    self.pageStartIndices = cache.pages.map { $0.startIndex }
                     self.totalPages = cache.isComplete ? self.bookPages.count : max(self.bookPages.count + 10, estimatedTotalPages())
                     self.isPaginationComplete = cache.isComplete
                     self.paginationProgress = Double(cache.pages.count) / Double(self.estimatedTotalPages())
@@ -377,10 +380,12 @@ class ReaderViewModel: ObservableObject {
         debugPrint("📖 ReaderViewModel: Saved progress for \(book.title) - page \(currentPage)")
     }
     
-    /// Calculate character index for a given page (simplified implementation)
+    /// Calculate character index for a given page using actual page boundaries
     private func calculateCharacterIndex(for page: Int) -> Int {
-        // For now, just estimate based on average page length
-        // In a real implementation, this would use actual page boundaries
+        if page < pageStartIndices.count {
+            return pageStartIndices[page]
+        }
+        // Fallback estimate if page ranges not yet available
         let avgCharsPerPage = 1000
         return page * avgCharsPerPage
     }

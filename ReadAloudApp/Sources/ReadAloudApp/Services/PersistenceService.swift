@@ -188,24 +188,26 @@ class PersistenceService {
         }
     }
 
-    /// Load and decode array of Book objects from JSON file (expects relative paths)
+    /// Load and decode array of Book objects from JSON file (expects relative paths).
+    /// If the file contains legacy format (with `fileURL` instead of `relativePath`),
+    /// it will be migrated to the new format automatically.
     /// - Returns: Array of Book objects, empty array if none found
     /// - Throws: PersistenceError if decoding fails
     func loadBookLibrary() throws -> [Book] {
         debugPrint("📖 PersistenceService: Loading book library")
-        
+
         let fileURL = try getBookLibraryFileURL()
-        
+
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             debugPrint("📝 PersistenceService: No book library file found, returning empty array")
             return []
         }
-        
+
         do {
             let data = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            
+
             struct PersistedBook: Codable {
                 let id: UUID
                 let title: String
@@ -215,22 +217,57 @@ class PersistenceService {
                 let fileSize: Int64
                 let textEncoding: String
             }
-            
-            let persisted = try decoder.decode([PersistedBook].self, from: data)
+
+            // Try current format first
+            if let persisted = try? decoder.decode([PersistedBook].self, from: data) {
+                let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let books: [Book] = persisted.map { p in
+                    let url = docs.appendingPathComponent(p.relativePath)
+                    return Book(
+                        id: p.id,
+                        title: p.title,
+                        fileURL: url,
+                        contentHash: p.contentHash,
+                        importedDate: p.importedDate,
+                        fileSize: p.fileSize,
+                        textEncoding: p.textEncoding
+                    )
+                }
+                debugPrint("✅ PersistenceService: Loaded \(books.count) Book entries")
+                return books
+            }
+
+            // Fall back to legacy format (fileURL instead of relativePath)
+            struct LegacyBook: Codable {
+                let id: UUID
+                let title: String
+                let fileURL: URL
+                let contentHash: String
+                let importedDate: Date
+                let fileSize: Int64
+                let textEncoding: String
+            }
+
+            let legacy = try decoder.decode([LegacyBook].self, from: data)
+            debugPrint("⚠️ PersistenceService: Detected legacy BookLibrary format, migrating \(legacy.count) entries")
+
             let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let books: [Book] = persisted.map { p in
-                let url = docs.appendingPathComponent(p.relativePath)
+            let books: [Book] = legacy.map { l in
                 return Book(
-                    id: p.id,
-                    title: p.title,
-                    fileURL: url,
-                    contentHash: p.contentHash,
-                    importedDate: p.importedDate,
-                    fileSize: p.fileSize,
-                    textEncoding: p.textEncoding
+                    id: l.id,
+                    title: l.title,
+                    fileURL: l.fileURL,
+                    contentHash: l.contentHash,
+                    importedDate: l.importedDate,
+                    fileSize: l.fileSize,
+                    textEncoding: l.textEncoding
                 )
             }
-            debugPrint("✅ PersistenceService: Loaded \(books.count) Book entries")
+
+            // Re-save in new format to complete migration
+            try saveBookLibrary(books)
+            debugPrint("✅ PersistenceService: Migration complete, saved \(books.count) books in new format")
+
             return books
         } catch {
             debugPrint("❌ PersistenceService: Failed to decode book library: \(error)")
