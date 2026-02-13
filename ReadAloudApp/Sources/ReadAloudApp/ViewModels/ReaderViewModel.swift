@@ -44,6 +44,7 @@ class ReaderViewModel: ObservableObject {
     private var currentViewSize: CGSize = .zero
     private var currentContentSize: CGSize = .zero
     private var currentReadingProgress: ReadingProgress?
+    private var viewSizeDebounceTask: Task<Void, Never>?
     private let speech: SpeechSynthesizing = SystemSpeechService()
     
     // MARK: - Initialization
@@ -345,7 +346,8 @@ class ReaderViewModel: ObservableObject {
     
     // MARK: - View Size Management
     
-    /// Update the view size for pagination calculations
+    /// Update the view size for pagination calculations.
+    /// Debounced by 0.3s to wait for geometry to settle (navigation bar, safe area).
     func updateViewSize(_ size: CGSize) {
         // Only update if integer width/height changed (material change)
         let oldW = Int(currentViewSize.width)
@@ -353,14 +355,19 @@ class ReaderViewModel: ObservableObject {
         let newW = Int(size.width)
         let newH = Int(size.height)
         if oldW != newW || oldH != newH {
-            debugPrint("📐 ReaderViewModel: View size changed to \(size) (material)")
+            debugPrint("📐 ReaderViewModel: View size changed to \(size) (material), debouncing...")
             currentViewSize = size
-            
-            // Save the view size for background service keying
-            persistenceService.saveLastViewSize(size)
-            
-            // Reload from cache with new size
-            Task { await loadFromCache() }
+
+            // Cancel any pending debounce and wait for geometry to settle
+            viewSizeDebounceTask?.cancel()
+            viewSizeDebounceTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s debounce
+                guard !Task.isCancelled else { return }
+
+                debugPrint("📐 ReaderViewModel: View size settled at \(size)")
+                persistenceService.saveLastViewSize(size)
+                await loadFromCache()
+            }
         }
     }
     
