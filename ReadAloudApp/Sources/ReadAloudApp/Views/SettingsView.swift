@@ -95,6 +95,14 @@ struct SettingsView: View {
     
     private var speechSettingsSection: some View {
         Section(header: Text("Text-to-Speech")) {
+            Picker("Language", selection: Binding(
+                get: { viewModel.userSettings.speechLanguageCode ?? "en-US" },
+                set: { viewModel.userSettings.speechLanguageCode = $0 }
+            )) {
+                Text("English (US)").tag("en-US")
+                Text("中文 (简体)").tag("zh-CN")
+            }
+
             VStack(alignment: .leading) {
                 Text("Speech Rate: \(viewModel.userSettings.speechRate, specifier: "%.1f")x")
                     .font(.caption)
@@ -102,7 +110,7 @@ struct SettingsView: View {
                 Slider(value: Binding(
                     get: { Double(viewModel.userSettings.speechRate) },
                     set: { viewModel.userSettings.speechRate = Float($0) }
-                ), in: Double(UserSettings.speechRateRange.lowerBound)...Double(UserSettings.speechRateRange.upperBound), 
+                ), in: Double(UserSettings.speechRateRange.lowerBound)...Double(UserSettings.speechRateRange.upperBound),
                    step: 0.1)
             }
         }
