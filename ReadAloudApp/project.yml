@@ -14,6 +14,8 @@ targets:
         type: folder
         buildPhase: resources
         destination: Resources/SampleBooks
+      - path: Resources/Assets.xcassets
+        buildPhase: resources
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.readAloud.ReadAloudApp
@@ -21,6 +23,7 @@ targets:
       MARKETING_VERSION: 1.1
       CURRENT_PROJECT_VERSION: 2
       SWIFT_OBJC_BRIDGING_HEADER: Sources/ReadAloudApp/ReadAloudApp-Bridging-Header.h
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       TARGETED_DEVICE_FAMILY: "1,2"
       ENABLE_PREVIEWS: YES
       DEVELOPMENT_ASSET_PATHS: "Sources/ReadAloudApp/rsc"
