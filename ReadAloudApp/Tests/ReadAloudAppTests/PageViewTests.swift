@@ -118,7 +118,7 @@ final class PageViewTests: XCTestCase {
     }
 
     // MARK: - Regression: Last glyph of paginated page sits within container width (no early cut-off)
-    func testLastGlyphWithinContainerWidthForCJKSample() {
+    func testLastGlyphWithinContainerWidthForCJKSample() async {
         // Sample CJK heavy text to stress wrapping
         let sample = String(repeating: "蒸汽与机械的浪潮中，谁能触及时光？", count: 50)
         let settings = UserSettings.default
@@ -132,7 +132,7 @@ final class PageViewTests: XCTestCase {
 
         // Ask paginator for first page range
         let paginator = PaginationService(textContent: sample, userSettings: settings)
-        let pageRange = paginator.calculatePageRange(from: 0, in: bounds, with: attributed)
+        let pageRange = await paginator.calculatePageRange(from: 0, in: bounds, with: attributed)
 
         // Layout with TextKit and measure the last glyph rect
         let storage = NSTextStorage(attributedString: attributed)

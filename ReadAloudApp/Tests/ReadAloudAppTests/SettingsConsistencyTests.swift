@@ -17,10 +17,9 @@ final class SettingsConsistencyTests: XCTestCase {
         let viewSize = LayoutMetrics.computeTextDrawableSize(container: container)
         let bounds = CGRect(origin: .zero, size: viewSize)
 
-        // Build attributed strings through the same helper used by both paths
-        let pageView = PageView(content: "", pageIndex: 0)
-        let attributedForBackground = pageView.createAttributedString(from: content, settings: settings)
-        let attributedForDisplay = pageView.createAttributedString(from: content, settings: settings)
+        // Build attributed strings through the shared TextStyling utility used by both paths
+        let attributedForBackground = TextStyling.createAttributedString(from: content, settings: settings)
+        let attributedForDisplay = TextStyling.createAttributedString(from: content, settings: settings)
 
         // They should be functionally equivalent in attributes length and string
         XCTAssertEqual(attributedForBackground.string, attributedForDisplay.string)
@@ -28,8 +27,8 @@ final class SettingsConsistencyTests: XCTestCase {
 
         // Use PaginationService to compute first page range using the same mapping
         let paginationService = PaginationService(textContent: content, userSettings: settings)
-        let firstRangeBG = paginationService.calculatePageRange(from: 0, in: bounds, with: attributedForBackground)
-        let firstRangeUI = paginationService.calculatePageRange(from: 0, in: bounds, with: attributedForDisplay)
+        let firstRangeBG = await paginationService.calculatePageRange(from: 0, in: bounds, with: attributedForBackground)
+        let firstRangeUI = await paginationService.calculatePageRange(from: 0, in: bounds, with: attributedForDisplay)
 
         // Expect identical page ranges for same content/settings/bounds
         XCTAssertEqual(firstRangeBG.location, firstRangeUI.location)

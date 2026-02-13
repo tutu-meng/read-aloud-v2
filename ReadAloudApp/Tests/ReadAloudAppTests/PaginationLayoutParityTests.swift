@@ -44,7 +44,7 @@ final class PaginationLayoutParityTests: XCTestCase {
     // MARK: - Diagnostic Test
 
     /// Paginate CJK text and check whether UITextView can render each page without clipping.
-    func testPaginationContentFitsInUITextView() {
+    func testPaginationContentFitsInUITextView() async {
         let settings = UserSettings()  // default: System 16, lineSpacing 1.2
         let drawableSize = CGSize(width: 370, height: 607)  // typical iPhone 16 Pro
         let bounds = CGRect(origin: .zero, size: drawableSize)
@@ -59,7 +59,7 @@ final class PaginationLayoutParityTests: XCTestCase {
 
         while currentIndex < (sampleText as NSString).length {
             pageNum += 1
-            let range = paginationService.calculatePageRange(
+            let range = await paginationService.calculatePageRange(
                 from: currentIndex,
                 in: bounds,
                 with: fullAttrStr
@@ -72,11 +72,11 @@ final class PaginationLayoutParityTests: XCTestCase {
             let pageContent = nsContent.substring(with: NSRange(location: range.location, length: safeLen))
 
             // Create UITextView and measure
-            let tv = makeDisplayTextView(drawableSize: drawableSize, content: pageContent, settings: settings)
-            let usedRect = tv.layoutManager.usedRect(for: tv.textContainer)
+            let tv = await MainActor.run { makeDisplayTextView(drawableSize: drawableSize, content: pageContent, settings: settings) }
+            let usedRect = await MainActor.run { tv.layoutManager.usedRect(for: tv.textContainer) }
 
             let overflow = usedRect.height - drawableSize.height
-            if overflow > 0.5 {  // allow 0.5pt tolerance for sub-pixel rounding
+            if overflow > 0.01 {  // near-zero tolerance — UITextView-based pagination should be exact
                 overflowPages.append((page: pageNum, overflow: overflow, chars: safeLen))
                 print("[BUG-5] Page \(pageNum): OVERFLOW by \(overflow)pt (\(safeLen) chars, usedRect.height=\(usedRect.height), available=\(drawableSize.height))")
             } else {
@@ -84,7 +84,7 @@ final class PaginationLayoutParityTests: XCTestCase {
             }
 
             currentIndex = range.location + safeLen
-            if pageNum > 50 { break }  // cap for test speed
+            if pageNum > 50 { break }
         }
 
         print("[BUG-5] Summary: \(overflowPages.count) / \(pageNum) pages overflow")
@@ -97,7 +97,7 @@ final class PaginationLayoutParityTests: XCTestCase {
     }
 
     /// Verify no character gaps between consecutive pages
-    func testNoCharacterGapsBetweenPages() {
+    func testNoCharacterGapsBetweenPages() async {
         let settings = UserSettings()
         let drawableSize = CGSize(width: 370, height: 607)
         let bounds = CGRect(origin: .zero, size: drawableSize)
@@ -112,7 +112,7 @@ final class PaginationLayoutParityTests: XCTestCase {
 
         while currentIndex < (sampleText as NSString).length {
             pageNum += 1
-            let range = paginationService.calculatePageRange(
+            let range = await paginationService.calculatePageRange(
                 from: currentIndex,
                 in: bounds,
                 with: fullAttrStr

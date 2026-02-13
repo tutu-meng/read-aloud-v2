@@ -32,6 +32,20 @@ class PaginationService {
     
     /// Current view dimensions
     private var currentViewSize: CGSize?
+
+    /// Create a UITextView configured identically to SinglePageViewController (main thread only).
+    @MainActor private static func makePaginationTextView() -> UITextView {
+        let tv = UITextView()
+        tv.isEditable = false
+        tv.isSelectable = false
+        tv.isScrollEnabled = false
+        tv.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        tv.contentInset = .zero
+        tv.textContainer.lineFragmentPadding = 0
+        tv.textContainer.maximumNumberOfLines = 0
+        tv.textContainer.lineBreakMode = .byCharWrapping
+        return tv
+    }
     
     // MARK: - Initialization
     
@@ -221,16 +235,15 @@ class PaginationService {
     
     // MARK: - PGN-5: Core calculatePageRange Function Implementation
     
-    /// Calculate the character range that fits within the given bounds using TextKit (to match UI engine)
-    /// This uses NSTextStorage/NSLayoutManager/NSTextContainer so pagination and UI render with the same layout engine.
+    /// Calculate the character range that fits within the given bounds using a real UITextView.
+    /// This guarantees the pagination layout matches the display layout exactly — same TextKit
+    /// stack, same internal adjustments, zero discrepancy.
     /// - Parameters:
     ///   - startIndex: Starting character index in the full attributed string to measure from
-    ///   - bounds: Exact bounds of the view where the text will be rendered
+    ///   - bounds: Exact drawable bounds (text area without insets)
     ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
-    /// - Returns: NSRange representing the exact characters that fit perfectly on the page
-    /// - Note: This function performs Core Text calculations on the current thread
-    func calculatePageRange(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) -> NSRange {
-        debugPrint("📄 PaginationService: calculatePageRange(TextKit) from: \(startIndex), in: \(bounds)")
+    /// - Returns: NSRange representing the exact characters that fit on the page
+    func calculatePageRange(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) async -> NSRange {
         guard bounds.width > 0, bounds.height > 0 else {
             return NSRange(location: startIndex, length: 0)
         }
@@ -238,33 +251,28 @@ class PaginationService {
             return NSRange(location: startIndex, length: 0)
         }
 
-        // Work on an attributed substring starting at startIndex for simpler TextKit indexing
         let subRange = NSRange(location: startIndex, length: attributedString.length - startIndex)
         let subAttr = attributedString.attributedSubstring(from: subRange)
 
-        let storage = NSTextStorage(attributedString: subAttr)
-        let layoutManager = NSLayoutManager()
-        // Match UI defaults closely
-        layoutManager.usesFontLeading = true
-        layoutManager.allowsNonContiguousLayout = false
-        // BUG-5: Reduce height by a small buffer so UITextView (which has subtle
-        // internal layout differences from standalone TextKit) never clips the last line.
-        let adjustedSize = CGSize(width: bounds.size.width, height: bounds.size.height - 2)
-        let textContainer = NSTextContainer(size: adjustedSize)
-        textContainer.lineFragmentPadding = 0
-        textContainer.maximumNumberOfLines = 0
-        textContainer.lineBreakMode = .byCharWrapping
-        layoutManager.addTextContainer(textContainer)
-        storage.addLayoutManager(layoutManager)
+        return await MainActor.run {
+            let tv = PaginationService.makePaginationTextView()
+            let inset: CGFloat = 16
+            // Frame = drawable size + insets (UITextView subtracts insets internally)
+            tv.frame = CGRect(
+                x: 0, y: 0,
+                width: bounds.width + 2 * inset,
+                height: bounds.height + 2 * inset
+            )
+            tv.attributedText = subAttr
+            tv.layoutManager.ensureLayout(for: tv.textContainer)
 
-        // Force layout to compute glyphs
-        _ = layoutManager.glyphRange(for: textContainer)
-        let glyphRange = layoutManager.glyphRange(for: textContainer)
-        let charRangeRelative = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+            let glyphRange = tv.layoutManager.glyphRange(for: tv.textContainer)
+            let charRangeRelative = tv.layoutManager.characterRange(
+                forGlyphRange: glyphRange, actualGlyphRange: nil
+            )
 
-        let absoluteRange = NSRange(location: startIndex + charRangeRelative.location, length: charRangeRelative.length)
-        debugPrint("📄 PaginationService: Calculated range (TextKit): location=\(absoluteRange.location), length=\(absoluteRange.length)")
-        return absoluteRange
+            return NSRange(location: startIndex + charRangeRelative.location, length: charRangeRelative.length)
+        }
     }
     
     /// Calculate the full layout for the entire document (PGN-3)
@@ -274,16 +282,16 @@ class PaginationService {
     ///   - attributedString: The attributed string to layout
     /// - Returns: Array of NSRange objects representing all pages in the document
     /// - Note: This method is designed to run on a background thread for performance
-    private func calculateFullLayout(bounds: CGRect, attributedString: NSAttributedString) -> [NSRange] {
+    private func calculateFullLayout(bounds: CGRect, attributedString: NSAttributedString) async -> [NSRange] {
         debugPrint("📄 PaginationService: calculateFullLayout(bounds: \(bounds)) - starting full document layout")
-        
+
         var pageRanges: [NSRange] = []
         var currentIndex = 0
         var pageNumber = 1
-        
+
         // Iterate through the entire document, calculating each page
         while currentIndex < attributedString.length {
-            let pageRange = calculatePageRange(from: currentIndex, in: bounds, with: attributedString)
+            let pageRange = await calculatePageRange(from: currentIndex, in: bounds, with: attributedString)
             
             // Safety check to prevent infinite loops
             if pageRange.length == 0 {
@@ -308,24 +316,10 @@ class PaginationService {
         return pageRanges
     }
     
-    /// Async version of calculateFullLayout that runs on a background thread (PGN-3)
-    /// - Parameters:
-    ///   - bounds: View bounds for text layout
-    ///   - attributedString: The attributed string to layout
-    /// - Returns: Array of NSRange objects representing all pages in the document
-    /// - Note: This method runs on a background thread to prevent UI freezes
+    /// Async wrapper for calculateFullLayout (PGN-3)
     private func calculateFullLayoutAsync(bounds: CGRect, attributedString: NSAttributedString) async -> [NSRange] {
-        debugPrint("📄 PaginationService: calculateFullLayoutAsync(bounds: \(bounds)) - dispatching to background thread")
-        
-        return await withCheckedContinuation { continuation in
-            // Dispatch full layout calculation to a background thread
-            DispatchQueue.global(qos: .userInitiated).async {
-                let result = self.calculateFullLayout(bounds: bounds, attributedString: attributedString)
-                DispatchQueue.main.async {
-                    continuation.resume(returning: result)
-                }
-            }
-        }
+        debugPrint("📄 PaginationService: calculateFullLayoutAsync(bounds: \(bounds))")
+        return await calculateFullLayout(bounds: bounds, attributedString: attributedString)
     }
     
     /// Get or calculate the full layout for the entire document with caching (PGN-3)
@@ -386,18 +380,9 @@ class PaginationService {
     ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
     /// - Returns: NSRange representing the exact characters that fit perfectly on the page
     /// - Note: All Core Text calculations are explicitly dispatched to DispatchQueue.global(qos: .userInitiated)
+    /// Async wrapper — calculatePageRange is already async, this just forwards.
     private func calculatePageRangeAsync(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) async -> NSRange {
-        debugPrint("📄 PaginationService: calculatePageRangeAsync(from: \(startIndex), in: \(bounds)) - dispatching to background thread")
-        
-        return await withCheckedContinuation { continuation in
-            // PGN-5 Requirement: All Core Text calculations must be explicitly dispatched to a background thread
-            DispatchQueue.global(qos: .userInitiated).async {
-                let result = self.calculatePageRange(from: startIndex, in: bounds, with: attributedString)
-                DispatchQueue.main.async {
-                    continuation.resume(returning: result)
-                }
-            }
-        }
+        return await calculatePageRange(from: startIndex, in: bounds, with: attributedString)
     }
     
     /// Calculate page ranges for multiple pages starting from a given index

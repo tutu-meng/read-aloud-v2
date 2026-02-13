@@ -259,7 +259,7 @@ class BackgroundPaginationService {
             guard currentIndex < content.count else { break }
             
             // Calculate page range using Core Text from current position
-            let range = paginationService.calculatePageRange(
+            let range = await paginationService.calculatePageRange(
                 from: currentIndex,
                 in: bounds,
                 with: attributedString

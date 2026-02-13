@@ -93,26 +93,40 @@ final class ReaderViewModelTests: XCTestCase {
     
     // MARK: - Page Navigation Tests
     
-    func testCurrentPageUpdatesTriggerContentUpdate() {
-        // Given
-        let expectation = XCTestExpectation(description: "Page content updates when page changes")
-        viewModel.loadBook()
-        
-        // Wait for initial load
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            
-            // When
-            self.viewModel.currentPage = 3
-            
-            // Then
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                XCTAssertTrue(self.viewModel.pageContent.contains("Page 4"), "Content should indicate page 4 (0-indexed)")
-                expectation.fulfill()
+    func testCurrentPageUpdatesTriggerContentUpdate() async {
+        // Given: Setup expectation for page content updates
+        let contentExpectation = XCTestExpectation(description: "Page content updates when page changes")
+        var contentUpdates: [String] = []
+
+        // Subscribe to pageContent publisher to observe actual state changes
+        let cancellable = viewModel.$pageContent
+            .dropFirst() // Skip initial empty value
+            .sink { content in
+                contentUpdates.append(content)
+                if contentUpdates.count >= 2 { // Initial load + page change
+                    contentExpectation.fulfill()
+                }
             }
+
+        // When: Load book
+        viewModel.loadBook()
+
+        // Wait for initial pagination to complete (observe actual state, not time)
+        await waitForCondition(timeout: 5.0) {
+            !self.viewModel.isLoading && self.viewModel.totalPages > 0
         }
-        
-        wait(for: [expectation], timeout: 3.0)
+
+        // Then: Change page
+        viewModel.currentPage = 3
+
+        // Wait for content update
+        await fulfillment(of: [contentExpectation], timeout: 2.0)
+
+        // Verify page content contains expected text
+        XCTAssertTrue(viewModel.pageContent.contains("Page 4"),
+                      "Content should indicate page 4 (0-indexed), got: \(viewModel.pageContent)")
+
+        cancellable.cancel()
     }
     
     
@@ -186,6 +200,17 @@ final class ReaderViewModelTests: XCTestCase {
     }
     
     // MARK: - Page Content Tests
-    
-    
+
+    // MARK: - Helper Methods
+
+    /// Wait for a condition to become true with a timeout
+    /// - Parameters:
+    ///   - timeout: Maximum time to wait in seconds
+    ///   - condition: Closure that returns true when the condition is met
+    private func waitForCondition(timeout: TimeInterval, condition: @escaping () -> Bool) async {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() && Date() < deadline {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s polling
+        }
+    }
 } 
