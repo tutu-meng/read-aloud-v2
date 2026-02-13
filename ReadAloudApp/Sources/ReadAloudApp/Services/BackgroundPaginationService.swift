@@ -9,12 +9,18 @@
 import Foundation
 import SwiftUI
 
+/// Notification posted after each pagination batch is saved to SQLite.
+/// `userInfo` contains "bookHash" (String) and "pageCount" (Int).
+extension Notification.Name {
+    static let paginationBatchCompleted = Notification.Name("com.readAloud.paginationBatchCompleted")
+}
+
 /// Service that monitors and paginates books in the background
 /// This runs independently of the UI and saves results to cache
 class BackgroundPaginationService {
-    
+
     // MARK: - Properties
-    
+
     private let persistenceService: PersistenceService
     private let fileProcessor: FileProcessor
     private let paginationQueue: DispatchQueue
@@ -202,7 +208,14 @@ class BackgroundPaginationService {
                 )
                 
                 debugPrint("💾 BackgroundPaginationService: Saved \(pages.count) pages (progress: \(currentIndex)/\(content.count))")
-                
+
+                // Notify observers that new pages are available
+                NotificationCenter.default.post(
+                    name: .paginationBatchCompleted,
+                    object: nil,
+                    userInfo: ["bookHash": book.contentHash, "pageCount": pages.count]
+                )
+
                 // Small delay to not hog resources
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             }

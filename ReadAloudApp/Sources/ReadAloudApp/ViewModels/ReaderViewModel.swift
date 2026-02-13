@@ -40,7 +40,6 @@ class ReaderViewModel: ObservableObject {
     private var currentViewSize: CGSize = .zero
     private var currentContentSize: CGSize = .zero
     private var currentReadingProgress: ReadingProgress?
-    private var cacheCheckTimer: Timer?
     private let speech: SpeechSynthesizing = SystemSpeechService()
     
     // MARK: - Initialization
@@ -88,10 +87,6 @@ class ReaderViewModel: ObservableObject {
     private func handleSettingsChange() {
         debugPrint("📱 ReaderViewModel: Settings changed, will reload from new cache")
         
-        // Stop current cache checking
-        cacheCheckTimer?.invalidate()
-        cacheCheckTimer = nil
-        
         // Clear current pages
         bookPages = []
         pageStartIndices = []
@@ -106,23 +101,35 @@ class ReaderViewModel: ObservableObject {
     /// Load book from pagination cache
     func loadBook() {
         isLoading = true
-        
+
         // Load saved reading progress first
         loadSavedProgress()
-        
-        // Simply load from cache
+
+        // Load from cache and listen for background pagination updates
         Task {
             await loadFromCache()
-            
-            // Set up periodic cache checking
+
+            // Observe background pagination batch notifications instead of polling
             await MainActor.run {
-                self.cacheCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+                self.setupPaginationObservation()
+            }
+        }
+    }
+
+    /// Observe notifications from BackgroundPaginationService
+    private func setupPaginationObservation() {
+        NotificationCenter.default.publisher(for: .paginationBatchCompleted)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                // Only react to notifications for the current book
+                if let bookHash = notification.userInfo?["bookHash"] as? String,
+                   bookHash == self.book.contentHash {
                     Task {
-                        await self?.loadFromCache()
+                        await self.loadFromCache()
                     }
                 }
             }
-        }
+            .store(in: &cancellables)
     }
     
     /// Load pages from pagination cache
@@ -160,11 +167,7 @@ class ReaderViewModel: ObservableObject {
                         self.restoreSavedPosition()
                     }
                     
-                    // Stop checking if complete
-                    if cache.isComplete {
-                        self.cacheCheckTimer?.invalidate()
-                        self.cacheCheckTimer = nil
-                    }
+                    // No polling needed -- notification-driven via .paginationBatchCompleted
                 }
             } else {
                 // No cache yet, show loading state
@@ -235,6 +238,17 @@ class ReaderViewModel: ObservableObject {
         }
     }
     
+    /// Get content for a specific page (used by BookPagerView for adjacent pages)
+    func contentForPage(_ page: Int) -> String {
+        if page >= 0 && page < bookPages.count {
+            return bookPages[page]
+        } else if !isPaginationComplete {
+            return "Page \(page + 1) is being processed..."
+        } else {
+            return ""
+        }
+    }
+
     /// Navigate to a specific page
     func goToPage(_ page: Int) {
         let clampedPage = max(0, min(page, totalPages - 1))
@@ -259,11 +273,6 @@ class ReaderViewModel: ObservableObject {
     /// Close the book and return to library
     func closeBook() {
         saveCurrentProgress()
-        
-        // Stop cache checking
-        cacheCheckTimer?.invalidate()
-        cacheCheckTimer = nil
-        
         coordinator.navigateToLibrary()
     }
     
@@ -393,7 +402,6 @@ class ReaderViewModel: ObservableObject {
     // MARK: - Cleanup
     
     deinit {
-        cacheCheckTimer?.invalidate()
         speech.stop()
         debugPrint("♻️ ReaderViewModel: Deinitialized for book: \(book.title)")
     }
