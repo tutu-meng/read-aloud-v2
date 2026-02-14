@@ -224,6 +224,35 @@ final class PaginationStore {
         }
     }
 
+    /// Find the 1-based page number whose character range contains the given index.
+    func fetchPageContaining(bookHash: String, settingsKey: String, characterIndex: Int) throws -> Int? {
+        return try db.perform { dbh in
+            let sql = "SELECT page_number FROM page_cache WHERE book_hash=? AND settings_key=? AND start_index<=? AND end_index>? LIMIT 1;"
+            var stmt: OpaquePointer?
+            guard sqlite3_prepare_v2(dbh, sql, -1, &stmt, nil) == SQLITE_OK else {
+                let msg = String(cString: sqlite3_errmsg(dbh))
+                throw NSError(domain: "SQLite", code: 21, userInfo: [NSLocalizedDescriptionKey: "prepare fetchPageContaining: \(msg)"])
+            }
+            defer { sqlite3_finalize(stmt) }
+            sqlite3_bind_text(stmt, 1, (bookHash as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, (settingsKey as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_int(stmt, 3, Int32(characterIndex))
+            sqlite3_bind_int(stmt, 4, Int32(characterIndex))
+            guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
+            return Int(sqlite3_column_int(stmt, 0))
+        }
+    }
+
+    /// Shift page numbers by `delta` for all pages whose current page_number >= `fromPageNumber`.
+    func renumberPages(bookHash: String, settingsKey: String, fromPageNumber: Int, delta: Int) throws {
+        _ = try db.inTransaction { dbh in
+            try exec(dbh, sql: """
+                UPDATE page_cache SET page_number = page_number + ?
+                WHERE book_hash=? AND settings_key=? AND page_number>=?;
+                """, bind: [delta, bookHash, settingsKey, fromPageNumber])
+        }
+    }
+
     func deleteAllForBook(_ bookHash: String) throws {
         _ = try db.inTransaction { dbh in
             try exec(dbh, sql: "DELETE FROM page_cache WHERE book_hash=?;", bind: [bookHash])

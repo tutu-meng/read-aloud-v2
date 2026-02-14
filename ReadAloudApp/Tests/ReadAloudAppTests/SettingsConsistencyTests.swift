@@ -39,7 +39,7 @@ final class SettingsConsistencyTests: XCTestCase {
         let container = CGSize(width: 390, height: 844)
         let expected = CGSize(
             width: max(0, 390 - 2 * LayoutMetrics.horizontalContentInset),
-            height: max(0, 844 - LayoutMetrics.chromeBottomHeight - 2 * LayoutMetrics.verticalContentInset)
+            height: max(0, 844 - LayoutMetrics.chromeBottomHeight - LayoutMetrics.verticalContentInsetTop - LayoutMetrics.verticalContentInsetBottom)
         )
         let actual = LayoutMetrics.computeTextDrawableSize(container: container)
         XCTAssertEqual(Int(actual.width), Int(expected.width))

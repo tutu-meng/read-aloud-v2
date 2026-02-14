@@ -31,6 +31,8 @@ class ReaderViewModel: ObservableObject {
     @Published var isPaginationComplete = false
     @Published var paginationProgress: Double = 0.0
     @Published var shouldPresentTTSPicker = false
+    /// Whether the reader is showing seed-window content (approximate position, not yet reconciled)
+    @Published var isSeedMode = false
 
     /// Track last user interaction for pagination coordination
     @Published private(set) var lastUserInteractionTime = Date.distantPast
@@ -51,16 +53,27 @@ class ReaderViewModel: ObservableObject {
     private var currentReadingProgress: ReadingProgress?
     private var viewSizeDebounceTask: Task<Void, Never>?
     private var progressSaveDebounceTask: Task<Void, Never>?
+    private var settingsDebounceTask: Task<Void, Never>?
+    private var loadBookTask: Task<Void, Never>?
     private let speech: SpeechSynthesizing = SystemSpeechService()
+
+    // MARK: - Seed Window State
+    /// Seed pages computed from the saved character position (in-memory only)
+    private var seedPages: [(content: String, range: NSRange)] = []
+    /// Character index used as the seed anchor
+    private var seedAnchorCharIndex: Int = 0
+    /// The page number where seed window starts (fixed anchor for offset calculation)
+    private var seedStartPage: Int = 0
     
     // MARK: - Initialization
     init(book: Book, coordinator: AppCoordinator) {
         self.book = book
         self.coordinator = coordinator
         self.persistenceService = PersistenceService.shared
-        
+
         setupSettingsObservation()
         setupAppLifecycleObservation()
+        setupPaginationObservation()
         loadBook()
     }
     
@@ -94,18 +107,22 @@ class ReaderViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    /// Handle settings changes that affect layout
+    /// Handle settings changes that affect layout (debounced to avoid cascade from rapid changes)
     private func handleSettingsChange() {
-        debugPrint("📱 ReaderViewModel: Settings changed, will reload from new cache")
-        
-        // Clear cached state
-        clearPageCache()
-        currentCacheKey = ""
-        cachedPageCount = 0
-        isPaginationComplete = false
-        
-        // Reload from cache with new settings
-        loadBook()
+        settingsDebounceTask?.cancel()
+        settingsDebounceTask = Task {
+            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s debounce
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                debugPrint("📱 ReaderViewModel: Settings changed, will reload from new cache")
+                self.clearPageCache()
+                self.clearSeedState()
+                self.currentCacheKey = ""
+                self.cachedPageCount = 0
+                self.isPaginationComplete = false
+                self.loadBook()
+            }
+        }
     }
     
     // MARK: - Methods
@@ -117,13 +134,13 @@ class ReaderViewModel: ObservableObject {
         // Load saved reading progress first
         loadSavedProgress()
 
-        // Load from cache and listen for background pagination updates
-        Task {
+        // Cancel any in-flight load task before starting a new one
+        loadBookTask?.cancel()
+        loadBookTask = Task {
             await loadFromCache()
-
-            // Observe background pagination batch notifications instead of polling
+            guard !Task.isCancelled else { return }
             await MainActor.run {
-                self.setupPaginationObservation()
+                self.requestSeedIfNeeded()
             }
         }
     }
@@ -133,12 +150,35 @@ class ReaderViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: .paginationBatchCompleted)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                // Only react to notifications for the current book
                 if let bookHash = notification.userInfo?["bookHash"] as? String,
                    bookHash == self.book.contentHash {
                     Task {
                         await self.loadFromCache()
                     }
+                }
+            }
+            .store(in: &cancellables)
+
+        // Seed window is ready — enter seed mode
+        NotificationCenter.default.publisher(for: .seedWindowReady)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                if let bookHash = notification.userInfo?["bookHash"] as? String,
+                   bookHash == self.book.contentHash,
+                   let serialized = notification.userInfo?["seedPages"] as? [[String: Any]] {
+                    self.handleSeedWindowReady(serialized)
+                }
+            }
+            .store(in: &cancellables)
+
+        // Background pagination has caught up to the seed anchor — reconcile page number
+        NotificationCenter.default.publisher(for: .seedReconciled)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                if let bookHash = notification.userInfo?["bookHash"] as? String,
+                   bookHash == self.book.contentHash,
+                   let realPage = notification.userInfo?["realPageNumber"] as? Int {
+                    self.handleSeedReconciled(realPageNumber: realPage)
                 }
             }
             .store(in: &cancellables)
@@ -211,13 +251,26 @@ class ReaderViewModel: ObservableObject {
         debugPrint("⏳ ReaderViewModel: Showing loading state, waiting for pagination")
     }
     
-    /// Estimate total pages based on file size, adjusted for text encoding
+    /// Estimate total pages based on actual pagination data when available, falling back to file-size heuristic.
     private func estimatedTotalPages() -> Int {
+        // If we have partial pagination data, extrapolate from actual chars-per-page
+        if cachedPageCount > 0, !currentCacheKey.isEmpty,
+           let meta = try? persistenceService.loadPaginationMeta(
+               bookHash: book.contentHash,
+               settingsKey: currentCacheKey
+           ), meta.lastProcessedIndex > 0 {
+            let charsPerPage = Double(meta.lastProcessedIndex) / Double(cachedPageCount)
+            let enc = book.textEncoding.uppercased()
+            let bytesPerChar: Double = (enc.contains("GBK") || enc.contains("GB18030") || enc.contains("UTF-16")) ? 2.0 : 1.0
+            let estimatedTotalChars = Double(book.fileSize) / bytesPerChar
+            let estimate = Int(estimatedTotalChars / charsPerPage)
+            return max(cachedPageCount, estimate)
+        }
+
+        // Fallback: pure file-size heuristic
         let enc = book.textEncoding.uppercased()
-        // Multi-byte CJK encodings: ~2 bytes per character
         let bytesPerChar: Double = (enc.contains("GBK") || enc.contains("GB18030") || enc.contains("UTF-16")) ? 2.0 : 1.0
         let estimatedChars = Double(book.fileSize) / bytesPerChar
-        // CJK text fits ~500 chars per page; Latin ~800
         let charsPerPage: Double = bytesPerChar > 1 ? 500 : 800
         return max(10, Int(estimatedChars / charsPerPage))
     }
@@ -246,6 +299,15 @@ class ReaderViewModel: ObservableObject {
             touchPageCache(page)
             return cached
         }
+
+        // In seed mode, serve seed content for pages within the seed window
+        if isSeedMode {
+            let seedIndex = page - seedStartPage
+            if seedIndex >= 0 && seedIndex < seedPages.count {
+                return seedPages[seedIndex].content
+            }
+        }
+
         // Fetch from SQLite (page_number is 1-based in DB)
         guard !currentCacheKey.isEmpty else {
             return !isPaginationComplete ? "Page \(page + 1) is being processed..." : ""
@@ -460,8 +522,88 @@ class ReaderViewModel: ObservableObject {
         return page * 1000 // fallback
     }
     
+    // MARK: - Seed Window
+
+    /// Request a seed window if the user has a saved position that isn't cached yet.
+    private func requestSeedIfNeeded() {
+        guard let progress = currentReadingProgress,
+              progress.lastReadCharacterIndex > 0 else { return }
+
+        // Check if the saved position is already covered by the cache
+        if let savedPage = progress.lastPageNumber, savedPage < cachedPageCount {
+            return // Cache already covers the saved position
+        }
+
+        let viewSize = currentViewSize.width > 0 ? currentViewSize : persistenceService.loadLastViewSize()
+        guard viewSize.width > 0 && viewSize.height > 0 else { return }
+
+        seedAnchorCharIndex = progress.lastReadCharacterIndex
+        debugPrint("🌱 ReaderViewModel: Requesting seed window at char \(seedAnchorCharIndex)")
+        coordinator.requestSeedWindow(
+            for: book,
+            anchorCharIndex: seedAnchorCharIndex,
+            settings: coordinator.userSettings,
+            viewSize: viewSize
+        )
+    }
+
+    /// Handle seed window ready notification.
+    private func handleSeedWindowReady(_ serialized: [[String: Any]]) {
+        var pages: [(content: String, range: NSRange)] = []
+        for dict in serialized {
+            guard let content = dict["content"] as? String,
+                  let location = dict["location"] as? Int,
+                  let length = dict["length"] as? Int else { continue }
+            pages.append((content: content, range: NSRange(location: location, length: length)))
+        }
+        guard !pages.isEmpty else { return }
+
+        seedPages = pages
+        isSeedMode = true
+        isLoading = false
+        totalPages = max(totalPages, estimatedTotalPages())
+
+        // Restore the saved page (keep the saved page number for now; it will be reconciled later)
+        if let savedPage = currentReadingProgress?.lastPageNumber, savedPage > 0 {
+            currentPage = min(savedPage, totalPages - 1)
+        }
+        seedStartPage = currentPage
+
+        updatePageContent()
+        debugPrint("🌱 ReaderViewModel: Entered seed mode with \(pages.count) pages at saved position")
+    }
+
+    /// Handle reconciliation: background pagination has reached the seed anchor.
+    private func handleSeedReconciled(realPageNumber: Int) {
+        guard isSeedMode else { return }
+        debugPrint("🎯 ReaderViewModel: Reconciling seed → real page \(realPageNumber)")
+
+        // Switch from seed mode to normal mode
+        clearSeedState()
+
+        // Jump to the real page number (content will be the same since it starts at the same char index)
+        currentPage = realPageNumber
+    }
+
+    private func clearSeedState() {
+        isSeedMode = false
+        seedPages = []
+        seedAnchorCharIndex = 0
+        seedStartPage = 0
+    }
+
+    /// Approximate reading percentage for the page indicator in seed mode.
+    var seedReadingPercentage: Int {
+        guard seedAnchorCharIndex > 0 else { return 0 }
+        let enc = book.textEncoding.uppercased()
+        let bytesPerChar: Double = (enc.contains("GBK") || enc.contains("GB18030") || enc.contains("UTF-16")) ? 2.0 : 1.0
+        let estimatedTotalChars = Double(book.fileSize) / bytesPerChar
+        guard estimatedTotalChars > 0 else { return 0 }
+        return min(99, max(1, Int(Double(seedAnchorCharIndex) / estimatedTotalChars * 100)))
+    }
+
     // MARK: - Cleanup
-    
+
     deinit {
         speech.stop()
         debugPrint("♻️ ReaderViewModel: Deinitialized for book: \(book.title)")

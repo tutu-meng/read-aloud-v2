@@ -138,9 +138,12 @@ class SinglePageViewController: UIViewController {
         tv.isEditable = false
         tv.isSelectable = false
         tv.isScrollEnabled = false
-        // Extra 8pt bottom buffer accommodates Core Text/UITextView layout differences
-        // Pagination calculates with 16pt insets, display shows with 24pt bottom for safety margin
-        tv.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16)
+        tv.textContainerInset = UIEdgeInsets(
+            top: LayoutMetrics.verticalContentInsetTop,
+            left: LayoutMetrics.horizontalContentInset,
+            bottom: LayoutMetrics.verticalContentInsetBottom,
+            right: LayoutMetrics.horizontalContentInset
+        )
         tv.contentInset = .zero
         tv.textContainer.lineFragmentPadding = 0
         tv.textContainer.maximumNumberOfLines = 0
@@ -165,51 +168,8 @@ class SinglePageViewController: UIViewController {
 
     private func applyContent() {
         guard let tv = textView else { return }
-        tv.backgroundColor = backgroundColor(for: settings.theme)
+        tv.backgroundColor = TextStyling.backgroundColor(for: settings.theme)
         view.backgroundColor = tv.backgroundColor
-
-        let attrStr = NSMutableAttributedString(string: content)
-        let font = resolveFont(name: settings.fontName, size: settings.fontSize)
-        let color = textColor(for: settings.theme)
-        let fullRange = NSRange(location: 0, length: (content as NSString).length)
-        attrStr.addAttribute(.font, value: font, range: fullRange)
-        attrStr.addAttribute(.foregroundColor, value: color, range: fullRange)
-        let ps = NSMutableParagraphStyle()
-        ps.lineSpacing = 4 * settings.lineSpacing
-        ps.paragraphSpacing = 8 * settings.lineSpacing
-        ps.lineBreakMode = .byCharWrapping
-        attrStr.addAttribute(.paragraphStyle, value: ps, range: fullRange)
-        tv.attributedText = attrStr
-    }
-
-    // MARK: - Helpers (mirrors PageView)
-
-    private func resolveFont(name: String, size: CGFloat) -> UIFont {
-        switch name {
-        case "System": return UIFont.systemFont(ofSize: size)
-        case "Georgia": return UIFont(name: "Georgia", size: size) ?? .systemFont(ofSize: size)
-        case "Helvetica": return UIFont(name: "Helvetica", size: size) ?? .systemFont(ofSize: size)
-        case "Times New Roman": return UIFont(name: "Times New Roman", size: size) ?? .systemFont(ofSize: size)
-        case "Courier": return UIFont(name: "Courier", size: size) ?? .systemFont(ofSize: size)
-        case "Palatino": return UIFont(name: "Palatino-Roman", size: size) ?? .systemFont(ofSize: size)
-        case "Baskerville": return UIFont(name: "Baskerville", size: size) ?? .systemFont(ofSize: size)
-        default: return UIFont.systemFont(ofSize: size)
-        }
-    }
-
-    private func backgroundColor(for theme: String) -> UIColor {
-        switch theme {
-        case "dark": return .black
-        case "sepia": return UIColor(red: 0.95, green: 0.91, blue: 0.82, alpha: 1.0)
-        default: return .systemBackground
-        }
-    }
-
-    private func textColor(for theme: String) -> UIColor {
-        switch theme {
-        case "dark": return .white
-        case "sepia": return UIColor(red: 0.3, green: 0.2, blue: 0.1, alpha: 1.0)
-        default: return .label
-        }
+        tv.attributedText = TextStyling.createAttributedString(from: content, settings: settings)
     }
 }

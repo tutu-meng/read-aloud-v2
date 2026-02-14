@@ -104,13 +104,17 @@ struct ReaderView: View {
     
     private var pageIndicator: some View {
         HStack {
-            Text("Page \(viewModel.currentPage + 1) of \(viewModel.totalPages)")
-                .font(.caption2)  // Smaller font for compact display
-                .foregroundColor(.secondary)
+            if viewModel.isSeedMode {
+                Text("~\(viewModel.seedReadingPercentage)%")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("Page \(viewModel.currentPage + 1) of \(viewModel.totalPages)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
 
             Spacer()
-
-            // Removed percentage indicator per UI-5 follow-up; keep left page text only
         }
         .frame(height: 8)
     }

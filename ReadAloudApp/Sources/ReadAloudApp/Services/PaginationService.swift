@@ -24,31 +24,11 @@ class PaginationService {
     /// User settings affecting layout
     private let userSettings: UserSettings
     
-    /// Layout cache for performance optimization
+    /// Layout cache for performance optimization (used by legacy paginateText/invalidateCache)
     private let layoutCache: LayoutCache
 
-    /// Cache for paginated content to avoid recalculation
-    private var paginationCache: [String: [String]] = [:]
-
-    /// Current view dimensions
+    /// Current view dimensions (used by legacy isCacheValid)
     private var currentViewSize: CGSize?
-
-    /// Reusable UITextView for pagination calculations (reduces MainActor overhead)
-    @MainActor private static var sharedPaginationTextView: UITextView?
-
-    /// Create a UITextView configured identically to SinglePageViewController (main thread only).
-    @MainActor private static func makePaginationTextView() -> UITextView {
-        let tv = UITextView()
-        tv.isEditable = false
-        tv.isSelectable = false
-        tv.isScrollEnabled = false
-        tv.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-        tv.contentInset = .zero
-        tv.textContainer.lineFragmentPadding = 0
-        tv.textContainer.maximumNumberOfLines = 0
-        tv.textContainer.lineBreakMode = .byCharWrapping
-        return tv
-    }
     
     // MARK: - Initialization
     
@@ -82,84 +62,10 @@ class PaginationService {
     }
     
     // MARK: - Public API Methods
-    
-    /// Get the character range for a specific page
-    /// - Parameter pageNumber: The page number (1-based)
-    /// - Returns: NSRange representing the character range for the specified page
-    func pageRange(for pageNumber: Int) -> NSRange {
-        debugPrint("📄 PaginationService: pageRange(for:) called with page \(pageNumber)")
-        
-        // For now, return placeholder until we have view bounds
-        // TODO: In a real implementation, this would need view bounds from the caller
-        // or store the current view bounds in the service
-        let estimatedCharsPerPage = 500
-        let startLocation = (pageNumber - 1) * estimatedCharsPerPage
-        let length = estimatedCharsPerPage
-        
-        return NSRange(location: startLocation, length: length)
-    }
-    
-    /// Get the character range for a specific page with view bounds
-    /// - Parameters:
-    ///   - pageNumber: The page number (1-based)
-    ///   - bounds: View bounds for text layout
-    /// - Returns: NSRange representing the character range for the specified page
-    func pageRange(for pageNumber: Int, bounds: CGRect) async -> NSRange {
-        debugPrint("📄 PaginationService: pageRange(for:bounds:) called with page \(pageNumber), bounds: \(bounds)")
-        
-        // Validate page number
-        guard pageNumber > 0 else {
-            debugPrint("⚠️ PaginationService: Invalid page number: \(pageNumber)")
-            return NSRange(location: 0, length: 0)
-        }
-        
-        // Get the full layout (cached or calculated)
-        let pageRanges = await getOrCalculateFullLayout(bounds: bounds)
-        
-        // Check if the requested page exists
-        let pageIndex = pageNumber - 1  // Convert to 0-based index
-        guard pageIndex < pageRanges.count else {
-            debugPrint("⚠️ PaginationService: Page \(pageNumber) out of range (total pages: \(pageRanges.count))")
-            return NSRange(location: 0, length: 0)
-        }
-        
-        let range = pageRanges[pageIndex]
-        debugPrint("📄 PaginationService: Page \(pageNumber) range: location=\(range.location), length=\(range.length)")
-        return range
-    }
-    
-    /// Get the total number of pages for the current text and settings
-    /// - Returns: Total page count
-    func totalPageCount() -> Int {
-        debugPrint("📄 PaginationService: totalPageCount() called")
-        
-        // Return a placeholder count based on text length estimation
-        let textLength = getTextLength()
-        let estimatedCharsPerPage = 500
-        let pageCount = max(1, (textLength + estimatedCharsPerPage - 1) / estimatedCharsPerPage)
-        
-        debugPrint("📄 PaginationService: Estimated total pages: \(pageCount)")
-        return pageCount
-    }
-    
-    /// Get the total number of pages for the current text and settings with view bounds
-    /// - Parameter bounds: View bounds for text layout
-    /// - Returns: Total page count
-    func totalPageCount(bounds: CGRect) async -> Int {
-        debugPrint("📄 PaginationService: totalPageCount(bounds:) called with bounds: \(bounds)")
-        
-        // Get the full layout (cached or calculated)
-        let pageRanges = await getOrCalculateFullLayout(bounds: bounds)
-        
-        let totalPages = pageRanges.count
-        debugPrint("📄 PaginationService: Total page count: \(totalPages)")
-        return totalPages
-    }
-    
-    /// Invalidate the pagination cache when settings or content change
+
+    /// Invalidate the pagination cache when settings or content change (legacy, used by tests)
     func invalidateCache() {
         debugPrint("🗑️ PaginationService: Invalidating pagination cache")
-        paginationCache.removeAll()
         layoutCache.clearCache()
         currentViewSize = nil
     }
@@ -373,72 +279,6 @@ class PaginationService {
         return pageRanges
     }
     
-    /// Async version of calculatePageRange that runs on a background thread (PGN-5 PREFERRED IMPLEMENTATION)
-    /// This is the preferred implementation that explicitly dispatches Core Text calculations to a background thread
-    /// to prevent any blocking or stuttering of the main UI thread, as required by PGN-5.
-    /// - Parameters:
-    ///   - startIndex: Starting character index in the full attributed string to measure from
-    ///   - bounds: Exact bounds of the view where the text will be rendered
-    ///   - attributedString: The full NSAttributedString of the book, containing all user-defined styles
-    /// - Returns: NSRange representing the exact characters that fit perfectly on the page
-    /// - Note: All Core Text calculations are explicitly dispatched to DispatchQueue.global(qos: .userInitiated)
-    /// Async wrapper — calculatePageRange is already async, this just forwards.
-    private func calculatePageRangeAsync(from startIndex: Int, in bounds: CGRect, with attributedString: NSAttributedString) async -> NSRange {
-        return await calculatePageRange(from: startIndex, in: bounds, with: attributedString)
-    }
-    
-    /// Calculate page ranges for multiple pages starting from a given index
-    /// - Parameters:
-    ///   - startIndex: Starting character index
-    ///   - pageCount: Number of pages to calculate
-    ///   - bounds: View bounds for text layout
-    ///   - attributedString: The attributed string to layout
-    /// - Returns: Array of NSRange objects for each page
-    private func calculateMultiplePageRanges(from startIndex: Int, pageCount: Int, in bounds: CGRect, with attributedString: NSAttributedString) async -> [NSRange] {
-        debugPrint("📄 PaginationService: calculateMultiplePageRanges(startIndex: \(startIndex), pageCount: \(pageCount))")
-        
-        var ranges: [NSRange] = []
-        var currentIndex = startIndex
-        
-        for pageNumber in 0..<pageCount {
-            guard currentIndex < attributedString.length else {
-                debugPrint("📄 PaginationService: Reached end of text at page \(pageNumber)")
-                break
-            }
-            
-            let range = await calculatePageRangeAsync(from: currentIndex, in: bounds, with: attributedString)
-            ranges.append(range)
-            
-            // Move to the next page start position
-            currentIndex = range.location + range.length
-            
-            // Safety check to prevent infinite loops
-            if range.length == 0 {
-                debugPrint("⚠️ PaginationService: Zero-length range detected, breaking to prevent infinite loop")
-                break
-            }
-        }
-        
-        debugPrint("📄 PaginationService: Calculated \(ranges.count) page ranges")
-        return ranges
-    }
-    
-    /// Generate a unique cache key for full layout calculation (PGN-3)
-    /// - Parameters:
-    ///   - bounds: View bounds for text layout
-    ///   - contentHash: Hash of the text content
-    /// - Returns: Unique cache key string
-    private func generateFullLayoutCacheKey(bounds: CGRect, contentHash: Int) -> String {
-        // Create a hash of the relevant UserSettings properties
-        let settingsHash = "\(userSettings.fontName)_\(userSettings.fontSize)_\(userSettings.lineSpacing)".hashValue
-        
-        // Combine all relevant parameters into a unique key
-        let key = "fullLayout_\(bounds.width)_\(bounds.height)_\(settingsHash)_\(contentHash)"
-        
-        debugPrint("📄 PaginationService: Generated full layout cache key: \(key)")
-        return key
-    }
-    
     /// Get the hash of the current text content for cache key generation
     /// - Returns: Hash value of the text content, or 0 if unable to retrieve
     private func getContentHash() -> Int {
@@ -457,23 +297,6 @@ class PaginationService {
     private func getFullTextContent() -> String? {
         debugPrint("📄 PaginationService: getFullTextContent() returning pre-extracted content (\(textContent.count) chars)")
         return textContent
-    }
-    
-    // MARK: - Existing Private Methods
-    
-    /// Get the text length from the TextSource
-    /// - Returns: Estimated text length in characters
-    private func getTextLength() -> Int {
-        // TODO: Implement proper text length calculation based on TextSource type
-        // This is a placeholder implementation for PGN-1
-        // Since textContent is now directly passed, we can return its length
-        return textContent.count
-    }
-    
-    /// Generate a cache key for the given parameters
-    private func generateCacheKey(content: String, settings: UserSettings, viewSize: CGSize) -> String {
-        let contentHash = content.hashValue
-        return "\(contentHash)_\(settings.fontSize)_\(settings.fontName)_\(settings.lineSpacing)_\(viewSize.width)_\(viewSize.height)"
     }
     
     // MARK: - Deinit

@@ -238,6 +238,32 @@ class AppCoordinator: ObservableObject {
     }
     
     // MARK: - PGN-10 Background Pagination
+
+    /// Request a seed window calculation for the given book at the saved character position.
+    /// The result is delivered via `.seedWindowReady` notification.
+    func requestSeedWindow(for book: Book, anchorCharIndex: Int, settings: UserSettings, viewSize: CGSize) {
+        guard let service = backgroundPaginationService else { return }
+        service.setPriorityAnchor(bookHash: book.contentHash, characterIndex: anchorCharIndex)
+        Task(priority: .userInitiated) {
+            let seedPages = await service.calculateSeedWindow(
+                for: book,
+                anchorCharIndex: anchorCharIndex,
+                settings: settings,
+                viewSize: viewSize
+            )
+            guard !seedPages.isEmpty else { return }
+            // Package results as notification userInfo (NSRange is not directly sendable via userInfo)
+            let serialized: [[String: Any]] = seedPages.map { page in
+                ["content": page.content, "location": page.range.location, "length": page.range.length]
+            }
+            NotificationCenter.default.post(
+                name: .seedWindowReady,
+                object: nil,
+                userInfo: ["bookHash": book.contentHash, "seedPages": serialized]
+            )
+        }
+    }
+
     private func startBackgroundPagination() {
         debugPrint("🔄 AppCoordinator: Starting background pagination service")
         backgroundPaginationService = BackgroundPaginationService(
@@ -289,7 +315,8 @@ class AppCoordinator: ObservableObject {
     /// - Parameter settings: The UserSettings to save
     func saveUserSettings(_ settings: UserSettings) {
         debugPrint("💾 AppCoordinator: Saving UserSettings to persistence")
-        // Update in-memory immediately to keep UI consistent
+        // Update in-memory immediately (needed by callers like confirmTTSLanguageSelection
+        // that don't set coordinator.userSettings directly)
         self.userSettings = settings
         do {
             try persistenceService.saveUserSettings(settings)

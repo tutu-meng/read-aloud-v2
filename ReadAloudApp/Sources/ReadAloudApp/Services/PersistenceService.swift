@@ -327,6 +327,16 @@ class PersistenceService {
         return try PaginationStore.shared.fetchMeta(bookHash: bookHash, settingsKey: settingsKey)
     }
 
+    /// Find the 1-based page number containing the given character index.
+    func loadPageContaining(bookHash: String, settingsKey: String, characterIndex: Int) throws -> Int? {
+        return try PaginationStore.shared.fetchPageContaining(bookHash: bookHash, settingsKey: settingsKey, characterIndex: characterIndex)
+    }
+
+    /// Shift page numbers by `delta` for pages >= `fromPageNumber`.
+    func renumberPages(bookHash: String, settingsKey: String, fromPageNumber: Int, delta: Int) throws {
+        try PaginationStore.shared.renumberPages(bookHash: bookHash, settingsKey: settingsKey, fromPageNumber: fromPageNumber, delta: delta)
+    }
+
     /// Remove all pagination caches for a given book
     func clearPaginationCache(for bookHash: String) {
         do { try PaginationStore.shared.deleteAllForBook(bookHash) }
