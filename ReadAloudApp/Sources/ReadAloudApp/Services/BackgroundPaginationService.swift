@@ -124,7 +124,7 @@ class BackgroundPaginationService {
         anchorCharIndex: Int,
         settings: UserSettings,
         viewSize: CGSize,
-        windowSize: Int = 3
+        windowSize: Int = 10
     ) async -> [(content: String, range: NSRange)] {
         debugPrint("🌱 BackgroundPaginationService: Calculating seed window (\(windowSize) pages) from char \(anchorCharIndex)")
         do {

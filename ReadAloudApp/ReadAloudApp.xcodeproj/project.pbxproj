@@ -38,6 +38,7 @@
 		8FE769986E9053F3412C2801 /* PageViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D608204CA54533AC7302AA5C /* PageViewTests.swift */; };
 		9457CFD462528A3DD258E87C /* PageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B744D6A54F24178EF8A69A /* PageView.swift */; };
 		98FC6612E2D48EDF8FCFE33A /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2608873B40CA0052119E474D /* ReaderView.swift */; };
+		A0BA8A8908E7947FB45AFB83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 480D0A687037AEEE5CAD2B7B /* Assets.xcassets */; };
 		AAE5DC640471FE91EB208A87 /* 《诡秘之主》（精校版全本）作者：爱潜水的乌贼.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4BECC500F9E5322205FBA086 /* 《诡秘之主》（精校版全本）作者：爱潜水的乌贼.txt */; };
 		AED3301033E2047DF0893A08 /* SettingsConsistencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BDE8B851E9CC1533538F05 /* SettingsConsistencyTests.swift */; };
 		B79D8193FE4D29B3F7D3A454 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012179C9CF470860C4A4CAEE /* AppCoordinatorTests.swift */; };
@@ -90,6 +91,7 @@
 		39159664AB3A9F9DB735FF46 /* LayoutCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutCache.swift; sourceTree = "<group>"; };
 		3F7DBE3A4D730A211FE9BF09 /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		469941E2ACF5571370930148 /* FileProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProcessorTests.swift; sourceTree = "<group>"; };
+		480D0A687037AEEE5CAD2B7B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		49E503C83AEFAEB92FA73D04 /* PaginationLayoutParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationLayoutParityTests.swift; sourceTree = "<group>"; };
 		4BECC500F9E5322205FBA086 /* 《诡秘之主》（精校版全本）作者：爱潜水的乌贼.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "《诡秘之主》（精校版全本）作者：爱潜水的乌贼.txt"; sourceTree = "<group>"; };
 		5CF9214D4A349A0F4B20D744 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
@@ -163,6 +165,14 @@
 				E57D8ACA928B81625C215B7C /* UserSettings.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		0CBE6DD8EAFC7654265107EF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				480D0A687037AEEE5CAD2B7B /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		1CDD87E11E89C2F03CC0BF7C /* ReadAloudAppTests */ = {
@@ -267,6 +277,7 @@
 				33672C6E1D4F446096A9D66E /* SampleBooks */,
 				6CD68866EFC133FAF6CEB117 /* ReadAloudApp */,
 				1CDD87E11E89C2F03CC0BF7C /* ReadAloudAppTests */,
+				0CBE6DD8EAFC7654265107EF /* Resources */,
 				F9210DFD45E4D1C6A2DF6557 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -353,6 +364,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0BA8A8908E7947FB45AFB83 /* Assets.xcassets in Resources */,
 				7229E5DE662150A2DB59451D /* ReaderViewModel.swift.bak in Resources */,
 				ED2FBE1A65158F4AE41563EC /* SampleBooks in Resources */,
 				AAE5DC640471FE91EB208A87 /* 《诡秘之主》（精校版全本）作者：爱潜水的乌贼.txt in Resources */,

@@ -166,7 +166,9 @@ class ReaderViewModel: ObservableObject {
                 if let bookHash = notification.userInfo?["bookHash"] as? String,
                    bookHash == self.book.contentHash,
                    let serialized = notification.userInfo?["seedPages"] as? [[String: Any]] {
-                    self.handleSeedWindowReady(serialized)
+                    DispatchQueue.main.async {
+                        self.handleSeedWindowReady(serialized)
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -178,7 +180,9 @@ class ReaderViewModel: ObservableObject {
                 if let bookHash = notification.userInfo?["bookHash"] as? String,
                    bookHash == self.book.contentHash,
                    let realPage = notification.userInfo?["realPageNumber"] as? Int {
-                    self.handleSeedReconciled(realPageNumber: realPage)
+                    DispatchQueue.main.async {
+                        self.handleSeedReconciled(realPageNumber: realPage)
+                    }
                 }
             }
             .store(in: &cancellables)

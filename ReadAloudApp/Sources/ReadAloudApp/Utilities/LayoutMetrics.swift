@@ -13,8 +13,10 @@ enum LayoutMetrics {
     static let horizontalContentInset: CGFloat = 16
     /// Top inset applied inside PageView's text container
     static let verticalContentInsetTop: CGFloat = 16
-    /// Bottom inset — larger than top to accommodate UITextView/TextKit layout differences
-    static let verticalContentInsetBottom: CGFloat = 24
+    /// Bottom inset inside the UITextView text container (0 = text can reach the edge)
+    static let verticalContentInsetBottom: CGFloat = 0
+    /// Bottom margin reserved during pagination so each page has breathing room
+    static let paginationBottomMargin: CGFloat = 30
 
     /// Compute the exact text drawable size for a given container size
     /// - Parameter container: The full container size from GeometryReader
@@ -22,7 +24,7 @@ enum LayoutMetrics {
     static func computeTextDrawableSize(container: CGSize) -> CGSize {
         let drawableWidth = max(0, container.width - 2 * horizontalContentInset)
         let drawableHeight = max(0, container.height - chromeBottomHeight
-                                   - verticalContentInsetTop - verticalContentInsetBottom)
+                                   - verticalContentInsetTop - paginationBottomMargin)
         return CGSize(width: drawableWidth, height: drawableHeight)
     }
 }
